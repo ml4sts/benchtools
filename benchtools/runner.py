@@ -27,7 +27,12 @@ class Bench():
         load a template from txt and create task objects for each row of a csv
         '''
         # using pandas to load the csv is easy, then use python string formatting to set up the final prompt to apss to the task constructor
+        textFile = open(self.dir, "r")
+        csvFile = pandas.read_csv(self.dir)
+        
 
+        
+        
         return self
 
     
