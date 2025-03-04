@@ -34,7 +34,6 @@ class PromptTask:
         self.reference = reference
         self.runner_type = runner_type
 
-
     def run(self,model):
         '''
         '''
