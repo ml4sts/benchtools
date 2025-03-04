@@ -1,4 +1,6 @@
 # module to run benchmarks
+import pandas
+import yaml
 
 class Bench():
     '''
