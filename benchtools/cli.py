@@ -1,5 +1,6 @@
 import click
-
+from task import PromptTask
+from runner import Bench
 
 @click.group()
 def cli():
@@ -10,8 +11,8 @@ def cli():
 @click.argument('task_name')
 def add_task(task_name):
     """Creating a new task."""
-    
-    click.echo(result)
+    new_task = PromptTask()
+    click.echo("Adding " + task_name)
 
 
 @click.command()
