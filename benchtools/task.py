@@ -56,6 +56,6 @@ class PromptTask:
         return self.scoring_function(response,self.reference)
         
 
-# additional classes that inherit for other types of tasks
+# additional classes for other types of tasks
 
 # likely an agent task that can pass environment assets

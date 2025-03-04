@@ -2,7 +2,7 @@
 
 a python library designed to help people design and run LLM benchmarks
 
-
+**warning** currently just an outline, has not yet run
 
 ## Orientation to the Repo
 

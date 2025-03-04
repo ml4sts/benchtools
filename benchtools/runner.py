@@ -3,15 +3,17 @@
 class Bench():
     '''
     '''
-    def __init__(dir, model):
-        # check dir for tasks and load them
-
+    def __init__(dir, target_dir):
+        '''
+        '''
+        # load tasks from file strucutre and instantiate task objects for each, store those in a list
         self.tasks
 
-        self.model = model
+        
 
-    def run(self):
+    def run(self, model):
         '''
+        
         '''
         for task in self.tasks:
-            task.run(self.model)
+            task.run(model)
