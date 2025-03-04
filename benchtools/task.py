@@ -8,7 +8,7 @@ class PromptTask:
     '''
     defines a basic prompt task with a simple scoring function
     '''
-    def __init__(self,prompt=None,scoring_function=None, reference=None):
+    def __init__(self,prompt=None,scoring_function=None, reference=None, runner_type='ollama'):
         '''
         init a task object
 
@@ -22,7 +22,8 @@ class PromptTask:
             if string, must be name of built in eval function provided here
         reference: string or number
             solution that will be passed with the model answer
-
+        runner_type: string {ollama}
+            the way the runner should be called,
         '''
         self.prompt = prompt
         if type(scoring_function) == str:
@@ -31,12 +32,16 @@ class PromptTask:
             self.scoring_function = scoring_function
 
         self.reference = reference
+        self.runner_type = runner_type
 
 
     def run(self,model):
         '''
         '''
-        return generate(model,self.prompt)
+        #  this should actually be a better switch structure 
+        #  these types should be documented in the constructor method (init)
+        if self.runner_type == 'ollma':
+            return generate(model,self.prompt,)
 
 
     def score(self,response):
