@@ -29,11 +29,16 @@ class Bench():
         # using pandas to load the csv is easy, then use python string formatting to set up the final prompt to apss to the task constructor
         textFile = open(self.dir, "r")
         csvFile = pandas.read_csv(self.dir)
-        
+        x = 0
+        storedPrompts = []
+        while x < len(csvFile):
+            processed_prompt = textFile.replace("{a}", csvFile.iloc[x,1])
+            processed_prompt.replace("{b}", csvFile.iloc[x, 2])
+            storedPrompts.append(processed_prompt)
 
         
         
-        return self
+        return storedPrompts
 
     
     def from_yaml():
