@@ -1,22 +1,32 @@
 # module to run benchmarks
 import pandas
 import yaml
+import os
 
 class Bench():
     '''
     '''
-    def __init__(dir, target_dir):
+    def __init__(self, dir, target_dir):
         '''
         '''
         # load tasks from file strucutre and instantiate task objects for each, store those in a list.
         #    loading will 
-        self.tasks
+        task_folder = os.listdir(dir)
+        for file in task_folder:
+            if file.endswith("csv"):
+                self.tasks = self.from_txt_csv()
+            elif file.endswith("yml"):
+                self.tasks = self.from_yaml()
+        # Both functions should have the same type return. porobably should be a list of PRompt_Task
+                    
+
 
         
 
     def run(self, model):
         '''
         
+
         '''
         for task in self.tasks:
             task.run(model)
