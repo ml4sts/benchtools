@@ -1,32 +1,30 @@
 # module to run benchmarks
-import pandas
-import yaml # requires pyyaml
 import os
+import yaml # requires pyyaml
+import pandas
 from task import PromptTask
 from pathlib import Path
 from log_file.py import log_agent_interaction
+from itertools import product
 
 
 class Bench():
     '''
     '''
-   
-
     def __init__(self, dir, target_dir):
         '''
         '''
         # load tasks from file strucutre and instantiate task objects for each, store those in a list.
         #    loading will 
-
-
         task_folder = os.listdir(dir)
         for file in task_folder:
             if file.endswith("csv"):
-                self.tasks = self.from_txt_csv(dir)
+                self.tasks = self.from_txt_csv()
             elif file.endswith("yml"):
-                self.tasks = self.from_yaml(dir)
+                self.tasks = self.from_yaml()
         # Both functions should have the same type return. porobably should be a list of PRompt_Task
                     
+
 
         
 
