@@ -1,4 +1,3 @@
-#  defines a class object for a task
 from ollama import Client
 from openai import OpenAI
 
@@ -34,7 +33,7 @@ class PromptTask:
             to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         """
         self.prompt = prompt
-        if type(scoring_function) == str:
+        if type(scoring_function) is str:
             self.scoring_function = scoring_fx[scoring_function]
         else:
             self.scoring_function = scoring_function
@@ -67,7 +66,7 @@ class PromptTask:
                         },
                     ],
                 )
-                return response["message"]["content"]
+                return (self.prompt, response["message"]["content"])
             case "openai":
                 client = OpenAI(
                     base_url=api_url if api_url else "https://api.openai.com/v1",
@@ -81,7 +80,7 @@ class PromptTask:
                         }
                     ],
                 )
-                return chat_completion.choices[0].message.content
+                return (self.prompt, chat_completion.choices[0].message.content)
             case _:
                 print(f"Runner type {self.runner_type} not supported")
                 return None
