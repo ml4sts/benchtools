@@ -1,7 +1,7 @@
 # module to run benchmarks
 import pandas
 import yaml
-
+import task
 class Bench():
     '''
     '''
@@ -22,23 +22,24 @@ class Bench():
             task.run(model)
 
     # possibly private method? 
-    def from_txt_csv():
+    def from_txt_csv(task_folder):
         '''
         load a template from txt and create task objects for each row of a csv
         '''
         # using pandas to load the csv is easy, then use python string formatting to set up the final prompt to apss to the task constructor
-        textFile = open(self.dir, "r")
-        csvFile = pandas.read_csv(self.dir)
+        textFile = open(task_folder + "task.txt", "r")
+        csvFile = pandas.read_csv(task_folder + "values.csv")
+        answers = pandas.read_csv(task_folder + "results")
         x = 0
-        storedPrompts = []
+        storedTasks = []
+        storedAnswers = []
         while x < len(csvFile):
             processed_prompt = textFile.replace("{a}", csvFile.iloc[x,1])
             processed_prompt.replace("{b}", csvFile.iloc[x, 2])
-            storedPrompts.append(processed_prompt)
-
+            storedAnswers.append(answers[x,1])
+            storedTasks.append(processed_prompt)
         
-        
-        return storedPrompts
+        return storedTasks, storedAnswers
 
     
     def from_yaml():
