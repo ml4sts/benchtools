@@ -103,20 +103,27 @@ class Bench():
                 self.tasks.append(PromptTask(prompt=filled_prompt))  # Store task
 
         return self
+
     
- 
-#            processed_values = []
-#            for val in values:
-#                for key, value in val.items():
-#                    if isinstance(value, str): 
-#                        processed_values.append((key, list(map(int, value.split(',')))))
-#                    else:
-#                        processed_values.append((key, value))
-#            keys = [key for key, _ in processed_values]
-#            value_lists = [value for _, value in processed_values]
-#            value_combinations = list(zip(*value_lists))
-#            for combination in value_combinations:
-#                value_dict = dict(zip(keys, combination))
-#                temp = template.format(**value_dict)
-#                self.tasks.append(temp)
-#        return self.tasks
+    def from_yaml(self, yaml_file):
+        with open(yaml_file, 'r') as file:
+            data = yaml.safe_load(file)
+            self.tasks = []
+            for each in data:
+                template = each.get('template', '')
+                values = each.get('values', [])
+                processed_values = []
+                for val in values:
+                    for key, value in val.items():
+                        if isinstance(value, str): 
+                            processed_values.append((key, list(map(int, value.split(',')))))
+                        else:
+                            processed_values.append((key, value))
+                keys = [key for key, _ in processed_values]
+                value_lists = [value for _, value in processed_values]
+                value_combinations = list(zip(*value_lists))
+                for combination in value_combinations:
+                    value_dict = dict(zip(keys, combination))
+                    temp = template.format(**value_dict)
+                    self.tasks.append(temp)
+        return self.tasks
