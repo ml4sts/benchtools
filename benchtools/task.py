@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+#  defines a class object for a task
+>>>>>>> ad67394 (Ollama and OpenAI API support complete)
 from ollama import Client
 from openai import OpenAI
 
@@ -26,6 +30,12 @@ class PromptTask:
         scoring_function : function handle or string
             if string, must be name of built in eval function provided here
         reference: string or number
+<<<<<<< HEAD
+=======
+            solution that will be passed with the model answer to the scoring function
+        runner_type: string {ollama}
+            the way the runner should be called,
+>>>>>>> ad67394 (Ollama and OpenAI API support complete)
             solution that will be passed with the model answer
         runner_type: string {ollama,openai}
             define which runner should be used for the task.
