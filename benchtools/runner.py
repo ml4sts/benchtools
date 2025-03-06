@@ -1,5 +1,6 @@
 # module to run benchmarks
 import os
+import task
 import yaml # requires pyyaml
 import pandas
 from task import PromptTask
@@ -7,6 +8,7 @@ from pathlib import Path
 from log_file.py import log_agent_interaction
 from itertools import product
 from log_file.py import log_agent_interaction
+
 
 class Bench():
     '''
