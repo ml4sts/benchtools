@@ -6,7 +6,7 @@ from task import PromptTask
 from pathlib import Path
 from log_file.py import log_agent_interaction
 from itertools import product
-
+from log_file.py import log_agent_interaction
 
 class Bench():
     '''
@@ -16,12 +16,13 @@ class Bench():
         '''
         # load tasks from file strucutre and instantiate task objects for each, store those in a list.
         #    loading will 
+
         task_folder = os.listdir(dir)
         for file in task_folder:
             if file.endswith("csv"):
-                self.tasks = self.from_txt_csv()
+                self.tasks = self.from_txt_csv(dir)
             elif file.endswith("yml"):
-                self.tasks = self.from_yaml()
+                self.tasks = self.from_yaml(dir)
         # Both functions should have the same type return. porobably should be a list of PRompt_Task
                     
 
