@@ -4,11 +4,12 @@ import yaml # requires pyyaml
 from itertools import product
 from task import PromptTask
 from pathlib import Path
+import os
+from log_file.py import log_agent_interaction
 
 class Bench():
     '''
     '''
-
 
     def __init__(self, dir, target_dir):
         '''
@@ -17,14 +18,33 @@ class Bench():
         #    loading will 
         self.tasks = []
 
+        task_folder = os.listdir(dir)
+        for file in task_folder:
+            if file.endswith("csv"):
+                self.tasks = self.from_txt_csv(dir)
+            elif file.endswith("yml"):
+                self.tasks = self.from_yaml(dir)
+        # Both functions should have the same type return. porobably should be a list of PRompt_Task
+                    
+
         
 
     def run(self, model):
         '''
         
+
         '''
         for task in self.tasks:
-            task.run(model)
+            (prompt, response) = task.run(model)
+            log_agent_interaction(prompt, response)
+            task.score()
+
+
+
+
+
+
+        
 
     # possibly private method? 
     def from_txt_csv():
