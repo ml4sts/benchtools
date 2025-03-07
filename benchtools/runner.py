@@ -3,7 +3,7 @@ import pandas
 import yaml
 import os
 from log_file.py import log_agent_interaction
-
+import task
 class Bench():
     '''
     '''
@@ -43,13 +43,24 @@ class Bench():
         
 
     # possibly private method? 
-    def from_txt_csv():
+    def from_txt_csv(task_folder):
         '''
         load a template from txt and create task objects for each row of a csv
         '''
         # using pandas to load the csv is easy, then use python string formatting to set up the final prompt to apss to the task constructor
-
-        return self
+        textFile = open(task_folder + "task.txt", "r")
+        csvFile = pandas.read_csv(task_folder + "values.csv")
+        answers = pandas.read_csv(task_folder + "results")
+        x = 0
+        storedTasks = []
+        storedAnswers = []
+        while x < len(csvFile):
+            processed_prompt = textFile.replace("{a}", csvFile.iloc[x,1])
+            processed_prompt.replace("{b}", csvFile.iloc[x, 2])
+            storedAnswers.append(answers[x,1])
+            storedTasks.append(processed_prompt)
+        
+        return storedTasks, storedAnswers
 
     
     def from_yaml():
