@@ -21,7 +21,7 @@ class PromptTask:
         scoring_function : function handle or string
             if string, must be name of built in eval function provided here
         reference: string or number
-            solution that will be passed with the model answer
+            solution that will be passed with the model answer to the scoring function
         runner_type: string {ollama}
             the way the runner should be called,
         '''
@@ -39,7 +39,7 @@ class PromptTask:
         '''
         #  this should actually be a better switch structure 
         #  these types should be documented in the constructor method (init)
-        if self.runner_type == 'ollma':
+        if self.runner_type == 'ollama':
             return generate(model,self.prompt,)
 
 
