@@ -1,5 +1,6 @@
 import os
 import click
+import requests
 # from task import PromptTask
 # from runner import Bench
 
@@ -63,10 +64,15 @@ def init_repo(bench_name, bench_path):
     os.chdir(benchmark_path)
     try:
         os.system("git init .")
-        print("DONE!")
     except:
         print("git might not be initialized in your system. Please run \"git init . \" when setup")
+    # Get python gitignore template and create .gitignore
+    ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
+    if ignore_text.status_code == 200:
+        with open(".gitignore", 'a') as f:
+            f.write(ignore_text.text)
     os.chdir(current_dir)
+
     
     
 
