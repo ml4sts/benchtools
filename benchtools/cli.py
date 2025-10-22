@@ -91,19 +91,20 @@ def init(benchmark_name, path, about, no_git):
 
 # What us creating a new task
 @click.command()
-@click.argument('task_name')
+@click.argument('task_name', required = True)
+# @click.option()
 def add_task(task_name):
-    """Creating a new task."""
-    new_task = PromptTask()
+    """Setting up a new task."""
+    # new_task = PromptTask()
     click.echo("Adding " + task_name)
-
+    
 
 @click.command()
-@click.argument('task_name')
+@click.argument('task_name', required = True)
 def run_task(task_name):
-    """Running a task."""
+    """Running the tasks and generating logs"""
     
-    click.echo(result)
+    click.echo(f"Running {task_name} now")
 
 
 cli.add_command(init)
