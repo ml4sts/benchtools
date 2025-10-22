@@ -55,6 +55,18 @@ def create_about(bench_name, bench_path, text):
     with open(about_path, 'w') as file:
         file.write(about_text)
 
+
+### Initialize git repository
+def init_repo(bench_name, bench_path):
+    current_dir = os.getcwd()
+    benchmark_path = os.path.join(bench_path, bench_name)
+    os.chdir(benchmark_path)
+    try:
+        os.system("git init .")
+        print("DONE!")
+    except:
+        print("git might not be initialized in your system. Please run \"git init . \" when setup")
+    os.chdir(current_dir)
     
     
 
@@ -63,7 +75,8 @@ def create_about(bench_name, bench_path, text):
 @click.argument('benchmark_name', required = False)
 @click.option('--path', '-P', default=".", help="The path where the benchmark repository will be")
 @click.option('--about', '-A', default="", help="The Content that goes in the about.md file")
-def init(benchmark_name, path, about):
+@click.option('--no-git', default=False, help="Don't make benchmark a git repository. Default is False")
+def init(benchmark_name, path, about, no_git):
     """Initializing a new benchmark."""
     # new_benchmark = PromptTask()
     if not benchmark_name:
@@ -71,7 +84,9 @@ def init(benchmark_name, path, about):
     click.echo("Creating " + benchmark_name + " in " + path)
     os.mkdir(os.path.join(path, benchmark_name))
     create_about(benchmark_name, path, about)
-
+    # Initialize a git repo
+    if not no_git:
+        init_repo(benchmark_name, path)
 
 
 # What us creating a new task
