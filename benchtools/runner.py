@@ -57,19 +57,19 @@ class Bench():
         textFile = open(task_folder + "task.txt", "r")
         csvFile = pandas.read_csv(task_folder + "values.csv")
         answers = pandas.read_csv(task_folder + "results")
-        x = 0
+
         storedTasks = []
         storedAnswers = []
-        while x < len(csvFile):
+        for x in range(len(csvFile)):
             processed_prompt = textFile.replace("{a}", csvFile.iloc[x,1])
             processed_prompt.replace("{b}", csvFile.iloc[x, 2])
-            storedAnswers.append(answers[x,1])
             storedTasks.append(processed_prompt)
+            storedAnswers.append(csvFile.iloc[x, 3])
         
         return storedTasks, storedAnswers
 
 
-    def from_yaml(self, yaml_file):
+    def from_yaml(yaml_file):
         """
         Load tasks from a YAML file and generate PromptTask objects.
 
@@ -86,11 +86,13 @@ class Bench():
         with open(yaml_file, 'r') as file:
             data = yaml.safe_load(file)
 
-        self.tasks = []
+        storedTasks = []
+        storedAnswers = []
 
         for entry in data:
             template = entry["template"]  # Extract template
             values_dict = entry["values"]  # Extract values dictionary
+            storedAnswers = entry["result"]
 
             # Generate all possible value combinations using itertools.product
             keys = values_dict.keys()
@@ -100,30 +102,6 @@ class Bench():
             for values in value_combinations:
                 value_mapping = dict(zip(keys, values))  # Pair keys with values
                 filled_prompt = template.format(**value_mapping)  # Format the template
-                self.tasks.append(PromptTask(prompt=filled_prompt))  # Store task
+                storedTasks.append(filled_prompt)  # Store task
 
-        return self
-
-    
-    def from_yaml(self, yaml_file):
-        with open(yaml_file, 'r') as file:
-            data = yaml.safe_load(file)
-            self.tasks = []
-            for each in data:
-                template = each.get('template', '')
-                values = each.get('values', [])
-                processed_values = []
-                for val in values:
-                    for key, value in val.items():
-                        if isinstance(value, str): 
-                            processed_values.append((key, list(map(int, value.split(',')))))
-                        else:
-                            processed_values.append((key, value))
-                keys = [key for key, _ in processed_values]
-                value_lists = [value for _, value in processed_values]
-                value_combinations = list(zip(*value_lists))
-                for combination in value_combinations:
-                    value_dict = dict(zip(keys, combination))
-                    temp = template.format(**value_dict)
-                    self.tasks.append(temp)
-        return self.tasks
+        return storedTasks, storedAnswers
