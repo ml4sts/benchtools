@@ -33,6 +33,8 @@ gui = ["PyQt5"]
 cli = [
   "rich",
   "click",
+  "pyyaml",
+  "pandas",
 ]
 
 [project.urls]
