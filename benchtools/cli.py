@@ -79,8 +79,8 @@ def init_repo(bench_name, bench_path):
 # Initialize the benchmark 
 @click.command()
 @click.argument('benchmark_name', required = False)
-@click.option('--path', '-P', default=".", help="The path where the benchmark repository will be")
-@click.option('--about', '-A', default="", help="The Content that goes in the about.md file")
+@click.option('--path', '-p', default=".", help="The path where the benchmark repository will be")
+@click.option('--about', '-a', default="", help="The Content that goes in the about.md file")
 @click.option('--no-git', default=False, help="Don't make benchmark a git repository. Default is False")
 def init(benchmark_name, path, about, no_git):
     """Initializing a new benchmark."""
