@@ -2,8 +2,8 @@ import os
 import click
 import shutil
 import requests
+from benchtools.runner import Bench
 # from task import PromptTask
-# from runner import Bench
 
 @click.group()
 def cli():
@@ -113,18 +113,28 @@ def init(benchmark_name, path, about, no_git, tasks):
     if not benchmark_name:
         benchmark_name = get_benchmark_name()
     click.echo("Creating " + benchmark_name + " in " + path)
+    
+    # Create the benchmark folder
     bench_path = os.path.join(path, benchmark_name)
     os.mkdir(bench_path)
-    create_about(benchmark_name, path, about)
+
     # Initialize a git repo
     if not no_git:
-        init_repo(benchmark_name, path)
+        init_repo(benchmark_name, path) # TODO: bench_path?
+    
+    # Create about.md
+    create_about(benchmark_name, path, about) # TODO: bench_path?
 
     # Create a benchmarks folder with tasks in them
     tasks_path = os.path.join(bench_path, "benchmarks")
     os.mkdir(tasks_path)
     for task_name, task_path in tasks:
         setup_task(tasks_path, task_name, task_path)
+
+    to_run = input(" Would you like to run the benchmark? y/n? ")
+    print()
+    if to_run in ['y', 'Y', 'yes', "YES", 'Yes', 'yyes']:
+        benchmark = Bench(bench_path, "something")
 
 
 # What us creating a new task
@@ -138,6 +148,16 @@ def add_task(task_name):
     
 
 @click.command()
+@click.argument('benchmark',type=str, required = True)
+def run(benchmark: str):
+    """Running the benchmark and generating logs"""
+    bench_path = os.path.join(os.getcwd(), benchmark)
+    
+    # TODO: Fix relPath case
+    click.echo(f"Running {benchmark.rsplit('/',maxsplit=1)[1]} now")
+    benchmark = Bench(benchmark, "something")
+
+@click.command()
 @click.argument('task_name', required = True)
 def run_task(task_name):
     """Running the tasks and generating logs"""
@@ -146,6 +166,7 @@ def run_task(task_name):
 
 
 cli.add_command(init)
+cli.add_command(run)
 cli.add_command(add_task)
 cli.add_command(run_task)
 cli.add_command(generate_demo_bench)
