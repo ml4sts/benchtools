@@ -1,5 +1,6 @@
 import os
 import click
+import shutil
 import requests
 # from task import PromptTask
 # from runner import Bench
@@ -63,7 +64,8 @@ def init_repo(bench_name, bench_path):
     benchmark_path = os.path.join(bench_path, bench_name)
     os.chdir(benchmark_path)
     try:
-        os.system("git init .")
+        os.system("git init . -q")
+        os.system("git branch -m main")
     except:
         print("git might not be initialized in your system. Please run \"git init . \" when setup")
     # Get python gitignore template and create .gitignore
@@ -73,26 +75,56 @@ def init_repo(bench_name, bench_path):
             f.write(ignore_text.text)
     os.chdir(current_dir)
 
+
+# Create a benchmarks folder with tasks in them
+def setup_task(tasks_path, task_name, task_path):
+
+    click.echo(f"Setting up {task_name}...", nl=False)
+    task_folder = os.path.join(tasks_path, task_name)
+    os.mkdir(task_folder) # TODO: check if folder exists and handle
+
+    # Path could be absolute or relative, check and work accordingly
+    if not task_path.startswith('/'):
+        if task_path.startswith('./'):
+            # TODO: Path could have one or more `../` use relpath to fix this block 
+            task_path = task_path[2:]
+        task_path = os.path.join(os.getcwd(), task_path)
+        # print(f" path {task_path}\n\n") # Debugging
     
-    
+    #  could be a single file or a folder check and work accordignly
+    if os.path.isdir(task_path):
+        for sub in os.listdir(task_path):
+            shutil.copy2(os.path.join(task_path, sub), task_folder)
+    else:
+        shutil.copy2(task_path, task_folder)
+    click.echo("Success")
+
 
 # Initialize the benchmark 
 @click.command()
-@click.argument('benchmark_name', required = False)
+@click.argument('benchmark_name', required=False)
 @click.option('--path', '-p', default=".", help="The path where the benchmark repository will be")
 @click.option('--about', '-a', default="", help="The Content that goes in the about.md file")
-@click.option('--no-git', default=False, help="Don't make benchmark a git repository. Default is False")
-def init(benchmark_name, path, about, no_git):
+@click.option('--no-git', is_flag=True, help="Don't make benchmark a git repository. Default is False")
+@click.option('--tasks', '-t', type=(str, str), multiple=True, default=[], help="Add benchmark tasks to your benchmark <name> <path>")
+def init(benchmark_name, path, about, no_git, tasks):
     """Initializing a new benchmark."""
     # new_benchmark = PromptTask()
     if not benchmark_name:
         benchmark_name = get_benchmark_name()
     click.echo("Creating " + benchmark_name + " in " + path)
-    os.mkdir(os.path.join(path, benchmark_name))
+    bench_path = os.path.join(path, benchmark_name)
+    os.mkdir(bench_path)
     create_about(benchmark_name, path, about)
     # Initialize a git repo
     if not no_git:
         init_repo(benchmark_name, path)
+
+    # Create a benchmarks folder with tasks in them
+    tasks_path = os.path.join(bench_path, "benchmarks")
+    os.mkdir(tasks_path)
+    for task_name, task_path in tasks:
+        setup_task(tasks_path, task_name, task_path)
 
 
 # What us creating a new task
