@@ -92,10 +92,10 @@ def from_yaml(yaml_file):
         data = yaml.safe_load(file)
     storedTasks = []
     storedAnswers = []
-    for entry in data:
-        template = entry["template"]  # Extract template
-        values_dict = entry["values"]  # Extract values dictionary
-        storedAnswers = entry["result"]
+    for sub_task in data:
+        template = sub_task["template"]  # Extract template
+        values_dict = sub_task["values"]  # Extract values dictionary
+        answers = sub_task["result"]
         # Generate all possible value combinations using itertools.product
         keys = values_dict.keys()
         value_combinations = zip(*values_dict.values())
@@ -104,4 +104,6 @@ def from_yaml(yaml_file):
             value_mapping = dict(zip(keys, values))  # Pair keys with values
             filled_prompt = template.format(**value_mapping)  # Format the template
             storedTasks.append(filled_prompt)  # Store task
+        for answer in answers:
+            storedAnswers.append(answer)
     return (storedTasks, storedAnswers)
