@@ -44,10 +44,10 @@ def generate_demo_bench(bench_name):
 def get_benchmark_name():
     return input("Enter the name of your benchmark/project (will be used as folder and repo name)...\n")
 
-
+# TODO: Move to designer
 ### Generate an about path from the description of the user 
 def create_about(bench_name, bench_path, text):
-    about_path = os.path.join(bench_path, bench_name, "about.md")
+    about_path = os.path.join(bench_path, "about.md")
     about_text= f"""
     # {bench_name}
     {text}
@@ -58,11 +58,11 @@ def create_about(bench_name, bench_path, text):
         file.write(about_text)
 
 
+# TODO: Move to designer
 ### Initialize git repository
-def init_repo(bench_name, bench_path):
+def init_repo(bench_path):
     current_dir = os.getcwd()
-    benchmark_path = os.path.join(bench_path, bench_name)
-    os.chdir(benchmark_path)
+    os.chdir(bench_path)
     try:
         os.system("git init . -q")
         os.system("git branch -m main")
@@ -76,6 +76,7 @@ def init_repo(bench_name, bench_path):
     os.chdir(current_dir)
 
 
+# TODO: Move to designer?
 # Create a benchmarks folder with tasks in them
 def setup_task(tasks_path, task_name, task_path):
 
@@ -100,62 +101,76 @@ def setup_task(tasks_path, task_name, task_path):
     click.echo("Success")
 
 
+# TODO: Import from designer
 # Initialize the benchmark 
 @click.command()
 @click.argument('benchmark_name', required=False)
-@click.option('--path', '-p', default=".", help="The path where the benchmark repository will be")
-@click.option('--about', '-a', default="", help="The Content that goes in the about.md file")
-@click.option('--no-git', is_flag=True, help="Don't make benchmark a git repository. Default is False")
-@click.option('--tasks', '-t', type=(str, str), multiple=True, default=[], help="Add benchmark tasks to your benchmark <name> <path>")
+@click.option('-p',  '--path', help="The path where the new benchmark repository will be placed", default=".", type=str)
+@click.option('-a', '--about', help="Benchmark describtion. Content will go in the about.md file", default="", type=str)
+@click.option('--no-git',      help="Don't make benchmark a git repository. Default is False", is_flag=True)
+@click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>", default=[], type=(str, str), multiple=True)
 def init(benchmark_name, path, about, no_git, tasks):
     """Initializing a new benchmark."""
-    # new_benchmark = PromptTask()
+
     if not benchmark_name:
-        benchmark_name = get_benchmark_name()
+        benchmark_name = input("Enter the name of your benchmark/project (will be used as folder and repo name)...\n")
     click.echo("Creating " + benchmark_name + " in " + path)
     
     # Create the benchmark folder
-    bench_path = os.path.join(path, benchmark_name)
-    os.mkdir(bench_path)
-
+    if path.startswith('/'):
+        abs_path = path
+    else:
+        abs_path = os.path.abspath(path)
+    bench_path = os.path.join(abs_path, benchmark_name)
+        
+    
+    # TODO: Move to designer?
+    os.mkdir(bench_path) 
     # Initialize a git repo
     if not no_git:
-        init_repo(benchmark_name, path) # TODO: bench_path?
+        init_repo(bench_path)
     
     # Create about.md
-    create_about(benchmark_name, path, about) # TODO: bench_path?
+    create_about(benchmark_name, bench_path, about)
 
     # Create a benchmarks folder with tasks in them
     tasks_path = os.path.join(bench_path, "benchmarks")
     os.mkdir(tasks_path)
+    
     for task_name, task_path in tasks:
         setup_task(tasks_path, task_name, task_path)
 
-    to_run = input(" Would you like to run the benchmark? y/n? ")
+    to_run = input("Would you like to run the benchmark? y/n? ")
     print()
     if to_run in ['y', 'Y', 'yes', "YES", 'Yes', 'yyes']:
-        benchmark = Bench(bench_path, "something")
+        benchmark = Bench(bench_path)
 
 
-# What us creating a new task
 @click.command()
-@click.argument('task_name', required = True)
-# @click.option()
-def add_task(task_name):
-    """Setting up a new task."""
-    # new_task = PromptTask()
-    click.echo("Adding " + task_name)
+@click.argument('benchmark_path', required = True, type=str)
+@click.argument('task_name',  required = True, type=str)
+@click.argument('task_path',  required = True, type=str)
+def add_task(benchmark_path, task_name, task_path):
+    """Set up a new task."""
+    bench_path = os.path.abspath(benchmark_path)
+    if os.path.exists(bench_path):
+        tasks_path = os.path.join(bench_path, "benchmarks")
+        if not os.path.exists(tasks_path):
+            os.mkdir(tasks_path)
+        setup_task(tasks_path, task_name, task_path)
+    else:
+        click.echo("No benchmark reposiory at " + bench_path)
     
 
 @click.command()
-@click.argument('benchmark',type=str, required = True)
-def run(benchmark: str):
+@click.argument('benchmark_path', required = True, type=str)
+def run(benchmark_path: str):
     """Running the benchmark and generating logs"""
-    bench_path = os.path.join(os.getcwd(), benchmark)
+    bench_path = os.path.abspath(benchmark_path)
     
-    # TODO: Fix relPath case
     click.echo(f"Running {benchmark.rsplit('/',maxsplit=1)[1]} now")
-    benchmark = Bench(benchmark, "something")
+    benchmark = Bench(bench_path)
+
 
 @click.command()
 @click.argument('task_name', required = True)
@@ -166,10 +181,10 @@ def run_task(task_name):
 
 
 cli.add_command(init)
-cli.add_command(run)
 cli.add_command(add_task)
-cli.add_command(run_task)
-cli.add_command(generate_demo_bench)
+cli.add_command(run)
+# cli.add_command(run_task)
+# cli.add_command(generate_demo_bench)
 
 
 if __name__ == "__main__":
