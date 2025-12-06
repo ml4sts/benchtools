@@ -44,6 +44,6 @@ Repository = "https://github.com/ml4sts/benchtools"
 
 
 [project.scripts]
-bench-cli = "benchtools.cli:main"
+benchtool = "benchtools.cli:benchtool"
 
 

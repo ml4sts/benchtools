@@ -9,7 +9,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'benchtool = benchtools.cli:cli',
+            'benchtool = benchtools.cli:benchtool',
         ],
     },
 )

@@ -6,7 +6,7 @@ from benchtools.runner import Bench
 # from task import PromptTask
 
 @click.group()
-def cli():
+def benchtool():
     """
     BenchTools is a tool that helps researchers set up benchmarks.
     """
@@ -180,12 +180,8 @@ def run_task(task_name):
     click.echo(f"Running {task_name} now")
 
 
-cli.add_command(init)
-cli.add_command(add_task)
-cli.add_command(run)
-# cli.add_command(run_task)
-# cli.add_command(generate_demo_bench)
-
-
-if __name__ == "__main__":
-    cli()
+benchtool.add_command(init)
+benchtool.add_command(add_task)
+benchtool.add_command(run)
+# benchtool.add_command(run_task)
+# benchtool.add_command(generate_demo_bench)
