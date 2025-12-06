@@ -4,6 +4,20 @@ a python library designed to help people design and run LLM benchmarks
 
 **warning** currently just an outline, has not yet run
 
+
+## Usage 
+
+### CLI 
+
+``` 
+benchtool init <benchmark_name>
+```
+To generate a folder structure for the Benchmark
+
+The system asks conceptual questions about the benchmark to align user's thoughts with the BetterBench checklist
+
+
+
 ## Orientation to the Repo
 
 - the `benchtools` folder is the code for the library
