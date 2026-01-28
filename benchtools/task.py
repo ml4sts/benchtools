@@ -4,6 +4,7 @@ import os
 import yaml # requires pyyaml
 import pandas
 from ollama import chat, ChatResponse, Client
+from benchtools.logger import init_logger, log_agent_interaction
 
 # from scorerers import exact_match
 # scoring_fx = {"exact_match": exact_match}
@@ -15,7 +16,7 @@ class Task:
     """
 
     def __init__(
-        self, data_type, name, path, scoring_function=None, reference=None, runner_type="ollama"
+        self, data_type, task_name, path, log_path, scoring_function=None, reference=None, runner_type="ollama"
     ):
         """
         init a task object
@@ -37,18 +38,19 @@ class Task:
             to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
             to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         """
-        self.name = name
+        self.name = task_name
+        self.log_path = log_path
         self.sub_tasks = []
         self.answers = []
         match data_type:
             case 'csv':
-                prompt, answer = from_txt_csv(path)
-                self.sub_tasks=(prompt)
-                self.answers=(answer)
+                prompts, answers = from_txt_csv(path)
+                self.sub_tasks += prompts
+                self.answers += answers
             case 'yml':
-                prompt, answer = from_yaml(path)
-                self.sub_tasks=(prompt)
-                self.answers=(answer)
+                prompts, answers = from_yaml(path)
+                self.sub_tasks += prompts
+                self.answers += answers
 
 
         if type(scoring_function) is str:
@@ -60,6 +62,7 @@ class Task:
         self.runner_type = runner_type
         self.responses = []
 
+        init_logger(self.log_path, self.name)
 
 
     def run(self, model, api_url=None):
@@ -75,7 +78,7 @@ class Task:
         """
 
         for sub_task in self.sub_tasks:
-            print(sub_task)
+            # print(sub_task)
 
             match self.runner_type:
                 case "ollama":
@@ -120,6 +123,8 @@ class Task:
                 case _:
                     print(f"Runner type {self.runner_type} not supported")
                     return None
+                
+            log_agent_interaction(sub_task, response.message.content)
 
 
     def score(self, response):
