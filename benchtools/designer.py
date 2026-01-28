@@ -3,6 +3,7 @@
 import os
 import shutil
 import requests
+from datasets import load_dataset
 # from pathlib import Path # ???
 
 
@@ -13,6 +14,8 @@ def build_dir(bench_path):
     # Create a benchmarks folder with tasks in them
     tasks_path = os.path.join(bench_path, "benchmarks")
     os.mkdir(tasks_path)
+    log_path = os.path.join(bench_path, "logs")
+    os.mkdir(log_path)
 
 ### Generate an about path from the description of the user 
 def create_about(bench_name, bench_path, text):
@@ -44,11 +47,17 @@ def init_repo(bench_path):
 
 
 # Create a benchmarks folder with tasks in them
-def setup_task(tasks_path, task_name, task_path):
+def setup_task(tasks_path: str, task_name: str, task_path: str):
 
     print(f"Setting up {task_name}...", end='')
     task_folder = os.path.join(tasks_path, task_name)
     os.mkdir(task_folder) # TODO: check if folder exists and handle
+
+    if task_path.startswith('openai'):
+        download_dataset(task_folder, task_path)
+        print("Success")
+        return
+
 
     # Path could be absolute or relative, check and work accordingly
     if not task_path.startswith('/'):
@@ -65,3 +74,19 @@ def setup_task(tasks_path, task_name, task_path):
     else:
         shutil.copy2(task_path, task_folder)
     print("Success")
+
+def download_dataset(task_folder: str, hf_path: str):
+    with open(os.path.join(task_folder, 'task.txt'), 'w') as f:
+        f.write('{p}')
+
+    dataset = load_dataset(hf_path)
+    dataset_test = dataset['test']
+    
+    with open(os.path.join(task_folder, 'values.csv'), 'w') as f:
+        f.write('p,res')
+        for row in dataset_test:
+            prompt = row['prompt']
+            answer = row['canonical_solution']
+            f.write(f"{prompt,answer}")
+
+
