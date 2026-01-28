@@ -1,8 +1,11 @@
-import logging 
 import os 
-#agent_log.text that is if we will like to name it that way , it could be anything 
-agent_name = os.path.join(os.getcwd(), 'agent_log.txt')
-logging.basicConfig(filename=agent_name, 
+import logging 
+
+log_folder: str
+
+def init_logger(log_path, task_name):
+    log_file = os.path.join(log_path, f'{task_name}_log.txt')
+    logging.basicConfig(filename=log_file, 
                     level=logging.INFO, format= '%(asctime)s - %(levelname)s - %(message)s')
 
 def log_agent_interaction(agent_input, agent_output):
