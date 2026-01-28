@@ -10,7 +10,6 @@ def benchtool():
     """
     pass
 
-# TODO: Import from designer
 # Initialize the benchmark 
 @benchtool.command()
 @click.argument('benchmark-name', required=False)
@@ -59,6 +58,7 @@ def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
     if to_run in ['y', 'Y']:
         benchmark.run()
 
+## TODO: Is it computationally better to use pickle to save the object in the benchmark folder??
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
@@ -70,13 +70,13 @@ def add_task(benchmark_path, task_name, task_path):
     if os.path.exists(bench_path):
         bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
         benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
-        benchmark.new_task(task_name, task_path)
+        benchmark.add_task(task_name, task_path)
     else:
         click.echo("No benchmark reposiory at " + bench_path)
     
 
 @benchtool.command()
-@click.argument('benchmark_path', required = True, type=str)
+@click.argument('benchmark-path', required = True, type=str)
 def run(benchmark_path: str):
     """Running the benchmark and generating logs"""
     bench_path = os.path.abspath(benchmark_path)
@@ -88,8 +88,13 @@ def run(benchmark_path: str):
 
 
 @benchtool.command()
+@click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
-def run_task(task_name):
+def run_task(benchmark_path: str, task_name):
     """Running the tasks and generating logs"""
-    
-    click.echo(f"Running {task_name} now")
+    bench_path = os.path.abspath(benchmark_path)
+    if os.path.exists(bench_path):
+        bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
+        benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
+        click.echo(f"Running {task_name} now")
+        benchmark.run([task_name])
