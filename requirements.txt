@@ -3,6 +3,8 @@ pandas
 click
 ollama
 openai
+myst-nb
+myst-parser
 sphinx
 sphinx-click
 sphinx-design
