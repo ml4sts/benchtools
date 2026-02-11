@@ -3,3 +3,7 @@ pandas
 click
 ollama
 openai
+sphinx
+sphinx-click
+sphinx-design
+pydata_sphinx_theme
