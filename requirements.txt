@@ -3,6 +3,7 @@ pandas
 click
 ollama
 openai
+datasets
 myst-nb
 myst-parser
 sphinx
