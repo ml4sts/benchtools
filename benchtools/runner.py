@@ -10,10 +10,18 @@ class Bench():
     '''
     def __init__(self, name, path):
         '''
+        initialize the benchmark object with the name and path to the benchmark folder.
+
+        Parameters:
+        -----------
+        name: str
+            name of the benchmark will be used for folder
+        path: str or buffer
+            path to the benchmark folder. If the folder does not exist, it will be created 
         '''
         # load tasks from file strucutre and instantiate task objects for each, store those in a list.
         #    loading will 
-        self.bench_name = name
+        self.bench_name = name.strip().replace(" ", "_").lower()
         self.bench_path = path
         self.tasks_folder = os.path.join(self.bench_path, 'benchmarks')
         self.log_folder = os.path.join(self.bench_path, 'logs')
@@ -22,6 +30,22 @@ class Bench():
     
 
     def build(self, about_text, no_git, new_tasks) -> bool:
+        '''
+        
+        Parameters:
+        -----------
+        about_text: str
+            description of the benchmark to be included in the about.md file
+        no_git: bool
+            whether to initialize a git repository in the benchmark folder
+        new_tasks: list of tuples (task_name, task_path)
+            list of tasks to be added to the benchmark. Each task is represented as a tuple containing
+
+        Returns:
+        --------        
+        self.built : bool
+            True if the benchmark was successfully built, False otherwise
+        '''
 
         # Create benchmark skeleton 
         build_dir(self.bench_path)
@@ -41,12 +65,22 @@ class Bench():
 
 
     def add_task(self, task_name, task_path):
+        
         if self.built:
             self.tasks.append(setup_task(self.tasks_folder, task_name, task_path))
 
 
     def run(self, tasks_torun=[], model='gemma3', api_url=None):
         '''
+        Run the benchmark by running each task in the benchmark and logging the interactions.
+        Parameters:
+-----------
+tasks_torun: list of str
+    A list of task names to run. If empty, all tasks will be run.
+model: str default 'gemma3'
+    The name of the model to use for running the tasks. Default is 'gemma3'.
+api_url: str
+    The URL of the API to use for running the tasks. If None, the default API
         '''
         tasks = os.listdir(self.tasks_folder)
         for task in tasks:

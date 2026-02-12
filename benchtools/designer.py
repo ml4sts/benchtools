@@ -9,6 +9,18 @@ from datasets import load_dataset
 
 ### Create benchmark skeleton
 def build_dir(bench_path):
+    '''
+    Create benchmrk skeleton 
+
+    Parameters:
+    -----------
+    bench_path: str
+        The path to the benchmark folder. This folder will be created if it does not exist.
+
+    Returns:
+    --------
+    
+    '''
     
     os.mkdir(bench_path)
     # Create a benchmarks folder with tasks in them
@@ -31,6 +43,14 @@ def create_about(bench_name, bench_path, text):
 
 ### Initialize git repository
 def init_repo(bench_path):
+    '''
+    Initialize the benchmark folder as git repo with gitiginore for python 
+
+    Parameters:
+    -----------
+    bench_path: str
+        The path to the benchmark folder
+    '''
     current_dir = os.getcwd()
     os.chdir(bench_path)
     try:
