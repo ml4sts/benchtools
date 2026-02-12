@@ -7,7 +7,6 @@ from datasets import load_dataset
 # from pathlib import Path # ???
 
 
-### Create benchmark skeleton
 def build_dir(bench_path):
     '''
     Create benchmrk skeleton 
