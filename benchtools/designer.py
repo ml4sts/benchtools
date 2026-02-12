@@ -7,8 +7,11 @@ from datasets import load_dataset
 # from pathlib import Path # ???
 
 
-### Create benchmark skeleton
 def build_dir(bench_path):
+    """
+    Create benchmark skeleton
+    :param bench_path: Path to where the folder will be created
+    """
     
     os.mkdir(bench_path)
     # Create a benchmarks folder with tasks in them

@@ -1,7 +1,7 @@
-.. BenchTools documentation master file, created by
+<!-- BenchTools documentation master file, created by
    sphinx-quickstart on Wed Feb 11 16:55:24 2026.
    You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   contain the root `toctree` directive. -->
 
 
 
@@ -52,5 +52,14 @@ There are two main ways to use BenchTools. The user can mix and match between th
 
 cli.md
 pylib.md
+
+```
+
+
+```{eval-rst}
+.. click:: benchtools.cli:benchtool
+   :prog: benchtools 
+   :nested: full
+   :commands:
 
 ```

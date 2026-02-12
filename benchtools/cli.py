@@ -18,7 +18,28 @@ def benchtool():
 @click.option('--no-git',      help="Don't make benchmark a git repository. Default is False", is_flag=True)
 @click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>", default=[], type=(str, str), multiple=True)
 def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
-    """Initializing a new benchmark."""
+    """
+    Initializes a new benchmark.
+    
+    Even though the command doesn't have any required arguments. If the <benchmark-name> argument wasn't passed the interface will ask for a name and wouldn't continue without one.
+
+    This command is the starting point. With this, the process of creating a benchmark structure and guiding the user into the correct mindset of a benchmark.
+
+    After running this command, the folder structure of the benchmark will be created. Task files will be loaded, the user will be asked a series of questions to demonstrate the correct mindset of benchmarking, and finally, the user will be given the choice to run the benchmark or not.
+
+    :param benchmark_name: The name of the benchmark and the folder to be created.
+    :type benchmark_name: str.
+    :param path: The path in which the benchmark folder will be created. Default is `.`.
+    :type path: str.
+    :param about: A description of the benchmark, its purpose and its goal. Will be used to create an `about.md`.
+    :type about: str.
+    :param no_git: For the user to choose not to initialize a git repository for the benchmark.
+    :type no_git: bool.
+    :param tasks: A list of tasks can be provided from the get go to be loaded into the benchmark folder. The list consists of tuples of <name>,<path>
+    :type tasks: str,str.
+
+
+    """
 
     if not benchmark_name:
         benchmark_name = click.prompt("Enter the name of your benchmark/project (will be used as folder and repo name)", type=str)
