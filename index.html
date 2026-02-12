@@ -329,10 +329,10 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <p>… BenchTools documentation master file, created by
-sphinx-quickstart on Wed Feb 11 16:55:24 2026.
-You can adapt this file completely to your liking, but it should at least
-contain the root <code class="docutils literal notranslate"><span class="pre">toctree</span></code> directive.</p>
+  <!-- BenchTools documentation master file, created by
+   sphinx-quickstart on Wed Feb 11 16:55:24 2026.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive. -->
 <section class="tex2jax_ignore mathjax_ignore" id="benchtools">
 <h1>BenchTools<a class="headerlink" href="#benchtools" title="Link to this heading">#</a></h1>
 <p>A library for building and running benchmarks</p>
@@ -370,10 +370,164 @@ and then the specific tasks in one of the forms above</p>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pylib.html">BenchTools as a Python Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#benchtool">benchtool</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pylib.html">BenchTools as a Python Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pylib.html#design-benchmark-directory">Design Benchmark Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pylib.html#build-directory">Build Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pylib.html#id1">Build Directory</a></li>
+</ul>
+</li>
 </ul>
 </div>
+<section id="benchtools">
+<h3>benchtools<a class="headerlink" href="#benchtools" title="Link to this heading">#</a></h3>
+<p>BenchTools is a tool that helps researchers set up benchmarks.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="benchtools-add-task">
+<h4>add-task<a class="headerlink" href="#benchtools-add-task" title="Link to this heading">#</a></h4>
+<p>Set up a new task.</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>add-task<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BENCHMARK_PATH<span class="w"> </span>TASK_NAME<span class="w"> </span>TASK_PATH
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-add-task-arg-BENCHMARK_PATH">
+<span class="sig-name descname"><span class="pre">BENCHMARK_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-add-task-arg-BENCHMARK_PATH" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-add-task-arg-TASK_NAME">
+<span class="sig-name descname"><span class="pre">TASK_NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-add-task-arg-TASK_NAME" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-add-task-arg-TASK_PATH">
+<span class="sig-name descname"><span class="pre">TASK_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-add-task-arg-TASK_PATH" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="benchtools-init">
+<h4>init<a class="headerlink" href="#benchtools-init" title="Link to this heading">#</a></h4>
+<p>Initializes a new benchmark.</p>
+<p>Even though the command doesn’t have any required arguments. If the &lt;benchmark-name&gt; argument wasn’t passed the interface will ask for a name and wouldn’t continue without one.</p>
+<p>This command is the starting point. With this, the process of creating a benchmark structure and guiding the user into the correct mindset of a benchmark.</p>
+<p>After running this command, the folder structure of the benchmark will be created. Task files will be loaded, the user will be asked a series of questions to demonstrate the correct mindset of benchmarking, and finally, the user will be given the choice to run the benchmark or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param benchmark_name<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The name of the benchmark and the folder to be created.</p>
+</dd>
+<dt class="field-even">type benchmark_name<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param path<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path in which the benchmark folder will be created. Default is <cite>.</cite>.</p>
+</dd>
+<dt class="field-even">type path<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param about<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A description of the benchmark, its purpose and its goal. Will be used to create an <cite>about.md</cite>.</p>
+</dd>
+<dt class="field-even">type about<span class="colon">:</span></dt>
+<dd class="field-even"><p>str.</p>
+</dd>
+<dt class="field-odd">param no_git<span class="colon">:</span></dt>
+<dd class="field-odd"><p>For the user to choose not to initialize a git repository for the benchmark.</p>
+</dd>
+<dt class="field-even">type no_git<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool.</p>
+</dd>
+<dt class="field-odd">param tasks<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of tasks can be provided from the get go to be loaded into the benchmark folder. The list consists of tuples of &lt;name&gt;,&lt;path&gt;</p>
+</dd>
+<dt class="field-even">type tasks<span class="colon">:</span></dt>
+<dd class="field-even"><p>str,str.</p>
+</dd>
+</dl>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>init<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span><span class="o">[</span>BENCHMARK_NAME<span class="o">]</span>
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-init-p">
+<span id="cmdoption-benchtools-init-path"></span><span class="sig-name descname"><span class="pre">-p</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--path</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-init-p" title="Link to this definition">#</a></dt>
+<dd><p>The path where the new benchmark repository will be placed</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-init-a">
+<span id="cmdoption-benchtools-init-about"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--about</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;about&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-init-a" title="Link to this definition">#</a></dt>
+<dd><p>Benchmark describtion. Content will go in the about.md file</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-init-no-git">
+<span class="sig-name descname"><span class="pre">--no-git</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-init-no-git" title="Link to this definition">#</a></dt>
+<dd><p>Don’t make benchmark a git repository. Default is False</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-init-t">
+<span id="cmdoption-benchtools-init-tasks"></span><span class="sig-name descname"><span class="pre">-t</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--tasks</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;tasks&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-init-t" title="Link to this definition">#</a></dt>
+<dd><p>Add benchmark tasks to your benchmark (can add multiple). Format: &lt;name&gt; &lt;path&gt;</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-init-arg-BENCHMARK_NAME">
+<span class="sig-name descname"><span class="pre">BENCHMARK_NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-init-arg-BENCHMARK_NAME" title="Link to this definition">#</a></dt>
+<dd><p>Optional argument</p>
+</dd></dl>
+
+</section>
+<section id="benchtools-run">
+<h4>run<a class="headerlink" href="#benchtools-run" title="Link to this heading">#</a></h4>
+<p>Running the benchmark and generating logs</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BENCHMARK_PATH
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-arg-BENCHMARK_PATH">
+<span class="sig-name descname"><span class="pre">BENCHMARK_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-run-arg-BENCHMARK_PATH" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="benchtools-run-task">
+<h4>run-task<a class="headerlink" href="#benchtools-run-task" title="Link to this heading">#</a></h4>
+<p>Running the tasks and generating logs</p>
+<p class="rubric">Usage</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>run-task<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BENCHMARK_PATH<span class="w"> </span>TASK_NAME
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-arg-BENCHMARK_PATH">
+<span class="sig-name descname"><span class="pre">BENCHMARK_PATH</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-run-task-arg-BENCHMARK_PATH" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-arg-TASK_NAME">
+<span class="sig-name descname"><span class="pre">TASK_NAME</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-benchtools-run-task-arg-TASK_NAME" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
 </section>
 </section>
 
