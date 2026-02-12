@@ -60,12 +60,8 @@ def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
             click.echo("The passed path doesn't exist.")
             exit(4356)
 
-    # Handle passed path to setup an absolute benchmark path
-    if path.startswith('/'):
-        abs_path = path
-    else:
-        abs_path = os.path.abspath(path)
-    bench_path = os.path.join(abs_path, benchmark_name)
+    # create full path
+    bench_path = os.path.join(path, benchmark_name)
     
     click.echo(f"Creating {benchmark_name} in {bench_path}")
     benchmark = Bench(benchmark_name, bench_path)
@@ -82,8 +78,8 @@ def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
 ## TODO: Is it computationally better to use pickle to save the object in the benchmark folder??
 
 @benchtool.command()
-@click.argument('benchmark-path', required = True, type=str)
-@click.argument('task-name',  required = True, type=str)
+@click.argument('benchmark-path', required = True, type=str, help="The path to the benchmark repository where the task will be added.")
+@click.argument('task-name',  required = True, type=str, help="The name of the task to be added. This will be used as the folder name for the task and should be unique within the benchmark.")
 @click.argument('task-path',  required = True, type=str)
 def add_task(benchmark_path, task_name, task_path):
     """Set up a new task."""
