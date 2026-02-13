@@ -1,4 +1,4 @@
-# module to run benchmarks
+# module to run tasks
 import os
 from benchtools.task import Task
 from benchtools.designer import build_dir, init_repo, create_about, setup_task
@@ -23,7 +23,7 @@ class Bench():
         #    loading will 
         self.bench_name = name.strip().replace(" ", "_").lower()
         self.bench_path = path
-        self.tasks_folder = os.path.join(self.bench_path, 'benchmarks')
+        self.tasks_folder = os.path.join(self.bench_path, 'tasks')
         self.log_folder = os.path.join(self.bench_path, 'logs')
         self.tasks = []
         self.built = os.path.exists(self.bench_path)

@@ -5,7 +5,7 @@ setup(
     version='0.1',
     packages=find_namespace_packages(),
     install_requires=[
-        'Click', 'ollama', 'pandas', 'yaml'
+        'Click', 'ollama', 'pandas', 'pyyaml', 'datasets'
     ],
     entry_points={
         'console_scripts': [

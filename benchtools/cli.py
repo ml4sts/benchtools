@@ -16,27 +16,22 @@ def benchtool():
 @click.option('-p',  '--path', help="The path where the new benchmark repository will be placed", default=".", type=str)
 @click.option('-a', '--about', help="Benchmark describtion. Content will go in the about.md file", default="", type=str)
 @click.option('--no-git',      help="Don't make benchmark a git repository. Default is False", is_flag=True)
-@click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>", default=[], type=(str, str), multiple=True)
-def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
+@click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>",
+               default=[], type=(str, str), multiple=True)
+def init(benchmark_name, path, about, no_git, tasks):
     """
     Initializes a new benchmark.
     
-    Even though the command doesn't have any required arguments. If the <benchmark-name> argument wasn't passed the interface will ask for a name and wouldn't continue without one.
+    Even though the command doesn't have any required arguments. If the <benchmark-name> 
+    argument wasn't passed the interface will ask for a name and wouldn't continue without one.
 
-    This command is the starting point. With this, the process of creating a benchmark structure and guiding the user into the correct mindset of a benchmark.
+    This command is the starting point. With this, the process of creating a benchmark 
+    structure and guiding the user into the correct mindset of a benchmark.
 
-    After running this command, the folder structure of the benchmark will be created. Task files will be loaded, the user will be asked a series of questions to demonstrate the correct mindset of benchmarking, and finally, the user will be given the choice to run the benchmark or not.
-
-    :param benchmark_name: The name of the benchmark and the folder to be created.
-    :type benchmark_name: str.
-    :param path: The path in which the benchmark folder will be created. Default is `.`.
-    :type path: str.
-    :param about: A description of the benchmark, its purpose and its goal. Will be used to create an `about.md`.
-    :type about: str.
-    :param no_git: For the user to choose not to initialize a git repository for the benchmark.
-    :type no_git: bool.
-    :param tasks: A list of tasks can be provided from the get go to be loaded into the benchmark folder. The list consists of tuples of <name>,<path>
-    :type tasks: str,str.
+    After running this command, the folder structure of the benchmark will be created. 
+    Task files will be loaded, the user will be asked a series of questions to demonstrate 
+    the correct mindset of benchmarking, and finally, the user will be given the choice to 
+    run the benchmark or not.
 
 
     """
@@ -71,18 +66,24 @@ def init(benchmark_name:str, path:str, about:str, no_git:bool, tasks:(str,str)):
     # TODO: Call betterbench CLI here
 
     # Run?
-    to_run = click.prompt("Would you like to run the benchmark?", type=click.Choice(['y','n'], case_sensitive=False), show_choices=True)
-    if to_run in ['y', 'Y']:
+    to_run = click.confirm("Do you want to run the benchmark now?", default=True)
+    if to_run:
         benchmark.run()
 
 ## TODO: Is it computationally better to use pickle to save the object in the benchmark folder??
 
+
 @benchtool.command()
-@click.argument('benchmark-path', required = True, type=str, help="The path to the benchmark repository where the task will be added.")
-@click.argument('task-name',  required = True, type=str, help="The name of the task to be added. This will be used as the folder name for the task and should be unique within the benchmark.")
+@click.argument('benchmark-path',  required = True, type=str,)
+# 
+@click.argument('task-name',  required = True, type=str,)
 @click.argument('task-path',  required = True, type=str)
 def add_task(benchmark_path, task_name, task_path):
-    """Set up a new task."""
+    """
+    Set up a new task.
+
+    # TODO explain arguments or convert to options. to use help
+    """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
         bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
@@ -95,7 +96,9 @@ def add_task(benchmark_path, task_name, task_path):
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 def run(benchmark_path: str):
-    """Running the benchmark and generating logs"""
+    """
+    Running the benchmark and generating logs
+    """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
         bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
@@ -108,7 +111,9 @@ def run(benchmark_path: str):
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
 def run_task(benchmark_path: str, task_name):
-    """Running the tasks and generating logs"""
+    """
+    Running the tasks and generating logs
+    """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
         bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path

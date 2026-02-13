@@ -54,7 +54,7 @@ class Task:
 
 
         if type(scoring_function) is str:
-            self.scoring_function = scoring_fx[scoring_function]
+            self.scoring_function = scoring_function[scoring_function]
         else:
             self.scoring_function = scoring_function
 
