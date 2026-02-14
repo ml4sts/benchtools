@@ -11,6 +11,6 @@
 ## Benchmark class
 <!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.runner.Benchmark
+.. autoclass:: benchtools.runner.Bench
     :members:
 ```
