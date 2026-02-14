@@ -22,13 +22,9 @@ def init(benchmark_name, path, about, no_git, tasks):
     """
     Initializes a new benchmark.
     
-    Even though the command doesn't have any required arguments. If the <benchmark-name> 
-    argument wasn't passed the interface will ask for a name and wouldn't continue without one.
+    Benchmark-name is required, if not provided, requested interactively.
 
-    This command is the starting point. With this, the process of creating a benchmark 
-    structure and guiding the user into the correct mindset of a benchmark.
-
-    After running this command, the folder structure of the benchmark will be created. 
+    this command creates the folder for the benchmark. 
     Task files will be loaded, the user will be asked a series of questions to demonstrate 
     the correct mindset of benchmarking, and finally, the user will be given the choice to 
     run the benchmark or not.
@@ -37,7 +33,7 @@ def init(benchmark_name, path, about, no_git, tasks):
     """
 
     if not benchmark_name:
-        benchmark_name = click.prompt("Enter the name of your benchmark/project (will be used as folder and repo name)", type=str)
+        benchmark_name = click.prompt("Enter the name of your benchmark (will be used as folder and repo name)", type=str)
     benchmark_name = benchmark_name.strip().replace(" ", "_").lower()
 
     # TODO: Handle existing benchmark
