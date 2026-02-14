@@ -16,7 +16,9 @@ kernelspec:
 # BenchTools as a Python Library
 
 ```{code-cell}
-import benchtools
+from benchtools import Bench
+
+Bench('Tiniest Demo', concept ='the simplest bench')
 ```
 
 

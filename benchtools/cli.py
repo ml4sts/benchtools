@@ -1,6 +1,6 @@
 import os
 import click
-from benchtools.runner import Bench
+from benchtools.designer import Bench
 from benchtools.betterbench import betterbench, get_score
 # from task import PromptTask
 
@@ -54,8 +54,8 @@ def init(benchmark_name, path, about, no_git, tasks):
     benchmark = Bench(benchmark_name, bench_path)
 
     # Build the benchmark folder
-    if benchmark.build(about, no_git, tasks):
-        click.echo(f"Built {benchmark_name} benchmark successfully!")
+    if benchmark.write(about, no_git, tasks):
+        click.echo(f"Created {benchmark_name} benchmark successfully!")
 
     # TODO: Call betterbench CLI here
     # betterbench()
