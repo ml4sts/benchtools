@@ -18,7 +18,34 @@ kernelspec:
 ```{code-cell}
 from benchtools import Bench
 
-Bench('Tiniest Demo', concept ='the simplest bench')
+tiny_bench = Bench('Tiniest Demo', concept ='a simplest test')
+```
+
+
+```{code-cell}
+from benchtools import Task
+
+tt = Task('greeting','Hello','hi', 'contains')
+```
+
+
+```{code-cell}
+tiny_bench.add_task(tt)
+```
+
+
+```{code-cell}
+response = tt.run()
+```
+
+
+```{code-cell}
+tt.score(response)
+```
+
+
+```{code-cell}
+tiny_bench.run()
 ```
 
 

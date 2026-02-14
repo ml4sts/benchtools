@@ -7,10 +7,8 @@ from benchtools.designer import build_dir, init_repo, create_about, setup_task
 
 class BenchRunner():
     '''
+    TODO: this might not be how this ends up, but thi si scurrent thign
     '''
-
-    
-
 
     def run(self, tasks_torun=[], model='gemma3', api_url=None):
         '''

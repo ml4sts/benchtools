@@ -4,7 +4,6 @@ import os
 import shutil
 import requests
 import yaml
-from datasets import load_dataset
 # from pathlib import Path # ???
 
 
@@ -30,20 +29,19 @@ class Bench():
         Path to tasks folder insise benchmark folder
     log folder:
         Path to logs folder inside benchmark folder
-    tasks: tuple<str,str>
-        A tas
+    tasks: list of Task objects
+        
     is_built: bool
 
     Methods
     -------
-    build()
         Build the benchmark directory.
     add_task()
         Add new tasks to the benchmark
     run()
         Run one task or all tasks of the benchmark.
     '''
-    def __init__(self, name, path = '.',concept = None):
+    def __init__(self, name, path = '.',concept = None, tasks = []):
         '''
         Initialize the benchmark object with the name and path to the benchmark folder.
 
@@ -54,16 +52,19 @@ class Bench():
         path: str or buffer
             path where the benchmark will be stored 
         
+        tasks: list of Task objects
+            list of tasks to be included in the benchmark. Each task should be an instance of the
+        
         '''
         # load tasks from file structre and instantiate task objects for each, store those in a list.
         #    loading will 
         self.display_name = name.strip()
-        self.bench_concept  = concept if concept else f'a benchmark about {name.strip()}'
+        self.concept  = concept if concept else f'a benchmark about {name.strip()}'
         self.bench_name = name.strip().replace(" ", "_").lower()
         self.base_path = path
         self.bench_path = os.path.join(path, self.bench_name)
         self.tasks_folder = os.path.join(self.bench_path, 'tasks')
-        self.tasks = []
+        self.tasks = tasks # initialize a task object for each task.
         self.written = os.path.exists(self.bench_path)
 
     @classmethod
@@ -84,12 +85,25 @@ class Bench():
         if not os.path.exists(bench_path):
             raise ValueError("The passed path doesn't exist.")
         
+        task_folder = os.path.join(bench_path, 'tasks')
         
-    
+        with open(os.path.join(bench_path, 'info.yml'), 'r') as f:
+            info = yaml.safe_load(f)
 
-    def initialize_dir(self, about_body=None, no_git=False):
+        task_list = os.listdir(task_folder)
+        tasks = []
+        for task in task_list:
+            # load the tasks
+            task_path = os.path.join(task_folder, task)
+            content = os.listdir(task_path)
+
+        bench = cls(info['bench_name'], bench_path, info['concept'])
+        return bench
+        
+
+    def initialize_dir(self, no_git=False):
         '''
-        write out the benchmark folder 
+        write out the benchmark folder initially
         
         Parameters:
         -----------
@@ -116,8 +130,8 @@ class Bench():
 
         # Create about.md
         about_path = os.path.join(self.bench_path, "about.md")
-        if not about_body:
-            about_body = "a {self.bench_name}."
+        if self:
+            about_body = "*{self.concept}*"
         about_text= about_template.format({'bench_name':self.bench_name, 
                                            'text':about_body})
         with open(about_path, 'w') as file:
@@ -137,11 +151,18 @@ class Bench():
 
     def write(self):
         info = {'bench_name': self.bench_name, 
-                'bench_concept': self.bench_concept, 
+                'concept': self.concept, 
                 'bench_path': self.bench_path, 
                 'tasks': self.tasks}
         with open(os.path.join(self.bench_path, 'info.yml'), 'w') as f:
             yaml.dump(info, f)
+
+        # likely also writ the tasks and the about, if need to be updated
+
+    
+    def write_tasks(self):
+        for task in self.tasks:
+            task.write(self.tasks_folder)
         
 
     ### Initialize git repository
@@ -174,68 +195,6 @@ class Bench():
         self.tasks.append(task_name)
             # setup_task(self.tasks_folder, task_name, task_source))
 
-    # Create a benchmarks folder with tasks in them
-    def initialize_task_dir(tasks_path, task_name: str, task_source=None,
-                            is_huggingface=False):
-        '''
-        Initialize a new task folder in the benchmark repo
 
-        Parameters:
-        -----------
-        tasks_path: str
-            The path to the tasks folder inside the benchmark folder
-        task_name: str
-            The name of the task to be added. This will be used for the task folder name
-        task_source: str or buffer
-            The source of the task data. This can be a path to a local file or folder, 
-            or a Hugging Face dataset identifier. 
-            The content
-        is_huggingface: bool
-            Whether the task source is a Hugging Face dataset. If True, the task_source 
-            should be like ownser/dataset_name
-        '''
-
-        print(f"Setting up {task_name}...", end='')
-        task_folder = os.path.join(tasks_path, task_name)
-        os.mkdir(task_folder) # TODO: check if folder exists and handle
-
-        if is_huggingface:
-            download_dataset(task_folder, task_source)
-            print("Success")
-            return
-
-
-        # Path could be absolute or relative, check and work accordingly
-        # if not task_source.startswith('/'):
-        #     if task_source.startswith('./'):
-        #         # TODO: Path could have one or more `../` use relpath to fix this block 
-        #         task_source = task_source[2:]
-        #     task_source = os.path.join(os.getcwd(), task_source)
-            # print(f" path {task_source}\n\n") # Debugging
-        
-        #  could be a single file or a folder check and work accordignly
-        if os.path.isdir(task_source):
-            for sub in os.listdir(task_source):
-                shutil.copy2(os.path.join(task_source, sub), task_folder)
-        else:
-            shutil.copy2(task_source, task_folder)
-        print("Success")
-
-    def download_dataset(task_folder: str, hf_path: str):
-        '''
-        dataset must have columns 'prompt' and 'canonical_solution' for now, can be expanded in the future.
-        '''
-        with open(os.path.join(task_folder, 'task.txt'), 'w') as f:
-            f.write('{p}')
-
-        dataset = load_dataset(hf_path)
-        dataset_test = dataset['test']
-        
-        with open(os.path.join(task_folder, 'values.csv'), 'w') as f:
-            f.write('p,res')
-            for row in dataset_test:
-                prompt = row['prompt']
-                answer = row['canonical_solution']
-                f.write(f"{prompt,answer}")
 
 

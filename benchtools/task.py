@@ -6,8 +6,9 @@ import pandas
 from ollama import chat, ChatResponse, Client
 from benchtools.logger import init_logger, log_agent_interaction
 
-# from scorerers import exact_match
-# scoring_fx = {"exact_match": exact_match}
+from datasets import load_dataset
+
+from scorers import scoring_fx_list, contains, exact_match
 
 
 class Task:
@@ -15,9 +16,8 @@ class Task:
     defines a basic prompt task with a simple scoring function
     """
 
-    def __init__(
-        self, task_name, prompt, reference, scoring_function=None, prompt_variants = None, 
-    ):
+    def __init__(self, task_name, prompt, reference=None, scoring_function=None,
+                  prompt_variants = None, storage_type = 'yaml'    ):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -37,24 +37,22 @@ class Task:
         if prompt_variants:
             self.sub_tasks = prompt_variants
             self.description = prompt 
+            self.reference = reference
         else:
             self.sub_tasks = [prompt]
+            self.reference = [reference]
             self.description = f"a basic prompt task with: {prompt}"
 
-        
-        self.reference = reference
 
-        if type(scoring_function) is str:
-            self.scoring_function = scoring_function[scoring_function]
+        self.storage_type = storage_type
+        if scoring_function: 
+            if isinstance(scoring_function, str):
+                self.scoring_function = scoring_fx_list.get(scoring_function, exact_match)
+            if isinstance(scoring_function, callable):
+                self.scoring_function = scoring_function
         else:
-            self.scoring_function = scoring_function
+            self.scoring_function = exact_match
 
-        
-        # self.responses = []
-
-        # self.logger = init_logger(self.log_path, self.name)
-
-    
 
     @classmethod
     def from_txt_csv(cls, task_name, task_folder):
@@ -81,12 +79,12 @@ class Task:
         
         description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        return cls(task_name, prompt_variants = storedTasks, reference=storedAnswers)
+        return cls(task_name, prommpt =description, prompt_variants = storedTasks,
+                    reference=storedAnswers, storage_type ='csv')
 
-        
 
     @classmethod
-    def from_yaml(yaml_file):
+    def from_yaml(cls, task_name, yaml_file):
         """
         Load tasks from a YAML file and generate PromptTask objects.
         Parameters
@@ -109,6 +107,7 @@ class Task:
             # Generate all possible value combinations using itertools.product
             keys = values_dict.keys()
             value_combinations = zip(*values_dict.values())
+            # T
             # Create a PromptTask for each combination
             for values in value_combinations:
                 value_mapping = dict(zip(keys, values))  # Pair keys with values
@@ -117,8 +116,88 @@ class Task:
                 storedTasks.append(filled_prompt)  # Store task
             for answer in answers:
                 storedAnswers.append(answer)
-        return (storedTasks, storedAnswers)
+        
+        description = f"a template based task with template:"
 
+        return cls(task_name,description , prompt_variants = storedTasks, reference=storedAnswers,
+                    storage_type ='yaml')
+    
+    @staticmethod
+    def from_hf_dataset(task_folder: str, hf_path: str):
+        '''
+        dataset must have columns 'prompt' and 'canonical_solution' for now, can be expanded in the future.
+        '''
+        with open(os.path.join(task_folder, 'task.txt'), 'w') as f:
+            f.write('{p}')
+
+        dataset = load_dataset(hf_path)
+        dataset_test = dataset['test']
+        
+        with open(os.path.join(task_folder, 'values.csv'), 'w') as f:
+            f.write('p,res')
+            for row in dataset_test:
+                prompt = row['prompt']
+                answer = row['canonical_solution']
+                f.write(f"{prompt,answer}")
+    
+    def write(self, target_path):
+        '''
+        write the task
+        '''
+        # choose the writer and call it 
+
+    # Create a benchmarks folder with tasks in them
+    def initialize_task_dir(tasks_path, task_name: str, task_source=None,
+                            is_huggingface=False):
+        '''
+        Initialize a new task folder in the benchmark repo
+
+        *probably to be deprecated* 
+
+        Parameters:
+        -----------
+        tasks_path: str
+            The path to the tasks folder inside the benchmark folder
+        task_name: str
+            The name of the task to be added. This will be used for the task folder name
+        task_source: str or buffer
+            The source of the task data. This can be a path to a local file or folder, 
+            or a Hugging Face dataset identifier. 
+            The content
+        is_huggingface: bool
+            Whether the task source is a Hugging Face dataset. If True, the task_source 
+            should be like ownser/dataset_name
+        '''
+
+        print(f"Setting up {task_name}...", end='')
+        task_folder = os.path.join(tasks_path, task_name)
+        os.mkdir(task_folder) # TODO: check if folder exists and handle
+
+        if is_huggingface:
+            download_dataset(task_folder, task_source)
+            print("Success")
+            return
+
+
+        # Path could be absolute or relative, check and work accordingly
+        # if not task_source.startswith('/'):
+        #     if task_source.startswith('./'):
+        #         # TODO: Path could have one or more `../` use relpath to fix this block 
+        #         task_source = task_source[2:]
+        #     task_source = os.path.join(os.getcwd(), task_source)
+            # print(f" path {task_source}\n\n") # Debugging
+        
+        #  could be a single file or a folder check and work accordignly
+        if os.path.isdir(task_source):
+            for sub in os.listdir(task_source):
+                shutil.copy2(os.path.join(task_source, sub), task_folder)
+        else:
+            shutil.copy2(task_source, task_folder)
+        print("Success")
+
+    
+
+    
     def run(self, model,runner_type="ollama", api_url=None):
         """
         run the task on the model

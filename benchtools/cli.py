@@ -65,7 +65,6 @@ def init(benchmark_name, path, about, no_git, tasks):
     if to_run:
         benchmark.run()
 
-## TODO: Is it computationally better to use pickle to save the object in the benchmark folder??
 
 
 @benchtool.command()
