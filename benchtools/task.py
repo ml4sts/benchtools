@@ -55,7 +55,7 @@ class Task:
 
 
     @classmethod
-    def from_txt_csv(cls, task_name, task_folder):
+    def from_txt_csv(cls, task_name, source_folder):
         '''
         load a template from txt and create task objects for each row of a csv
 
@@ -63,10 +63,10 @@ class Task:
         '''
         # using pandas to load the csv is easy, then use python string formatting to set up the final prompt to apss to the task constructor
         prompt = ""
-        with open(os.path.join(task_folder, "task.txt"), "r") as f:
+        with open(os.path.join(source_folder, "task.txt"), "r") as f:
             prompt = f.read()
 
-        value_answer_df = pandas.read_csv(os.path.join(task_folder, "values.csv"))
+        value_answer_df = pandas.read_csv(os.path.join(source_folder, "values.csv"))
         # answers = pandas.read_csv(os.path.join(task_folder, "results"))
         storedTasks = []
         storedAnswers = []

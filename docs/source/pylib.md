@@ -30,11 +30,6 @@ tt = Task('greeting','Hello','hi', 'contains')
 
 
 ```{code-cell}
-tiny_bench.add_task(tt)
-```
-
-
-```{code-cell}
 response = tt.run()
 ```
 
@@ -43,10 +38,42 @@ response = tt.run()
 tt.score(response)
 ```
 
+```{code-cell}
+tiny_bench.add_task(tt)
+```
+
 
 ```{code-cell}
 tiny_bench.run()
 ```
+
+
+```{code-cell}
+pre_built = Bench('math Demo', concept ='a math test')
+add_task = Task.from_txt_csv('../../demobench/add')
+pre_built.add_task(add_task)
+```
+
+
+```{code-cell}
+symb_task = Task.from_yaml('../../demobench/miscops')
+pre_built.add_task(symb_task)
+```
+
+```{code-cell}
+pre_built.write()
+```
+
+```{code-cell}
+pre_built.run()
+```
+
+
+```{code-cell}
+demo_bench = Bench.load('../../demobench')
+```
+
+
 
 
 
