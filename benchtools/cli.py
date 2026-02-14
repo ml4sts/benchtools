@@ -1,6 +1,7 @@
 import os
 import click
 from benchtools.runner import Bench
+from benchtools.betterbench import betterbench, get_score
 # from task import PromptTask
 
 @click.group()
@@ -128,6 +129,24 @@ def run_task(benchmark_path: str, task_name):
         benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
         click.echo(f"Running {task_name} now")
         benchmark.run([task_name])
+
+@benchtool.command()
+@click.argument('benchmark-path', required = True, type=str)
+def score(benchmark_path: str):
+    """
+    Running the tasks and generating logs
+
+    , help="The path to the benchmark repository where all the task reside."
+    , help="The name of the specific task you would like to run"
+    """
+    bench_path = os.path.abspath(benchmark_path)
+    if os.path.exists(bench_path):
+        bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
+        benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
+        click.echo(f"Scoring {benchmark.bench_name} now...")
+        score = get_score()
+        click.echo(f"Score: {score}")
+
 
 # For debugging
 if __name__ == '__main__':
