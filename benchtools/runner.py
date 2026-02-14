@@ -1,4 +1,4 @@
-# module to run tasks
+# module to create and run benchmarks
 import os
 from benchtools.task import Task
 from benchtools.designer import build_dir, init_repo, create_about, setup_task
@@ -10,7 +10,7 @@ class Bench():
     '''
     def __init__(self, name, path):
         '''
-        initialize the benchmark object with the name and path to the benchmark folder.
+        Initialize the benchmark object with the name and path to the benchmark folder.
 
         Parameters:
         -----------
@@ -74,13 +74,13 @@ class Bench():
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
------------
-tasks_torun: list of str
-    A list of task names to run. If empty, all tasks will be run.
-model: str default 'gemma3'
-    The name of the model to use for running the tasks. Default is 'gemma3'.
-api_url: str
-    The URL of the API to use for running the tasks. If None, the default API
+        -----------
+        tasks_torun: list of str
+            A list of task names to run. If empty, all tasks will be run.
+        model: str default 'gemma3'
+            The name of the model to use for running the tasks. Default is 'gemma3'.
+        api_url: str
+            The URL of the API to use for running the tasks. If None, the default API
         '''
         tasks = os.listdir(self.tasks_folder)
         for task in tasks:
@@ -92,12 +92,12 @@ api_url: str
                 elif file.endswith("yml"):
                     self.tasks.append(Task('yml', task, os.path.join(task_folder,file), self.log_folder))
 
-        tasks_torun = self.tasks if tasks_torun == [] else tasks_torun    
-        print(tasks_torun)
-        print(self.tasks)
+        tasks_torun = [task.name for task in self.tasks] if tasks_torun == [] else tasks_torun
+        # print(tasks_torun)
+        # print(self.tasks)
         for task in self.tasks:
             if task.name in tasks_torun:
-                print("\n\n\n")
+                print("\n")
                 name, prompts, answers = task.name, task.sub_tasks, task.answers
                 print("Task: " + name)
                 print("Prompts: ", end='')

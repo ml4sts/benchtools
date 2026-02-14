@@ -162,7 +162,7 @@ def from_txt_csv(task_folder):
         processed_prompt = prompt.replace("{a}", str(csvFile.iloc[x,0]))
         processed_prompt = processed_prompt.replace("{b}", str(csvFile.iloc[x, 1]))
         storedTasks.append(processed_prompt)
-        print("Prompt: "+ processed_prompt)
+        # print("Prompt: "+ processed_prompt) # Debugging
         storedAnswers.append(str(csvFile.iloc[x, 2]))
     
     return (storedTasks, storedAnswers)
@@ -195,7 +195,7 @@ def from_yaml(yaml_file):
         for values in value_combinations:
             value_mapping = dict(zip(keys, values))  # Pair keys with values
             filled_prompt = template.format(**value_mapping)  # Format the template
-            print("Prompt: "+ filled_prompt)
+            # print("Prompt: "+ filled_prompt) # Debugging
             storedTasks.append(filled_prompt)  # Store task
         for answer in answers:
             storedAnswers.append(answer)

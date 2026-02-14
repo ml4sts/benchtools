@@ -16,8 +16,7 @@ def benchtool():
 @click.option('-p',  '--path', help="The path where the new benchmark repository will be placed", default=".", type=str)
 @click.option('-a', '--about', help="Benchmark describtion. Content will go in the about.md file", default="", type=str)
 @click.option('--no-git',      help="Don't make benchmark a git repository. Default is False", is_flag=True)
-@click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>",
-               default=[], type=(str, str), multiple=True)
+@click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>", default=[], type=(str, str), multiple=True)
 def init(benchmark_name, path, about, no_git, tasks):
     """
     Initializes a new benchmark.
@@ -38,7 +37,7 @@ def init(benchmark_name, path, about, no_git, tasks):
 
     if not benchmark_name:
         benchmark_name = click.prompt("Enter the name of your benchmark/project (will be used as folder and repo name)", type=str)
-    
+    benchmark_name = benchmark_name.strip().replace(" ", "_").lower()
 
     # TODO: Handle existing benchmark
     if not os.path.exists(path):
@@ -60,10 +59,13 @@ def init(benchmark_name, path, about, no_git, tasks):
     
     click.echo(f"Creating {benchmark_name} in {bench_path}")
     benchmark = Bench(benchmark_name, bench_path)
+
+    # Build the benchmark folder
     if benchmark.build(about, no_git, tasks):
         click.echo(f"Built {benchmark_name} benchmark successfully!")
 
     # TODO: Call betterbench CLI here
+    # betterbench()
 
     # Run?
     to_run = click.confirm("Do you want to run the benchmark now?", default=True)
@@ -74,15 +76,17 @@ def init(benchmark_name, path, about, no_git, tasks):
 
 
 @benchtool.command()
-@click.argument('benchmark-path',  required = True, type=str,)
-# 
-@click.argument('task-name',  required = True, type=str,)
+@click.argument('benchmark-path', required = True, type=str)
+@click.argument('task-name',  required = True, type=str) 
 @click.argument('task-path',  required = True, type=str)
 def add_task(benchmark_path, task_name, task_path):
     """
     Set up a new task.
 
     # TODO explain arguments or convert to options. to use help
+    benchmark-path: "The path to the benchmark repository where the task will be added."
+    task-name: "The name of the task to be added. This will be used as the folder name for the task and should be unique within the benchmark."
+    task-path "The relative path to the dataset used for the task. OR any dataset from huggingface that starts with `openai/`"
     """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
@@ -98,6 +102,7 @@ def add_task(benchmark_path, task_name, task_path):
 def run(benchmark_path: str):
     """
     Running the benchmark and generating logs
+    , help="The path to the benchmark repository where all the task reside."
     """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
@@ -113,6 +118,9 @@ def run(benchmark_path: str):
 def run_task(benchmark_path: str, task_name):
     """
     Running the tasks and generating logs
+
+    , help="The path to the benchmark repository where all the task reside."
+    , help="The name of the specific task you would like to run"
     """
     bench_path = os.path.abspath(benchmark_path)
     if os.path.exists(bench_path):
@@ -120,3 +128,7 @@ def run_task(benchmark_path: str, task_name):
         benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
         click.echo(f"Running {task_name} now")
         benchmark.run([task_name])
+
+# For debugging
+if __name__ == '__main__':
+    init()

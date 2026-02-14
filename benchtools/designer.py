@@ -23,7 +23,7 @@ def build_dir(bench_path):
     
     os.mkdir(bench_path)
     # Create a benchmarks folder with tasks in them
-    tasks_path = os.path.join(bench_path, "benchmarks")
+    tasks_path = os.path.join(bench_path, "tasks")
     os.mkdir(tasks_path)
     log_path = os.path.join(bench_path, "logs")
     os.mkdir(log_path)
