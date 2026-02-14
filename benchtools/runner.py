@@ -9,7 +9,6 @@ class Bench():
     '''
         Benchmark with multiple tasks
 
-    ...
 
     Attributes
     ----------
