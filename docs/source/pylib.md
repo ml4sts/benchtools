@@ -1,23 +1,16 @@
 # BenchTools as a Python Library
 
 
-## Design Benchmark Directory
+## Creating a Benchmark object
 <!-- Testing which is better -->
 ```{eval-rst}
-.. automodule:: benchtools.designer
+.. automodule:: benchtools.runner
     :members:
 ```
 
-## Build Directory
+## Benchmark class
 <!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.designer.build_dir
-    :members:
-```
-
-## Build Directory
-<!-- Testing which is better -->
-```{eval-rst}
-.. automodule:: benchtools.designer.build_dir
+.. autoclass:: benchtools.runner.Benchmark
     :members:
 ```

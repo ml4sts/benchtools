@@ -21,6 +21,7 @@ Setting up FillIn...Success
 benchtool run testRuns/111
 ```
 
+<!-- The following will grab all docstrings within cli.py -->
 ```{eval-rst}
 .. click:: benchtools.cli:benchtool
    :prog: benchtool 

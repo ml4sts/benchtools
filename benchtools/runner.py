@@ -7,6 +7,32 @@ from benchtools.designer import build_dir, init_repo, create_about, setup_task
 
 class Bench():
     '''
+        Benchmark with multiple tasks
+
+    ...
+
+    Attributes
+    ----------
+    bench_name : str
+        Name of the benchmark.
+    bench_path: str
+        Path to where the benchmark folder and all its content reside
+    task_folder:
+        Path to tasks folder insise benchmark folder
+    log folder:
+        Path to logs folder inside benchmark folder
+    tasks: tuple<str,str>
+        A tas
+    is_built: bool
+
+    Methods
+    -------
+    build()
+        Build the benchmark directory.
+    add_task()
+        Add new tasks to the benchmark
+    run()
+        Run one task or all tasks of the benchmark.
     '''
     def __init__(self, name, path):
         '''
