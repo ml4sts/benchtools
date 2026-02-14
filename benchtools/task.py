@@ -62,7 +62,7 @@ class Task:
         self.runner_type = runner_type
         self.responses = []
 
-        init_logger(self.log_path, self.name)
+        self.logger = init_logger(self.log_path, self.name)
 
 
     def run(self, model, api_url=None):
@@ -123,8 +123,8 @@ class Task:
                 case _:
                     print(f"Runner type {self.runner_type} not supported")
                     return None
-                
-            log_agent_interaction(sub_task, response.message.content)
+            
+            log_agent_interaction(self.logger, sub_task, response.message.content)
 
 
     def score(self, response):
