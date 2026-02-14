@@ -25,10 +25,6 @@ def init(benchmark_name, path, about, no_git, tasks):
     Benchmark-name is required, if not provided, requested interactively.
 
     this command creates the folder for the benchmark. 
-    Task files will be loaded, the user will be asked a series of questions to demonstrate 
-    the correct mindset of benchmarking, and finally, the user will be given the choice to 
-    run the benchmark or not.
-
 
     """
 
