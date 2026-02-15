@@ -3,7 +3,7 @@ import click
 from benchtools.task import Task
 from benchtools.benchmark import Bench
 from benchtools.runner import BenchRunner
-# from benchtools.betterbench import betterbench, get_score
+from benchtools.betterbench import better_session, get_score
 # from task import PromptTask
 
 @click.group()
@@ -70,7 +70,7 @@ def init(benchmark_name, path, about, no_git):
         click.echo(f"Created {benchmark_name} benchmark successfully!")
 
     # TODO: Call betterbench CLI here
-    # betterbench()
+    betterbench(bench_path)
 
     # Run?
     if benchmark.tasks:
@@ -154,20 +154,36 @@ def run(benchmark_path: str):
     benchmark.run()
 
 
-
-@benchtool.command()
-@click.argument('benchmark-path', required = True, type=str)
-def score(benchmark_path: str):
+@click.group()
+def betterbench():
     """
-    Running the tasks and generating logs
-
-    , help="The path to the benchmark repository where all the task reside."
-    , help="The name of the specific task you would like to run"
+    Launch the BenchBench interactive tool
     """
-    benchmark = Bench.load(benchmark_path)
+    pass
+    
+@betterbench.command()
+@click.argument('bench-path', required = True, type=str)
+def resume(bench_path: str):
+    """
+    Running the betterbench interactive session
+    """
+    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
+    better_session(bench_path)
+
+    
+
+@betterbench.command()
+@click.argument('bench-path', required = True, type=str)
+def score(bench_path: str):
+    """
+    Running the betterbench scoring function
+    """
+    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
     click.echo(f"Scoring {benchmark.bench_name} now...")
     score = get_score()
     click.echo(f"Score: {score}")
+
+benchtool.add_command(betterbench)
 
 
 # For debugging

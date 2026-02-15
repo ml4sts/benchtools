@@ -266,6 +266,7 @@ class Bench():
         # self.tasks.append(task)
         self.tasks[task_object.name] = task_object
 
+
     def run(self,model='gemma3',runner_type="ollama", api_url=None,):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.

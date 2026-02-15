@@ -1,6 +1,7 @@
 pyyaml
 pandas
 click
+click-prompt
 ollama
 openai
 datasets
