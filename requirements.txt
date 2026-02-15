@@ -1,3 +1,13 @@
 pyyaml
 pandas
 click
+click-prompt
+ollama
+openai
+datasets
+myst-nb
+myst-parser
+sphinx
+sphinx-click
+sphinx-design
+pydata_sphinx_theme

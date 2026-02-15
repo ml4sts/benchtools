@@ -1,0 +1,13 @@
+- name: product
+  template: "find the product of {a} and {b}"
+  values:
+     a: [2,3,5]
+     b: [3,4,5]
+  reference: [6,12,25]
+  scorer: "exact_match"
+- name: symbol
+  template: "what is the name for the following symbol? {symb}"
+  values: 
+     symb: ["@","$","#"]
+  reference: ["at", "dollar sign", "pound"]
+  scorer: "contains"

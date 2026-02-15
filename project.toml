@@ -13,19 +13,18 @@ dependencies = [
 ]
 requires-python = ">=3.10"
 authors = [
-  {name = "Sarah M Brown, email = "brownsarahm@uri.edu"},
-  {name = "Tzu-Ping Chung", email = "tzu-ping@example.com"},
-  {name = "Another person"},
-  {email = "different.person@example.com"},
+  {name = "Ayman Sandouk", email = "ayman_sandouk@uri.edu"},
+  {name = "Sarah M Brown", email = "brownsarahm@uri.edu"},
 ]
 maintainers = [
+  {name = "Ayman Sandouk", email = "ayman_sandouk@uri.edu"},
   {name = "Sarah M Brown", email = "brownsarahm@uri.edu"}
 ]
 description = ""
 readme = "README.md"
 license = "MIT"  # or license = {file = "LICENSE.txt"} for legacy declaration
-license-files = ["LICEN[CS]E.*"]
-keywords = ["benchmark"]
+
+keywords = ["benchmark", "machine-learning", "ai", "llm"]
 
 
 [project.optional-dependencies]
@@ -33,16 +32,18 @@ gui = ["PyQt5"]
 cli = [
   "rich",
   "click",
+  "pyyaml",
+  "pandas",
 ]
 
 [project.urls]
 Homepage = "https://example.com"
 Documentation = "https://readthedocs.org"
-Repository = "https://github.com/evalexplain/benchtools"
-"Bug Tracker" = "https://github.com/evalexplain/benchtools/issues"
+Repository = "https://github.com/ml4sts/benchtools"
+"Bug Tracker" = "https://github.com/ml4sts/benchtools/issues"
 
 
 [project.scripts]
-bench-cli = "benchtools:cli"
+benchtool = "benchtools.cli:benchtool"
 
 
