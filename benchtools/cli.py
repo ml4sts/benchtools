@@ -186,6 +186,3 @@ def score(bench_path: str):
 benchtool.add_command(betterbench)
 
 
-# For debugging
-if __name__ == '__main__':
-    init()
