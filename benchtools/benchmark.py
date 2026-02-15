@@ -195,11 +195,11 @@ class Bench():
         self.tasks.append(task_name)
             # setup_task(self.tasks_folder, task_name, task_source))
 
-    def run(self):
-        
-        self.run_task(tasks)
+    def run(self, runner):
+        for task in self.tasks():
+            self.run_task(task, runner)
 
-    def run_tasks(self, tasks): 
-        self.runner = BenchRunner(tasks)
+    def run_task(self, task): 
+        task.run(runner)
 
 
