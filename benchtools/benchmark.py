@@ -202,7 +202,7 @@ class Bench():
         for task in self.tasks():
             self.run_task(task, runner)
 
-    def run_task(self, task): 
+    def run_task(self, task, runner): 
         task.run(runner)
 
 
