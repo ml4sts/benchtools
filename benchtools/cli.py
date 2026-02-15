@@ -1,6 +1,8 @@
 import os
 import click
+from benchtools.task import Task
 from benchtools.benchmark import Bench
+from benchtools.runner import BenchRunner
 from benchtools.betterbench import betterbench, get_score
 # from task import PromptTask
 
@@ -18,7 +20,7 @@ def benchtool():
 @click.option('-a', '--about', help="Benchmark describtion. Content will go in the about.md file", default="", type=str)
 @click.option('--no-git',      help="Don't make benchmark a git repository. Default is False", is_flag=True)
 @click.option('-t', '--tasks', help="Add benchmark tasks to your benchmark (can add multiple). Format: <name> <path>", default=[], type=(str, str), multiple=True)
-def init(benchmark_name, path, about, no_git, tasks):
+def init(benchmark_name, path, about, no_git, task_sources):
     """
     Initializes a new benchmark.
     
@@ -50,8 +52,12 @@ def init(benchmark_name, path, about, no_git, tasks):
     # create full path
     folder_name = benchmark_name.replace(" ", "_").lower()
     bench_path = os.path.join(path, folder_name)
-    
-    # TODO: get concept? Is it different that about?
+
+    tasks = []
+    if task_sources:
+        # TODO: Look at content to create Task objects and add them to tasks
+        continue
+
     click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
     benchmark = Bench(benchmark_name, path, about, tasks)
 
@@ -63,9 +69,12 @@ def init(benchmark_name, path, about, no_git, tasks):
     # betterbench()
 
     # Run?
-    to_run = click.confirm("Do you want to run the benchmark now?", default=True)
-    if to_run:
-        benchmark.run()
+    if tasks:
+        to_run = click.confirm("Do you want to run the benchmark now?", default=True)
+        if to_run:
+            # TODO: Get runner info and create runner object?
+            # benchmark.run(runner)
+            benchmark.run()
 
 
 
@@ -98,12 +107,9 @@ def run(benchmark_path: str):
     Running the benchmark and generating logs
     , help="The path to the benchmark repository where all the task reside."
     """
-    bench_path = os.path.abspath(benchmark_path)
-    if os.path.exists(bench_path):
-        bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
-        benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
-        click.echo(f"Running {benchmark.bench_name} now")
-        benchmark.run()
+    benchmark = Bench.load(benchmark_path)
+    click.echo(f"Running {benchmark.bench_name} now")
+    benchmark.run()
 
 
 @benchtool.command()
@@ -116,12 +122,10 @@ def run_task(benchmark_path: str, task_name):
     , help="The path to the benchmark repository where all the task reside."
     , help="The name of the specific task you would like to run"
     """
-    bench_path = os.path.abspath(benchmark_path)
-    if os.path.exists(bench_path):
-        bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
-        benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
-        click.echo(f"Running {task_name} now")
-        benchmark.run([task_name])
+    
+    benchmark = Bench.load(benchmark_path)
+    click.echo(f"Running {task_name} now")
+    benchmark.run([task_name])
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
@@ -132,13 +136,10 @@ def score(benchmark_path: str):
     , help="The path to the benchmark repository where all the task reside."
     , help="The name of the specific task you would like to run"
     """
-    bench_path = os.path.abspath(benchmark_path)
-    if os.path.exists(bench_path):
-        bench_path = bench_path[:-1] if bench_path.endswith('/') else bench_path
-        benchmark = Bench(bench_path.rsplit('/',1)[1], bench_path)
-        click.echo(f"Scoring {benchmark.bench_name} now...")
-        score = get_score()
-        click.echo(f"Score: {score}")
+    benchmark = Bench.load(benchmark_path)
+    click.echo(f"Scoring {benchmark.bench_name} now...")
+    score = get_score()
+    click.echo(f"Score: {score}")
 
 
 # For debugging

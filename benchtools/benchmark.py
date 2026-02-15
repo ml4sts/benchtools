@@ -68,7 +68,7 @@ class Bench():
         self.written = os.path.exists(self.bench_path)
 
     @classmethod
-    def load(bench_path):
+    def load(cls, bench_path):
         '''
         Load a benchmark from a given path. The path should point to the benchmark folder.
 
@@ -96,8 +96,9 @@ class Bench():
             # load the tasks
             task_path = os.path.join(task_folder, task)
             content = os.listdir(task_path)
+            # TODO: Look at content to create Task objects and add them to tasks
 
-        bench = cls(info['bench_name'], bench_path, info['concept'])
+        bench = cls(info['bench_name'], bench_path, info['concept'], tasks)
         return bench
         
 
@@ -191,9 +192,11 @@ class Bench():
 
 
     def add_task(self, task_name, task_source):
+        # TODO: Look at content to create Task objects and add them to tasks
+        # setup_task(self.tasks_folder, task_name, task_source))
 
-        self.tasks.append(task_name)
-            # setup_task(self.tasks_folder, task_name, task_source))
+        # self.tasks.append(task)
+        continue
 
     def run(self, runner):
         for task in self.tasks():
