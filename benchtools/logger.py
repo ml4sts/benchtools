@@ -26,9 +26,9 @@ def init_logger(log_path, task_name):
     # print(logger) # Debugging
     return logger
 
-def log_agent_interaction(logger, agent_input, agent_output):
+def log_interaction(logger, agent_input, agent_output):
     """
-    Logs the agent's input and output to a file.
+    Logs the aevent to 
 
     Parameters:
     -------------

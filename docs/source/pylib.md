@@ -15,24 +15,26 @@ kernelspec:
 
 # BenchTools as a Python Library
 
+## A tiny examle
+
+we can create a tiny benchmark programmatically
 ```{code-cell}
 from benchtools import Bench
 
-tiny_bench = Bench('Tiniest Demo', concept ='a simplest test')
+tiny_bench = Bench('Tiniest Demo', concept ='the simplest test')
 ```
 
 
 ```{code-cell}
 from benchtools import Task
 
-tt = Task('greeting','Hello','hi', 'contains')
+tt = Task('greeting','Hello there','hi', 'contains')
 ```
-
+<!-- there -->
 
 ```{code-cell}
 response = tt.run()
 ```
-
 
 ```{code-cell}
 tt.score(response)
@@ -40,38 +42,47 @@ tt.score(response)
 
 ```{code-cell}
 tiny_bench.add_task(tt)
+add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
+tiny_bench.add_task(add_task)
 ```
 
+For demo purposes we delete the folder, if it exists, before running. 
+```{code-cell}
+%%bash
+rm  -rf tiniest_demo
+```
 
 ```{code-cell}
+tiny_bench.initialize_dir()
 tiny_bench.run()
 ```
 
 
 ```{code-cell}
-pre_built = Bench('math Demo', concept ='a math test')
-add_task = Task.from_txt_csv('../../demobench/add')
-pre_built.add_task(add_task)
+pre_built_yml = Bench.from_yaml('../../demos/listbench')
+pre_built_yml.written
+```
+
+we can access individual tasks:
+
+```{code-cell}
+pre_built_yml.tasks['product'].variant_values
 ```
 
 
+
 ```{code-cell}
-symb_task = Task.from_yaml('../../demobench/miscops')
-pre_built.add_task(symb_task)
+pre_built_yml.run()
 ```
 
 ```{code-cell}
-pre_built.write()
-```
-
-```{code-cell}
-pre_built.run()
+demo_bench = Bench.from_yaml('../../demos/listbench')
 ```
 
 
-```{code-cell}
+<!-- ```{code-cell}
 demo_bench = Bench.load('../../demobench')
-```
+``` -->
 
 
 

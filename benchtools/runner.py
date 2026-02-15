@@ -7,7 +7,7 @@ from benchtools.task import Task
 
 class BenchRunner():
     '''
-    TODO: this might not be how this ends up, but thi si scurrent thign
+    unused currenlty; possibly resurected for batch runs? 
     '''
 
     def run(self, tasks_torun=[], model='gemma3', api_url=None):

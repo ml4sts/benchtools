@@ -1,4 +1,11 @@
 .vscode/
+# site and test related outputs
+logs/*
+docs/source/logs
+demos/logs/*
+demos/folderbench/logs/*
+demos/listbench/logs/*
+
 
 ## Python template for .gitignore sourced from Github's [gitignore](https://github.com/github/gitignore)
 # Byte-compiled / optimized / DLL files

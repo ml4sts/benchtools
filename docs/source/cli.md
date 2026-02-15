@@ -1,18 +1,23 @@
 # CLI
 
 
-```bash
-benchtool init new_test -p . -t add ../datasets/add/ -t Gaps ../datasets/miscops/ -a "this is a demo for benchtools"
-```
+We an initialize without tasks
 
 ```bash
+cd demos
+benchtool init testbench -a "to test a simple example" --no-git
+```
+
+<!-- this is still needing fix -->
+```bash
+cd testbench
 benchtool add-task ../new_test/ FillIn ../datasets/miscops/
 ```
 
 
 
 ```
-benchtool run testRuns/111
+benchtool run demos/folderbench
 ```
 
 <!-- The following will grab all docstrings within cli.py -->
