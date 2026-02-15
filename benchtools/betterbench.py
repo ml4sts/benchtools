@@ -43,7 +43,7 @@ with open("benchtools/assets/betterbench.yml", 'r') as f: # NEED manifest?
     main_checklist = yaml.safe_load(f)
 
 
-def better_session(bench_path="/work/pi_brownsarahm_uri_edu/ayman_uri/BenchTools/testRuns/111/") -> dict:
+def better_session(bench_path) -> dict:
 # def betterbench(checklist_path) -> dict:
     """
     The checklist below is based on the benchmark quality assessment proposed in BetterBench. It is supposed to help authors identify if they adhere to best practices in their benchmark development. If you want to have your benchmark added to the BetterBench Repository, please also fill out the justifications. These should be about one sentence long each, and include the page numbers of your paper or your webpage where the information can be found. You can also copy-paste quotes from any of your publicly available materials here as evidence. In this case, please also add a link to the source.

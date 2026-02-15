@@ -16,7 +16,7 @@ benchtool add-task ../new_test/ FillIn ../datasets/miscops/
 
 
 
-```
+```bash
 benchtool run demos/folderbench
 ```
 
