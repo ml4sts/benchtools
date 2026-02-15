@@ -1,6 +1,6 @@
 import os
 import click
-from benchtools.designer import Bench
+from benchtools.benchmark import Bench
 from benchtools.betterbench import betterbench, get_score
 # from task import PromptTask
 
@@ -30,7 +30,7 @@ def init(benchmark_name, path, about, no_git, tasks):
 
     if not benchmark_name:
         benchmark_name = click.prompt("Enter the name of your benchmark (will be used as folder and repo name)", type=str)
-    benchmark_name = benchmark_name.strip().replace(" ", "_").lower()
+    benchmark_name = benchmark_name.strip() # Strip from surrouding whitespace
 
     # TODO: Handle existing benchmark
     if not os.path.exists(path):
@@ -48,13 +48,15 @@ def init(benchmark_name, path, about, no_git, tasks):
             exit(4356)
 
     # create full path
-    bench_path = os.path.join(path, benchmark_name)
+    folder_name = benchmark_name.replace(" ", "_").lower()
+    bench_path = os.path.join(path, folder_name)
     
-    click.echo(f"Creating {benchmark_name} in {bench_path}")
-    benchmark = Bench(benchmark_name, bench_path)
+    # TODO: get concept? Is it different that about?
+    click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
+    benchmark = Bench(benchmark_name, path, about, tasks)
 
     # Build the benchmark folder
-    if benchmark.write(about, no_git, tasks):
+    if benchmark.initialize_dir(no_git):
         click.echo(f"Created {benchmark_name} benchmark successfully!")
 
     # TODO: Call betterbench CLI here

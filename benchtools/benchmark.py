@@ -41,7 +41,7 @@ class Bench():
     run()
         Run one task or all tasks of the benchmark.
     '''
-    def __init__(self, name, path = '.',concept = None, tasks = []):
+    def __init__(self, name, path='.', concept = None, tasks=[]):
         '''
         Initialize the benchmark object with the name and path to the benchmark folder.
 
@@ -125,15 +125,15 @@ class Bench():
         # Create a benchmarks folder with tasks in them
         tasks_path = os.path.join(self.bench_path, "tasks")
         os.mkdir(tasks_path)
-        log_path = os.path.join(self.bench_path, "logs")
-        os.mkdir(log_path)
+        log_path = os.path.join(self.bench_path, "logs") # Do we want a log dir?
+        os.mkdir(log_path) # Do we want a log dir?
 
         # Create about.md
         about_path = os.path.join(self.bench_path, "about.md")
-        if self:
-            about_body = "*{self.concept}*"
-        about_text= about_template.format({'bench_name':self.bench_name, 
-                                           'text':about_body})
+        if self: # if self.concept?
+            about_body = f"*{self.concept}*"
+        about_text= about_template.format(bench_name=self.bench_name, 
+                                           text = about_body)
         with open(about_path, 'w') as file:
             file.write(about_text)
 
@@ -141,7 +141,7 @@ class Bench():
         if not no_git:
             self.init_repo(self.bench_path)
 
-        for task_name, task_source in new_tasks:
+        for task_name, task_source in self.tasks: 
             self.add_task(task_name, task_source)
 
         self.write()    
@@ -166,7 +166,7 @@ class Bench():
         
 
     ### Initialize git repository
-    def init_repo(bench_path):
+    def init_repo(self, bench_path):
         '''
         Initialize the benchmark folder as git repo with gitiginore for python 
 
@@ -191,10 +191,15 @@ class Bench():
 
 
     def add_task(self, task_name, task_source):
-        
+
         self.tasks.append(task_name)
             # setup_task(self.tasks_folder, task_name, task_source))
 
+    def run(self):
+        
+        self.run_task(tasks)
 
+    def run_tasks(self, tasks): 
+        self.runner = BenchRunner(tasks)
 
 

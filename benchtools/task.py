@@ -8,7 +8,7 @@ from benchtools.logger import init_logger, log_agent_interaction
 
 from datasets import load_dataset
 
-from scorers import scoring_fx_list, contains, exact_match
+from benchtools.scorers import scoring_fx_list, contains, exact_match
 
 
 class Task:
