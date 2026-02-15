@@ -354,24 +354,20 @@
                   
   <section class="tex2jax_ignore mathjax_ignore" id="cli">
 <h1>CLI<a class="headerlink" href="#cli" title="Link to this heading">#</a></h1>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">benchtool</span> <span class="n">init</span> <span class="n">new_test</span> <span class="o">-</span><span class="n">p</span> <span class="o">../</span> <span class="o">-</span><span class="n">t</span> <span class="n">add</span> <span class="o">../</span><span class="n">datasets</span><span class="o">/</span><span class="n">add</span><span class="o">/</span> <span class="o">-</span><span class="n">t</span> <span class="n">Gaps</span> <span class="o">../</span><span class="n">datasets</span><span class="o">/</span><span class="n">miscops</span><span class="o">/</span> <span class="o">-</span><span class="n">a</span> <span class="s2">&quot;this is a demo for benchtools&quot;</span>
+<p>We an initialize without tasks</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>demos
+benchtool<span class="w"> </span>init<span class="w"> </span>testbench<span class="w"> </span>-a<span class="w"> </span><span class="s2">&quot;to test a simple example&quot;</span><span class="w"> </span>--no-git
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Creating new_test in ../
-Setting up add...Success
-Setting up Gaps...Success
-Would you like to run the benchmark? y/n? n
+<!-- this is still needing fix -->
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>testbench
+benchtool<span class="w"> </span>add-task<span class="w"> </span>../new_test/<span class="w"> </span>FillIn<span class="w"> </span>../datasets/miscops/
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">benchtool</span> <span class="n">add</span><span class="o">-</span><span class="n">task</span> <span class="o">../</span><span class="n">new_test</span><span class="o">/</span> <span class="n">FillIn</span> <span class="o">../</span><span class="n">datasets</span><span class="o">/</span><span class="n">miscops</span><span class="o">/</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>benchtool<span class="w"> </span>run<span class="w"> </span>demos/folderbench
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Setting</span> <span class="n">up</span> <span class="n">FillIn</span><span class="o">...</span><span class="n">Success</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">benchtool</span> <span class="n">run</span> <span class="n">testRuns</span><span class="o">/</span><span class="mi">111</span>
-</pre></div>
-</div>
+<!-- The following will grab all docstrings within cli.py -->
 </section>
 
 

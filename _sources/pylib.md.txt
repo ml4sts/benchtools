@@ -1,23 +1,103 @@
+---
+jupytext:
+  formats: ipynb,md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.15.1
+kernelspec:
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
+---
+
+
 # BenchTools as a Python Library
 
+## A tiny examle
 
-## Design Benchmark Directory
+we can create a tiny benchmark programmatically
+```{code-cell}
+from benchtools import Bench
+
+tiny_bench = Bench('Tiniest Demo', concept ='the simplest test')
+```
+
+
+```{code-cell}
+from benchtools import Task
+
+tt = Task('greeting','Hello there','hi', 'contains')
+```
+<!-- there -->
+
+```{code-cell}
+response = tt.run()
+```
+
+```{code-cell}
+tt.score(response)
+```
+
+```{code-cell}
+tiny_bench.add_task(tt)
+add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
+tiny_bench.add_task(add_task)
+```
+
+For demo purposes we delete the folder, if it exists, before running. 
+```{code-cell}
+%%bash
+rm  -rf tiniest_demo
+```
+
+```{code-cell}
+tiny_bench.initialize_dir()
+tiny_bench.run()
+```
+
+
+```{code-cell}
+pre_built_yml = Bench.from_yaml('../../demos/listbench')
+pre_built_yml.written
+```
+
+we can access individual tasks:
+
+```{code-cell}
+pre_built_yml.tasks['product'].variant_values
+```
+
+
+
+```{code-cell}
+pre_built_yml.run()
+```
+
+```{code-cell}
+demo_bench = Bench.from_yaml('../../demos/listbench')
+```
+
+
+<!-- ```{code-cell}
+demo_bench = Bench.load('../../demobench')
+``` -->
+
+
+
+
+
+## Creating a Benchmark object
 <!-- Testing which is better -->
 ```{eval-rst}
-.. automodule:: benchtools.designer
+.. automodule:: benchtools.runner
     :members:
 ```
 
-## Build Directory
+## Benchmark class
 <!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.designer.build_dir
-    :members:
-```
-
-## Build Directory
-<!-- Testing which is better -->
-```{eval-rst}
-.. automodule:: benchtools.designer.build_dir
+.. autoclass:: benchtools.runner.Bench
     :members:
 ```
