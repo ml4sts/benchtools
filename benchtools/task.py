@@ -54,7 +54,7 @@ class Task:
                 raise ValueError(f"Scoring function {scoring_function} is not valid, must be a string name"+
                            "of a built in function or a function handle")   
         else:
-            self.scoring_function = exact_match
+            self.scoring_function = exact_match ## DID this run???
 
     def generate_prompts(self):
         '''
@@ -297,11 +297,13 @@ class Task:
             logging_path = 'logs'
         if not os.path.exists(logging_path):
             os.mkdir(logging_path)
-        self.logger = init_logger(logging_path, self.name)
+        self.run_log = init_logger(logging_path, self.name)
+        # TODO: Add to run metadata?
 
-        for sub_task in self.generate_prompts():
+        for idx, sub_task in enumerate(self.generate_prompts()):
             # print(sub_task)
 
+            # TODO: What is the difference between the first two cases???
             match runner_type:
                 case "ollama":
                     response: ChatResponse = chat(model=model, messages=[
@@ -325,8 +327,8 @@ class Task:
                                 "content": sub_task,
                             },
                         ],
-                    )
-                    responses.append(response["message"]["content"])
+                    )["message"]["content"]
+                    responses.append(response)
 
                 case "openai":
                     client = OpenAI(
@@ -341,12 +343,13 @@ class Task:
                             }
                         ],
                     )
-                    responses.append(chat_completion.choices[0].message.content)
+                    response = chat_completion.choices[0].message.content
+                    responses.append(response)
                 case _:
                     print(f"Runner type {runner_type} not supported")
                     return None
             
-            log_interaction(self.logger, sub_task, response.message.content)
+            log_interaction(self.run_log, idx, sub_task, response)
         
 
         if self.variant_values:
@@ -379,3 +382,4 @@ class Task:
 # additional classes for other types of tasks
 
 # likely an agent task that can pass environment assets
+

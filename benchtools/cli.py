@@ -86,7 +86,7 @@ def init(benchmark_name, path, about, no_git):
 @benchtool.command()
 @click.argument('task-name',  required = True, type=str) 
 @click.option('-p','--benchmark-path', default='.', help="The path to the benchmark repository where the task will be added.", type=str)
-@click.option('-s','task-source', type=str,help="The relative path to  content that already exists`", required=True)
+@click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
 @click.option('-t','--task-type', type=click.Choice(['folders', 'list']), help="The type of the task content being added. Options are csv or yml", required=True)
 def add_task(task_name, bench_path, task_source,task_type):
     """
