@@ -171,6 +171,16 @@ class Task:
             return prompt_list
         else:
             return [self.template]
+        
+    def get_bench_data(self):
+        '''
+        get the data for the benchark info file, which includes the name, and storage type.
+        '''
+        return {
+            "name": self.name,
+            "id": self.id,
+            "storage_type": self.storage_type
+        }
 
 
     def write(self, target_path):
