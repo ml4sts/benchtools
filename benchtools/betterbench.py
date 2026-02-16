@@ -3,7 +3,7 @@ import yaml
 # import json
 import click
 # import dataclasses
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from .utils import load_asset_yml
 # from click_prompt import choice_option
 
@@ -45,10 +45,19 @@ class ChecklistItem:
 def better_session(bench_path) -> dict:
 # def betterbench(checklist_path) -> dict:
     """
-    The checklist below is based on the benchmark quality assessment proposed in BetterBench. It is supposed to help authors identify if they adhere to best practices in their benchmark development. If you want to have your benchmark added to the BetterBench Repository, please also fill out the justifications. These should be about one sentence long each, and include the page numbers of your paper or your webpage where the information can be found. You can also copy-paste quotes from any of your publicly available materials here as evidence. In this case, please also add a link to the source.
+    The checklist below is based on the benchmark quality assessment proposed in
+    BetterBench. It is supposed to help authors identify if they adhere to best 
+    practices in their benchmark development. If you want to have your benchmark
+    added to the BetterBench Repository, please also fill out the justifications.
+      These should be about one sentence long each, and include the page numbers 
+      of your paper or your webpage where the information can be found. You can 
+      also copy-paste quotes from any of your publicly available materials here 
+      as evidence. In this case, please also add a link to the source.
     Reuel et. al.
 
-    To understand methodology and justification of questions please view [BetterBench Methodology](https://betterbench.stanford.edu/methodology.html)
+    To understand methodology and justification of questions please view 
+    [BetterBench Methodology](https://betterbench.stanford.edu/methodology.html)
+
 
     ---- 
     checklist_path: Path to Benchmark's betterbench checklist file
@@ -60,8 +69,10 @@ def better_session(bench_path) -> dict:
 
     # Intro
     click.echo("Entering interactive session for BetterBench!")
-    click.echo("This interactive session is meant guide the benchmark to follow the standards developed by reuel et. al. named the BetterBench Checklist!")
-    click.echo("This interactive session is optional and you can always come back to it with the `benchtool betterbench resume <benchmark>` command")
+    click.echo("This interactive session is meant guide the benchmark to follow \
+               the standards developed by reuel et. al. named the BetterBench Checklist!")
+    click.echo("This interactive session is optional and you can always come back " \
+                "to it with the `betterbench resume` command")
     
     # Load existing BetterBench checklist if applicable 
     bench_checklist={}
@@ -81,7 +92,7 @@ def better_session(bench_path) -> dict:
                 justification="",
                 score=0,
             )
-            bench_checklist[question] = yaml.dump(item)
+            bench_checklist[question] = asdict(item)
 
         # Save empty checklist into the benchmark repo
         if os.path.exists(bench_path):
@@ -96,38 +107,42 @@ def better_session(bench_path) -> dict:
         # TODO: add if(bench_checklist[skipped])
         # print(question) # DEbugging
         # # print(vals)
-        if len(criteria) == 4:
-            choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...", type=click.Choice(["yes", "no", 'q', ''], case_sensitive=False), show_choices=True, default='')
-        else:
-            choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...", type=click.Choice(["yes", "no", "n/a", 'q', ''], case_sensitive=False), show_choices=True, default='')
-
+        available_choices = ["yes", "no", 'q', '']
+        available_choices+= ['n/a'] if len(criteria) >4  else []
+        
+        choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...", 
+                              type=click.Choice(available_choices , case_sensitive=False), 
+                              show_choices=True, default='')
+        
         # TODO: check for n/a
         # Check for user opt out
         match choice:
             case 'q':
-                break
-            case 'no':
-                item = ChecklistItem(
-                skipped=False,
-                response=choice,
-                justification=criteria[0],
-                score=0,
-                )
-                bench_checklist[question] = yaml.dump(item)
-                print(bench_checklist[question])
-            case 'yes':
-                score = click.prompt(f"Please pick score level:\n0- {criteria[0]}\n5- {criteria[1]}\n10- {criteria[2]}\n15- {criteria[3]}\n", type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
-                justification = click.prompt("Justification? ")
-                item = ChecklistItem(
-                skipped=False,
-                response=choice,
-                justification=justification,
-                score=score,
-                )
-                bench_checklist[question] = yaml.dump(item)
-                print(bench_checklist[question])
+                break    
             case '':
                 continue
+            case 'no':
+                item = ChecklistItem(
+                                    skipped=False,
+                                    response=choice,
+                                    justification=criteria[0],
+                                    score=0,
+                )
+                
+            case 'yes':
+                criteria_text = "\n ".join([f"{i*5}- {crit}" for i,crit in enumerate(criteria)])
+                score = click.prompt(f"Please pick score level:\n {criteria_text}",
+                                       type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
+                justification = click.prompt("Justification:  ")
+                item = ChecklistItem(
+                                    skipped=False,
+                                    response=choice,
+                                    justification=justification,
+                                    score=score,
+                                    )
+        # store this question
+        bench_checklist[question] = asdict(item)
+        print(bench_checklist[question]) # remove this
 
         
         # score = calculate_score(choice, justification)
@@ -147,3 +162,4 @@ def better_session(bench_path) -> dict:
 def get_score() -> int:
     return 99
     
+
