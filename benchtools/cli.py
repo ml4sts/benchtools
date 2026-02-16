@@ -70,7 +70,8 @@ def init(benchmark_name, path, about, no_git):
         click.echo(f"Created {benchmark_name} benchmark successfully!")
 
     # TODO: Call betterbench CLI here
-    betterbench(bench_path)
+    if click.confirm("Do you want to go through the BetterBench checklist now?", default=True) :
+        better_session(bench_path)
 
     # Run?
     if benchmark.tasks:
@@ -162,7 +163,7 @@ def betterbench():
     pass
     
 @betterbench.command()
-@click.argument('bench-path', required = True, type=str)
+@click.argument('bench-path', default='.', type=str)
 def resume(bench_path: str):
     """
     Running the betterbench interactive session
@@ -179,10 +180,10 @@ def score(bench_path: str):
     Running the betterbench scoring function
     """
     # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
-    click.echo(f"Scoring {benchmark.bench_name} now...")
+    click.echo(f"Scoring now...")
     score = get_score()
     click.echo(f"Score: {score}")
 
-benchtool.add_command(betterbench)
+
 
 
