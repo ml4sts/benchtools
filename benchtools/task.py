@@ -56,23 +56,6 @@ class Task:
         else:
             self.scoring_function = exact_match
 
-    def generate_prompts(self):
-        '''
-        if the task is a template based task, generate the prompts by filling 
-        in the template with the variant values
-        '''
-        # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
-        if self.variant_values:
-            prompt_list = []
-            for value_set in self.variant_values:
-                prompt = self.template
-                prompt = prompt.format(**value_set)
-                prompt_list.append(prompt)
-            return prompt_list
-        else:
-            return [self.template]
-
-
     @classmethod
     def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None):
         '''
@@ -173,6 +156,23 @@ class Task:
         return cls(task_name, prommpt =description, variant_values = stored_tasks,
                     reference=stored_answers, storage_type ='csv')
     
+    def generate_prompts(self):
+        '''
+        if the task is a template based task, generate the prompts by filling 
+        in the template with the variant values
+        '''
+        # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
+        if self.variant_values:
+            prompt_list = []
+            for value_set in self.variant_values:
+                prompt = self.template
+                prompt = prompt.format(**value_set)
+                prompt_list.append(prompt)
+            return prompt_list
+        else:
+            return [self.template]
+
+
     def write(self, target_path):
         '''
         write the task
