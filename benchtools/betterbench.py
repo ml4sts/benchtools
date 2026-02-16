@@ -4,6 +4,7 @@ import yaml
 import click
 # import dataclasses
 from dataclasses import dataclass
+from .utils import load_asset_yml
 # from click_prompt import choice_option
 
 
@@ -39,8 +40,6 @@ class ChecklistItem:
 #     else:
 #         TODO
 
-with open("benchtools/assets/betterbench.yml", 'r') as f: # NEED manifest?
-    main_checklist = yaml.safe_load(f)
 
 
 def better_session(bench_path) -> dict:
@@ -55,6 +54,9 @@ def better_session(bench_path) -> dict:
     checklist_path: Path to Benchmark's betterbench checklist file
     
     """
+
+    
+    main_checklist = load_asset_yml("betterbench.yml") 
 
     # Intro
     click.echo("Entering interactive session for BetterBench!")

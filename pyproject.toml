@@ -3,13 +3,15 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "spam-eggs"
-version = "2025.0.0"
+name = "benchtools"
+version = "0.2.0"
 dependencies = [
-  "httpx",
-  "gidgethub[httpx]>4.0.0",
-  "django>2.1; os_name != 'nt'",
-  "django>2.0; os_name == 'nt'",
+  "CLick",
+  "pyyaml",
+  "pandas",
+  "datasets",
+  "openai",
+  "ollama"
 ]
 requires-python = ">=3.10"
 authors = [
@@ -28,22 +30,20 @@ keywords = ["benchmark", "machine-learning", "ai", "llm"]
 
 
 [project.optional-dependencies]
-gui = ["PyQt5"]
 cli = [
-  "rich",
   "click",
   "pyyaml",
   "pandas",
 ]
 
 [project.urls]
-Homepage = "https://example.com"
-Documentation = "https://readthedocs.org"
+Homepage = "https://ml4sts.com/benchtools"
+Documentation = "https://ml4sts.com/benchtools"
 Repository = "https://github.com/ml4sts/benchtools"
 "Bug Tracker" = "https://github.com/ml4sts/benchtools/issues"
 
 
 [project.scripts]
 benchtool = "benchtools.cli:benchtool"
-
+betterbench = "benchtools.cli:betterbench"
 
