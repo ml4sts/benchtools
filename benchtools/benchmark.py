@@ -7,6 +7,8 @@ import yaml
 # from pathlib import Path # ???
 from .task import Task
 from pathlib import PurePath
+from benchtools.runner import BenchRunner
+
 
 about_template = """# {bench_name}
 
@@ -267,7 +269,7 @@ class Bench():
         self.tasks[task_object.name] = task_object
 
 
-    def run(self,model='gemma3',runner_type="ollama", api_url=None,):
+    def run(self, runner=BenchRunner()):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -279,9 +281,9 @@ class Bench():
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
         # TODO deal with results 
         for name, task in self.tasks.items():
-            self.run_task(task, model,runner_type, api_url)
+            self.run_task(task, runner)
 
-    def run_task(self, target_task=None, model='gemma3',runner_type="ollama", api_url=None): 
+    def run_task(self, target_task=None, runner=BenchRunner()): 
         if not(target_task):
             # TODO: use a generator and make this have a state
             target_task = list[self.tasks.keys()][0] 
@@ -293,7 +295,7 @@ class Bench():
         else:
             raise ValueError("target_task should be either a string (task name) or a Task object.")
         
-        logging_path = os.path.join(self.bench_path, 'logs')
-        return task_object.run(model,runner_type, api_url,logging_path)
+        logging_path = os.path.join(self.bench_path, 'logs') # Is this intentional or should we get log_path as an arg for this run method?
+        return task_object.run(model,runner)
 
 

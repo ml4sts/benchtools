@@ -125,6 +125,9 @@ def add_task(task_name, bench_path, task_source,task_type):
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
+@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, help="The api call required to access the runner engine.")
 def run_task(benchmark_path: str, task_name):
     """
     Running the tasks and generating logs
@@ -133,17 +136,9 @@ def run_task(benchmark_path: str, task_name):
     , help="The name of the specific task you would like to run"
     """
     
-    benchmark = Bench.load(benchmark_path)
-    click.echo(f"Running {task_name} now")
-    benchmark.run([task_name])
+    # Create BenchRunner object
+    runner = BenchRunner(runner_type, model, api)
 
-@benchtool.command()
-@click.argument('benchmark-path', required = True, type=str)
-def run(benchmark_path: str):
-    """
-    Running the benchmark and generating logs
-    , help="The path to the benchmark repository where all the task reside."
-    """
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):
         content = os.listdir(benchmark_path)
@@ -152,7 +147,32 @@ def run(benchmark_path: str):
         else:
             benchmark = Bench.from_folders(benchmark_path)
     click.echo(f"Running {benchmark.bench_name} now")
-    benchmark.run()
+
+    click.echo(f"Running {task_name} now")
+    benchmark.run([task_name], runner)
+
+@benchtool.command()
+@click.argument('benchmark-path', required = True, type=str)
+@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, help="The api call required to access the runner engine.")
+def run(benchmark_path: str, runner_type: str, model: str, api_url: str):
+    """
+    Running the benchmark and generating logs
+    , help="The path to the benchmark repository where all the task reside."
+    """
+    # Create BenchRunner object
+    runner = BenchRunner(runner_type, model, api)
+
+    # check folder to see if folder or yaml type to load benchmark
+    if os.path.isdir(benchmark_path):
+        content = os.listdir(benchmark_path)
+        if 'tasks.yml' in content:
+            benchmark = Bench.from_yaml(benchmark_path)
+        else:
+            benchmark = Bench.from_folders(benchmark_path)
+    click.echo(f"Running {benchmark.bench_name} now")
+    benchmark.run(runner)
 
 
 @click.group()
