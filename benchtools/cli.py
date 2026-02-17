@@ -163,7 +163,7 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     , help="The path to the benchmark repository where all the task reside."
     """
     # Create BenchRunner object
-    runner = BenchRunner(runner_type, model, api)
+    runner = BenchRunner(runner_type, model, api_url)
 
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):

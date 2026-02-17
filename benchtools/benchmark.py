@@ -331,6 +331,6 @@ class Bench():
 
         # TODO: Add log_dir to attributes?
         
-        return task_object.run(model,runner, log_dir)
+        return task_object.run(runner, log_dir)
 
 
