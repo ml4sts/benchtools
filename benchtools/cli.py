@@ -56,17 +56,25 @@ def init(benchmark_name, path, about, no_git):
     folder_name = benchmark_name.replace(" ", "_").lower()
     bench_path = os.path.join(path, folder_name)
 
-    tasks_exist = click.confirm("Do you have task files already prepared?", default=False)
-    if tasks_exist:
-        click.echo("Please add your task files after the benchmark is created with `benchtool add-task` ")
-    else:
-        task_template = click.confirm("Would you like to add a task template to your benchmark?", default=True)
-        if task_template:
-            template_type = click.prompt("What type of template would you like to add?", type=click.Choice(['folders', 'list']), show_choices=True)
+    tasks = []
+    tasks_desired = click.confirm("Do you want to add any tasks now?")
+    while tasks_desired:
+        tasks_exist = click.confirm("Do you have task files already prepared?", default=False)
+        if tasks_exist:
+            path = click.prompt('Enter the path to the files')
+        else:
+            template_type = click.prompt("What type of template would you like to add?",
+                                          type=click.Choice(['csv', 'yaml']), 
+                                          show_choices=True)
+            task_name = click.prompt("what is the name of your task?")
+            tasks.append(Task.from_example(task_name,template_type))
+
+        tasks_desired = click.confirm("Do you want to add another?")
+
 
     click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
     benchmark = Bench(name =benchmark_name, bench_path = bench_path, 
-                      concept = about)
+                      concept = about, tasks=tasks)
 
     # Build the benchmark folder
     if benchmark.initialize_dir(no_git):
@@ -87,7 +95,7 @@ def init(benchmark_name, path, about, no_git):
 
 
 @benchtool.command()
-@click.argument('task-name',  required = True, type=str) 
+@click.argument('task-name',  required = True, type=str, ) 
 @click.option('-p','--benchmark-path', default='.', help="The path to the benchmark repository where the task will be added.", type=str)
 @click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
 @click.option('-t','--task-type', type=click.Choice(['folders', 'list']), 
@@ -111,9 +119,8 @@ def add_task(task_name, bench_path, task_source,task_type):
                     storage_type = 'csv'
                 case 'list':
                     storage_type = 'yaml'
-            task = Task(name=task_name, template= "fill in your prompt template here",
-                            description = "add a description of your task here",
-                        storage_type=storage_type)
+            task = Task.from_example(name=task_name, storage_type=storage_type)
+            task.write()
         else:
             click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
             exit(4356)
