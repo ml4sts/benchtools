@@ -32,7 +32,7 @@ def init_logger(log_path, model, task_info: dict):
 
     # Create trace.yml with all the metadata
     trace = {
-        "task_name": ['name'],
+        "task_name": task_info['name'],
         "description": task_info['description'],
         "template": task_info['template'],
         "values": task_info['values'],
