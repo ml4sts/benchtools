@@ -5,7 +5,7 @@ import shutil
 import requests
 import yaml
 # from pathlib import Path # ???
-from .task import Task
+from benchtools.task import Task
 from pathlib import PurePath
 from benchtools.runner import BenchRunner
 

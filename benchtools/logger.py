@@ -17,7 +17,7 @@ def init_logger(log_path, model, task_info: dict):
         A dictionary with all the task's info for which the logger is being initialized.
     '''
     # Get timestamp without fractions of seconds
-    timestamp = int(datetime.datetime().now().timestamp())
+    timestamp = int(datetime.datetime.now().timestamp())
 
     model_dir = os.path.join(log_path, model)
     if not os.path.exists(model_dir):
@@ -32,13 +32,13 @@ def init_logger(log_path, model, task_info: dict):
 
     # Create trace.yml with all the metadata
     trace = {
-        "task_name": task_info.name,
-        "description": task_info.description,
-        "template": task_info.template,
-        "values": task_info.variant_values,
-        "reference": task_info.reference,
-        "benchmark": task_info.benchmark,
-        "bench_path": task_info.bench_path
+        "task_name": ['name'],
+        "description": task_info['description'],
+        "template": task_info['template'],
+        "values": task_info['values'],
+        "reference": task_info['reference'],
+        "benchmark": task_info['benchmark'],
+        "bench_path": task_info['bench_path']
     }
     with open(os.path.join(run_dir,'trace.yml'), 'w') as f:
         yaml.dump(trace, f)
@@ -93,12 +93,12 @@ def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
         f.write(f"{response}\n\n")
     
     # Gather trace info
-    with open(os.path.join(run_log_dir, "trace.yml")) as f:
+    with open(os.path.join(run_log_dir, "trace.yml"), 'r') as f:
             trace = yaml.safe_load(f) 
 
     step_trace = {
-        'task_name': trace.task_name,
-        'template': trace.template,
+        'task_name': trace['task_name'],
+        'template': trace['template'],
         'idx': prompt_idx,
         'error': error,
         'steps':{ 

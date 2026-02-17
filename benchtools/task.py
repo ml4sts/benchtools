@@ -267,6 +267,7 @@ class Task:
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
 
+        run_log=""
         # Create logging structure for a task within a log directory
         try:
             run_log = init_logger(log_dir, runner.model, self.get_dict())
@@ -276,19 +277,20 @@ class Task:
 
         for idx, sub_task in enumerate(self.generate_prompts()):
             # print(sub_task)
-
+            error = None
             try:
                 # TODO: What is the difference between the first two cases???
                 match runner.runner_type:
                     case "ollama":
-                        response: ChatResponse = chat(model=runner.model, messages=[
+                        completion: ChatResponse = chat(model=runner.model, messages=[
                             {
                             'role': 'user',
                             'content':sub_task,
                             },
                         ])
                         # print("response: " + response.message.content)
-                        responses.append(response.message.content)
+                        response = completion.message.content
+                        responses.append(response)
 
                     case "ollama_api":
                         client = Client(
@@ -324,9 +326,9 @@ class Task:
                     case _:
                         print(f"Runner type {runner.runner_type} not supported")
                         return None
-                log_interaction(run_log, str(idx), sub_task, response, None)
-            except Exception as error:
-                log_interaction(run_log, str(idx), sub_task, '', error)
+            except Exception as e:
+                error = e
+            log_interaction(run_log, str(idx), sub_task, response, error)
 
         
 
@@ -361,3 +363,9 @@ class Task:
 
 # likely an agent task that can pass environment assets
 
+if __name__ == '__main__':
+    tt = Task('greeting','Hello there','hi', 'contains')
+    runner = BenchRunner()
+    print(f"model: {runner.model}, type: {runner.runner_type}")
+    # exit(000)
+    tt.run(runner, 'test_logs')

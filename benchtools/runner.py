@@ -1,8 +1,4 @@
 # module to create and run benchmarks
-import os
-from benchtools.task import Task
-# from benchtools.designer import build_dir, init_repo, create_about, setup_task
-# from log_file.py import log_agent_interaction
 
 
 # possibly resurected for batch runs? 
@@ -11,7 +7,7 @@ class BenchRunner():
     A BenchRunner holds information about how a task is going to be run. 
     '''
 
-    def init(self, runner_type='ollama', model='gemma3', api_url=None):
+    def __init__(self, runner_type='ollama', model='gemma3:1b', api_url=None):
         '''
         The constructor for BenchRunner will have default values for all attributes to have a full default runner ready to be used for running any task.
         P.S. Requires Ollama to be installed and running on your machine.
