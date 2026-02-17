@@ -7,6 +7,7 @@ from ollama import chat, ChatResponse, Client
 from benchtools.logger import init_logger, log_interaction
 from pathlib import PurePath
 from datasets import load_dataset
+from benchtools.runner import BenchRunner
 
 from benchtools.scorers import scoring_fx_list, contains, exact_match
 
@@ -276,20 +277,22 @@ class Task:
     
 
     
-    def run(self, model='gemma3',runner_type="ollama", api_url=None,logging_path = None):
+    def run(self, runner=BenchRunner(), logging_path = None):
         """
         run the task on the stated model and log the interactions.
 
         Parameters
         ----------
-        model : string
-            the model to run the task on
-        api_url : string
-            the url of the api to use for the task
-        runner_type: string {ollama,openai}
+        runner: BenchRunner 
             define which runner should be used for the task.
-            to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
-            to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
+        
+            runner.model : string
+                the model to run the task on
+            runner.api_url : string
+                the url of the api to use for the task
+            runner.runner_type: {ollama,openai}
+                to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
+                to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         """
         responses = []
 
@@ -297,16 +300,18 @@ class Task:
             logging_path = 'logs'
         if not os.path.exists(logging_path):
             os.mkdir(logging_path)
+
         self.run_log = init_logger(logging_path, self.name)
         # TODO: Add to run metadata?
+
 
         for idx, sub_task in enumerate(self.generate_prompts()):
             # print(sub_task)
 
             # TODO: What is the difference between the first two cases???
-            match runner_type:
+            match runner.runner_type:
                 case "ollama":
-                    response: ChatResponse = chat(model=model, messages=[
+                    response: ChatResponse = chat(model=runner.model, messages=[
                         {
                           'role': 'user',
                           'content':sub_task,
@@ -317,10 +322,10 @@ class Task:
 
                 case "ollama_api":
                     client = Client(
-                        host=api_url if api_url else "http://localhost:11434",
+                        host=runner.api_url if runner.api_url else "http://localhost:11434",
                     )
                     response = client.chat(
-                        model,
+                        runner.model,
                         messages=[
                             {
                                 "role": "user",
@@ -332,10 +337,10 @@ class Task:
 
                 case "openai":
                     client = OpenAI(
-                        base_url=api_url if api_url else "https://api.openai.com/v1",
+                        base_url=runner.api_url if runner.api_url else "https://api.openai.com/v1",
                     )
                     chat_completion = client.chat.completions.create(
-                        model=model,
+                        model=runner.model,
                         messages=[
                             {
                                 "role": "user",
@@ -346,7 +351,7 @@ class Task:
                     response = chat_completion.choices[0].message.content
                     responses.append(response)
                 case _:
-                    print(f"Runner type {runner_type} not supported")
+                    print(f"Runner type {runner.runner_type} not supported")
                     return None
             
             log_interaction(self.run_log, idx, sub_task, response)
