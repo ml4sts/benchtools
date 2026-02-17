@@ -1,8 +1,8 @@
 import os
-import time
 import logging 
+import datetime
 
-def init_logger(log_path, task_name):
+def init_logger(log_path, model, task_name):
     ''''
     Initializes the logger for a specific task.
     
@@ -10,14 +10,23 @@ def init_logger(log_path, task_name):
     -------------
     log_path: str
         The path to the log dir where the log file will be created.
+    model: 
+        The name of the model running the task
     task_name: str
         The name of the task for which the logger is being initialized. This will be used to name the log file.
     '''
-    timestamp = time.time()
-    task_dir = os.path.join(log_path, task_name)
+    # Get timestamp without fractions of seconds
+    timestamp = int(datetime.datetime().now().timestamp())
+
+    model_dir = os.path.join(log_path, model)
+    if not os.path.exists(model_dir):
+        os.mkdir(model_dir)
+
+    task_dir = os.path.join(model_dir, task_name)
     if not os.path.exists(task_dir):
         os.mkdir(task_dir)
-    run_dir = os.path.join(task_dir,str(timestamp))
+
+    run_dir = os.path.join(task_dir, str(timestamp))
     os.mkdir(run_dir)
 
     {
