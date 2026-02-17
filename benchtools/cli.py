@@ -125,10 +125,10 @@ def add_task(task_name, bench_path, task_source,task_type):
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
-@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], help="The engine that will run your LLM.")
-@click.option('-m', '--model', type=str, help="The LLM to be benchmarked.")
-@click.option('-a', '--api-url', type=str, help="The api call required to access the runner engine.")
-@click.option('-l', '--log-path', type=str, help="The path to a log directory.")
+@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3", help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None, help="The path to a log directory.")
 def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_path):
     """
     Running the tasks and generating logs
@@ -153,10 +153,10 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
-@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], help="The engine that will run your LLM.")
-@click.option('-m', '--model', type=str, help="The LLM to be benchmarked.")
-@click.option('-a', '--api-url', type=str, help="The api call required to access the runner engine.")
-@click.option('-l', '--log-path', type=str, help="The path to a log directory.")
+@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3", help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None, help="The path to a log directory.")
 def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_path: str):
     """
     Running the benchmark and generating logs
