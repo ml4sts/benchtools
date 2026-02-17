@@ -362,10 +362,3 @@ class Task:
 # additional classes for other types of tasks
 
 # likely an agent task that can pass environment assets
-
-if __name__ == '__main__':
-    tt = Task('greeting','Hello there','hi', 'contains')
-    runner = BenchRunner()
-    print(f"model: {runner.model}, type: {runner.runner_type}")
-    # exit(000)
-    tt.run(runner, 'test_logs')
