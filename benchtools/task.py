@@ -18,7 +18,8 @@ class Task:
     """
 
     def __init__(self, task_name, template, reference=None, scoring_function=None,
-                  variant_values = None, storage_type = 'yaml', description = None):
+                  variant_values = None, storage_type = 'yaml', description = None, 
+                  benchmark = None, bench_path = None):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -34,13 +35,19 @@ class Task:
             solution that will be passed with the model answer to the scoring function,
         variant_values: 
             dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
+        benchmark: 
+            The name of the benchmark this task is a part of (if any)
+        bench_path: 
+            Path to the benchmark directory
         """
         self.name = task_name
         self.id = task_name.strip().replace(" ", "_").lower() 
+        self.description = description 
+        self.benchmark = benchmark
+        self.bench_path = bench_path
 
         self.template = template
         self.variant_values = variant_values
-        self.description = description 
         self.reference = reference
         
 
@@ -75,7 +82,8 @@ class Task:
 
 
     @classmethod
-    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None):
+    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
+             benchmark = None, bench_path = None):
         '''
         load a template from txt and create task objects for each row of a csv
 
@@ -107,10 +115,12 @@ class Task:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
         return cls(task_name, template= prompt, variant_values = variant_values, description = description,
-                    reference=reference, storage_type ='csv', scoring_function=scoring_function)
+                    reference=reference, storage_type ='csv', scoring_function=scoring_function, 
+                    benchmark=benchmark, bench_path=bench_path)
     
     @classmethod
-    def from_yaml(cls, source_folder, task_name = None, scoring_function = None):
+    def from_yaml(cls, source_folder, task_name = None, scoring_function = None, 
+                benchmark = None, bench_path = None):
         '''
         load a task from a yaml file. The yaml file should have the following structure:
         name: string
@@ -128,10 +138,13 @@ class Task:
                    description = task_dict.get('description', None),
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
-                      scoring_function=task_dict.get('scorer', None) or scoring_function)
+                      scoring_function=task_dict.get('scorer', None) or scoring_function,
+                      benchmark=benchmark,
+                      bench_path=bench_path
+                      )
 
     @classmethod
-    def from_dict(cls, task_dict):
+    def from_dict(cls, task_dict, benchmark=None, bench_path=None):
         '''
         load a task from a dictionary, which could be useful for loading from yaml or json files. The dictionary should have the following structure:
         {
@@ -155,10 +168,12 @@ class Task:
                    reference = task_dict.get("reference", None), 
                    scoring_function = task_dict.get("scoring_function", None), 
                    description = task_dict.get("description", None),
-                   storage_type='yaml')
+                   storage_type='yaml',
+                   benchmark=benchmark,
+                   bench_path=bench_path)
     
     @classmethod
-    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
+    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution', benchmark=None, bench_path=None):
         '''
         dataset must have columns 'prompt' and 'canonical_solution' for now, can be expanded in the future.
         '''
@@ -172,7 +187,7 @@ class Task:
         description = f"a task base don the Hugging Face dataset {hf_path} with prompt column {prompt_column} and answer column {answer_column}"
 
         return cls(task_name, prommpt =description, variant_values = stored_tasks,
-                    reference=stored_answers, storage_type ='csv')
+                    reference=stored_answers, storage_type ='csv', benchmark=benchmark, bench_path=bench_path)
     
     def write(self, target_path):
         '''
@@ -186,14 +201,15 @@ class Task:
                 self.write_csv(target_path)
 
     def get_dict(self):
-
         task_dict = {
             "name": self.name,
             "template": self.template,
             "values": self.variant_values,
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
-            "description": self.description
+            "description": self.description,
+            "benchmark": self.benchmark,
+            "bench_path": self.bench_path
         }
         return task_dict
     
@@ -222,62 +238,10 @@ class Task:
         # write the values and answers to a csv
         value_answer_df = pd.DataFrame(self.variant_values)
         value_answer_df.to_csv(os.path.join(target_folder, 'values.csv'), index=False)
-
-        
-
-    # Create a benchmarks folder with tasks in them
-    def initialize_task_dir(tasks_path, task_name: str, task_source=None,
-                            is_huggingface=False):
-        '''
-        Initialize a new task folder in the benchmark repo
-
-        *probably to be deprecated* 
-
-        Parameters:
-        -----------
-        tasks_path: str
-            The path to the tasks folder inside the benchmark folder
-        task_name: str
-            The name of the task to be added. This will be used for the task folder name
-        task_source: str or buffer
-            The source of the task data. This can be a path to a local file or folder, 
-            or a Hugging Face dataset identifier. 
-            The content
-        is_huggingface: bool
-            Whether the task source is a Hugging Face dataset. If True, the task_source 
-            should be like ownser/dataset_name
-        '''
-
-        # print(f"Setting up {task_name}...", end='')
-        task_folder = os.path.join(tasks_path, task_name)
-        os.mkdir(task_folder) # TODO: check if folder exists and handle
-
-        # if is_huggingface:
-        #     download_dataset(task_folder, task_source)
-        #     print("Success")
-        #     return
-
-
-        # # Path could be absolute or relative, check and work accordingly
-        # # if not task_source.startswith('/'):
-        # #     if task_source.startswith('./'):
-        # #         # TODO: Path could have one or more `../` use relpath to fix this block 
-        # #         task_source = task_source[2:]
-        # #     task_source = os.path.join(os.getcwd(), task_source)
-        #     # print(f" path {task_source}\n\n") # Debugging
-        
-        # #  could be a single file or a folder check and work accordignly
-        # if os.path.isdir(task_source):
-        #     for sub in os.listdir(task_source):
-        #         shutil.copy2(os.path.join(task_source, sub), task_folder)
-        # else:
-        #     shutil.copy2(task_source, task_folder)
-        # print("Success")
-
     
 
     
-    def run(self, runner=BenchRunner(), logging_path = None):
+    def run(self, runner=BenchRunner(), log_dir='logs'):
         """
         run the task on the stated model and log the interactions.
 
@@ -293,68 +257,77 @@ class Task:
             runner.runner_type: {ollama,openai}
                 to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
                 to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
+        log_dir: str
+            Path to where the logs should be saved. If empty a log folder will be created in the current working directory
         """
+
         responses = []
 
-        if not logging_path:
-            logging_path = 'logs'
-        if not os.path.exists(logging_path):
-            os.mkdir(logging_path)
+        # Create log directory if it doesn't exist
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
 
-        self.run_log = init_logger(logging_path, self.name)
-        # TODO: Add to run metadata?
+        # Create logging structure for a task within a log directory
+        try:
+            run_log = init_logger(log_dir, runner.model, self.get_dict())
+        except Exception as e:
+            print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
 
         for idx, sub_task in enumerate(self.generate_prompts()):
             # print(sub_task)
 
-            # TODO: What is the difference between the first two cases???
-            match runner.runner_type:
-                case "ollama":
-                    response: ChatResponse = chat(model=runner.model, messages=[
-                        {
-                          'role': 'user',
-                          'content':sub_task,
-                        },
-                    ])
-                    # print("response: " + response.message.content)
-                    responses.append(response.message.content)
-
-                case "ollama_api":
-                    client = Client(
-                        host=runner.api_url if runner.api_url else "http://localhost:11434",
-                    )
-                    response = client.chat(
-                        runner.model,
-                        messages=[
+            try:
+                # TODO: What is the difference between the first two cases???
+                match runner.runner_type:
+                    case "ollama":
+                        response: ChatResponse = chat(model=runner.model, messages=[
                             {
-                                "role": "user",
-                                "content": sub_task,
+                            'role': 'user',
+                            'content':sub_task,
                             },
-                        ],
-                    )["message"]["content"]
-                    responses.append(response)
+                        ])
+                        # print("response: " + response.message.content)
+                        responses.append(response.message.content)
 
-                case "openai":
-                    client = OpenAI(
-                        base_url=runner.api_url if runner.api_url else "https://api.openai.com/v1",
-                    )
-                    chat_completion = client.chat.completions.create(
-                        model=runner.model,
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": sub_task,
-                            }
-                        ],
-                    )
-                    response = chat_completion.choices[0].message.content
-                    responses.append(response)
-                case _:
-                    print(f"Runner type {runner.runner_type} not supported")
-                    return None
-            
-            log_interaction(self.run_log, idx, sub_task, response)
+                    case "ollama_api":
+                        client = Client(
+                            host=runner.api_url if runner.api_url else "http://localhost:11434",
+                        )
+                        completeion = client.chat(
+                            runner.model,
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": sub_task,
+                                },
+                            ],
+                        )
+                        response = completeion["message"]["content"]
+                        responses.append(response)
+
+                    case "openai":
+                        client = OpenAI(
+                            base_url=runner.api_url if runner.api_url else "https://api.openai.com/v1",
+                        )
+                        chat_completion = client.chat.completions.create(
+                            model=runner.model,
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": sub_task,
+                                }
+                            ],
+                        )
+                        response = chat_completion.choices[0].message.content
+                        responses.append(response)
+                    case _:
+                        print(f"Runner type {runner.runner_type} not supported")
+                        return None
+                log_interaction(run_log, str(idx), sub_task, response, None)
+            except Exception as error:
+                log_interaction(run_log, str(idx), sub_task, '', error)
+
         
 
         if self.variant_values:
