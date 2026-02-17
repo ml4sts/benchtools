@@ -25,3 +25,17 @@ def load_asset_yml(*args):
         template = yaml.safe_load(tmpt_f)
     
     return(template)
+
+def concatenator_id_generator(name,values_dict):
+    '''
+    create an id for individual prompts from task name and values
+    '''
+
+    values = values_dict.values()
+    return name +'_' + '-'.join(values)
+
+def selector_id_generator(name,values_dict):
+    '''
+    if provided
+    '''
+    return values_dict['id']

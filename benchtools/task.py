@@ -10,6 +10,8 @@ from datasets import load_dataset
 
 from benchtools.scorers import scoring_fx_list, contains, exact_match
 
+from .utils import concatenator_id_generator, selector_id_generator
+
 
 class Task:
     """
@@ -17,7 +19,8 @@ class Task:
     """
 
     def __init__(self, task_name, template, reference=None, scoring_function=None,
-                  variant_values = None, storage_type = 'yaml', description = None):
+                  variant_values = None, storage_type = 'yaml', description = None, 
+                  prompt_id_generator_fx = concatenator_id_generator):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -41,6 +44,7 @@ class Task:
         self.variant_values = variant_values
         self.description = description 
         self.reference = reference
+        self.id_generator = prompt_id_generator_fx
         
 
         self.storage_type = storage_type
@@ -57,7 +61,8 @@ class Task:
             self.scoring_function = exact_match
 
     @classmethod
-    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None):
+    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
+                     prompt_id_generator_fx = concatenator_id_generator):
         '''
         load a template from txt and create task objects for each row of a csv
 
@@ -80,6 +85,9 @@ class Task:
         
         variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
         reference = value_answer_df['reference'].tolist()
+
+        if 'id' in value_answer_df.columns:
+            prompt_id_generator_fx = selector_id_generator
         
         # TODO: improve this 
         if os.path.exists(os.path.join(source_folder, "description.txt")):
@@ -88,9 +96,28 @@ class Task:
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        return cls(task_name, template= prompt, variant_values = variant_values, description = description,
-                    reference=reference, storage_type ='csv', scoring_function=scoring_function)
+        return cls(task_name, template= prompt, variant_values = variant_values, 
+                   description = description, reference=reference, storage_type ='csv', 
+                    scoring_function=scoring_function,
+                    prompt_id_generator_fx =prompt_id_generator_fx)
     
+    @classmethod
+    def from_example(cls, task_name, storage_type):
+        '''
+        make a blank task 
+        '''
+        supplemental_files = {'csv':'columns in the csv file',
+                              'yaml':'keys below' }
+        template = 'Your {noun} for the model here with values that should vary\
+              denoted in brackets. {verb} matching  ' + supplemental_files[storage_type]
+        variant_values = {'noun':['text','task'],
+                          'verb':['use','select','employ']}
+        description = 'give your task a short description '
+        return cls(task_name, template= template, variant_values = variant_values, 
+                   description = description,  reference='', 
+                   storage_type = storage_type, scoring_function = exact_match)
+
+
     @classmethod
     def from_yaml(cls, source_folder, task_name = None, scoring_function = None):
         '''
@@ -110,7 +137,8 @@ class Task:
                    description = task_dict.get('description', None),
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
-                      scoring_function=task_dict.get('scorer', None) or scoring_function)
+                      scoring_function=task_dict.get('scorer', None) or scoring_function,
+                    prompt_id_generator_fx =task_dict.get('id_generator', None))
 
     @classmethod
     def from_dict(cls, task_dict):
@@ -130,14 +158,16 @@ class Task:
         else:
             expanded_values = None
         
-        
+        if 'id' in task_dict.keys():
+            prompt_id_generator_fx = selector_id_generator
         return cls(task_dict.get("name", "unnamed_task"),
                    template = task_dict.get("template", ""), 
                    variant_values=expanded_values,
                    reference = task_dict.get("reference", None), 
                    scoring_function = task_dict.get("scoring_function", None), 
                    description = task_dict.get("description", None),
-                   storage_type='yaml')
+                   storage_type='yaml',
+                    prompt_id_generator_fx =task_dict.get('id_generator', None))
     
     @classmethod
     def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
@@ -163,14 +193,15 @@ class Task:
         '''
         # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
         if self.variant_values:
-            prompt_list = []
+            id_prompt_list = []
             for value_set in self.variant_values:
                 prompt = self.template
                 prompt = prompt.format(**value_set)
-                prompt_list.append(prompt)
-            return prompt_list
+                prompt_id = self.id_generator(self.id,value_set)
+                id_prompt_list.append((prompt_id,prompt))
+            return id_prompt_list
         else:
-            return [self.template]
+            return [(self.name, self.template)]
         
     def get_bench_data(self):
         '''
@@ -202,7 +233,8 @@ class Task:
             "values": self.variant_values,
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
-            "description": self.description
+            "description": self.description,
+            "id_generator":self.id_generator
         }
         return task_dict
     
@@ -211,9 +243,8 @@ class Task:
         write the task to a yaml file
         '''
         data = self.get_dict()
-        task_path = os.path.join(target_path, self.id)
-        os.makedirs(task_path, exist_ok=True)
-        with open(os.path.join(task_path,'task_info.yml'), 'w') as file:
+        
+        with open(os.path.join(target_path,'task_info.yml'), 'w') as file:
             yaml.dump(data, file)
 
     def write_csv(self, target_folder):
