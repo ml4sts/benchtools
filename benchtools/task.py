@@ -55,7 +55,7 @@ class Task:
                 raise ValueError(f"Scoring function {scoring_function} is not valid, must be a string name"+
                            "of a built in function or a function handle")   
         else:
-            self.scoring_function = exact_match ## DID this run???
+            self.scoring_function = exact_match 
 
     def generate_prompts(self):
         '''
