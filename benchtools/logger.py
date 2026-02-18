@@ -3,9 +3,9 @@ import yaml
 import logging 
 import datetime
 
-def init_logger(log_path, model, task_info: dict):
+def init_log_folder(log_path, model, task_info: dict):
     ''''
-    Initializes the logger for a specific task.
+    Creates the log directories and sub-directories for a specific task.
     
     Parameters:
     -------------
@@ -31,15 +31,10 @@ def init_logger(log_path, model, task_info: dict):
     os.mkdir(run_dir)
 
     # Create trace.yml with all the metadata
-    trace = {
-        "task_name": task_info['name'],
-        "description": task_info['description'],
-        "template": task_info['template'],
-        "values": task_info['values'],
-        "reference": task_info['reference'],
-        "benchmark": task_info['benchmark'],
-        "bench_path": task_info['bench_path']
-    }
+    trace = {} 
+    for key, item in task_info.items():
+        trace[key] = item
+    
     with open(os.path.join(run_dir,'trace.yml'), 'w') as f:
         yaml.dump(trace, f)
 
