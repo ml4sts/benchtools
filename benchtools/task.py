@@ -4,7 +4,7 @@ import os
 import yaml # requires pyyaml
 import pandas as pd
 from ollama import chat, ChatResponse, Client
-from benchtools.logger import init_logger, log_interaction
+from benchtools.logger import init_log_folder, log_interaction
 from pathlib import PurePath
 from datasets import load_dataset
 from benchtools.runner import BenchRunner
@@ -18,8 +18,7 @@ class Task:
     """
 
     def __init__(self, task_name, template, reference=None, scoring_function=None,
-                  variant_values = None, storage_type = 'yaml', description = None, 
-                  benchmark = None, bench_path = None):
+                  variant_values = None, storage_type = 'yaml', description = None):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -35,16 +34,10 @@ class Task:
             solution that will be passed with the model answer to the scoring function,
         variant_values: 
             dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
-        benchmark: 
-            The name of the benchmark this task is a part of (if any)
-        bench_path: 
-            Path to the benchmark directory
         """
         self.name = task_name
         self.id = task_name.strip().replace(" ", "_").lower() 
         self.description = description 
-        self.benchmark = benchmark
-        self.bench_path = bench_path
 
         self.template = template
         self.variant_values = variant_values
@@ -82,8 +75,7 @@ class Task:
 
 
     @classmethod
-    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
-             benchmark = None, bench_path = None):
+    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None):
         '''
         load a template from txt and create task objects for each row of a csv
 
@@ -115,12 +107,10 @@ class Task:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
         return cls(task_name, template= prompt, variant_values = variant_values, description = description,
-                    reference=reference, storage_type ='csv', scoring_function=scoring_function, 
-                    benchmark=benchmark, bench_path=bench_path)
+                    reference=reference, storage_type ='csv', scoring_function=scoring_function)
     
     @classmethod
-    def from_yaml(cls, source_folder, task_name = None, scoring_function = None, 
-                benchmark = None, bench_path = None):
+    def from_yaml(cls, source_folder, task_name = None, scoring_function = None):
         '''
         load a task from a yaml file. The yaml file should have the following structure:
         name: string
@@ -138,13 +128,10 @@ class Task:
                    description = task_dict.get('description', None),
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
-                      scoring_function=task_dict.get('scorer', None) or scoring_function,
-                      benchmark=benchmark,
-                      bench_path=bench_path
-                      )
+                      scoring_function=task_dict.get('scorer', None) or scoring_function)
 
     @classmethod
-    def from_dict(cls, task_dict, benchmark=None, bench_path=None):
+    def from_dict(cls, task_dict):
         '''
         load a task from a dictionary, which could be useful for loading from yaml or json files. The dictionary should have the following structure:
         {
@@ -168,12 +155,10 @@ class Task:
                    reference = task_dict.get("reference", None), 
                    scoring_function = task_dict.get("scoring_function", None), 
                    description = task_dict.get("description", None),
-                   storage_type='yaml',
-                   benchmark=benchmark,
-                   bench_path=bench_path)
+                   storage_type='yaml')
     
     @classmethod
-    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution', benchmark=None, bench_path=None):
+    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
         '''
         dataset must have columns 'prompt' and 'canonical_solution' for now, can be expanded in the future.
         '''
@@ -187,7 +172,7 @@ class Task:
         description = f"a task base don the Hugging Face dataset {hf_path} with prompt column {prompt_column} and answer column {answer_column}"
 
         return cls(task_name, prommpt =description, variant_values = stored_tasks,
-                    reference=stored_answers, storage_type ='csv', benchmark=benchmark, bench_path=bench_path)
+                    reference=stored_answers, storage_type ='csv')
     
     def write(self, target_path):
         '''
@@ -207,9 +192,7 @@ class Task:
             "values": self.variant_values,
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
-            "description": self.description,
-            "benchmark": self.benchmark,
-            "bench_path": self.bench_path
+            "description": self.description
         }
         return task_dict
     
@@ -241,7 +224,7 @@ class Task:
     
 
     
-    def run(self, runner=BenchRunner(), log_dir='logs'):
+    def run(self, runner=BenchRunner(), log_dir='logs', benchmark=None, bench_path=None):
         """
         run the task on the stated model and log the interactions.
 
@@ -270,7 +253,7 @@ class Task:
         run_log=""
         # Create logging structure for a task within a log directory
         try:
-            run_log = init_logger(log_dir, runner.model, self.get_dict())
+            run_log = init_log_folder(log_dir, runner.model, self.get_dict(), benchmark, bench_path)
         except Exception as e:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 

@@ -3,7 +3,7 @@ import yaml
 import logging 
 import datetime
 
-def init_log_folder(log_path, model, task_info: dict):
+def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path=None):
     ''''
     Creates the log directories and sub-directories for a specific task.
     
@@ -34,6 +34,9 @@ def init_log_folder(log_path, model, task_info: dict):
     trace = {} 
     for key, item in task_info.items():
         trace[key] = item
+    if benchmark:
+        trace['bench_name'] = benchmark
+        trace['bench_path'] = bench_name
     
     with open(os.path.join(run_dir,'trace.yml'), 'w') as f:
         yaml.dump(trace, f)
