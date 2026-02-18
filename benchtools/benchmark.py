@@ -117,12 +117,7 @@ class Bench():
             for task_dir in task_list:
                 # load the tasks
                 task_path = os.path.join(task_folder, task_dir)
-                task_content = os.listdir(task_path)
-                if 'task_info.yml' in task_content:
-                    task_info_file = os.path.join(task_path, 'task_info.yml')
-                    task = Task.from_dict(task_info_file)
-                else:
-                    task = Task.from_txt_csv(task_path)
+                task = Task.from_txt_csv(task_path)
                 tasks.append(task)
         else:
             tasks = []
