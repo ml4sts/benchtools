@@ -1,7 +1,20 @@
 import os
 import yaml
-import logging 
+import json
+# import logging 
 import datetime
+import dataclasses
+# from dataclasses import dataclass
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        #if it is a function, use its string name
+        elif hasattr(o, '__call__'):
+            return o.__name__
+        return super().default(o)
+
 
 def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path=None):
     ''''
@@ -36,7 +49,7 @@ def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path
         trace[key] = item
     if benchmark:
         trace['bench_name'] = benchmark
-        trace['bench_path'] = bench_name
+        trace['bench_path'] = bench_path
     
     with open(os.path.join(run_dir,'trace.yml'), 'w') as f:
         yaml.dump(trace, f)
@@ -95,20 +108,21 @@ def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
             trace = yaml.safe_load(f) 
 
     step_trace = {
-        'task_name': trace['task_name'],
+        'task_name': trace['name'],
         'template': trace['template'],
         'idx': prompt_idx,
         'error': error,
         'steps':{ 
             0:{ # In case a subtask had more than one step we can always make the 0 dynamic
                 'prompt': prompt,
-                'response': response
-            }
-        }
+                'response': response,
+            },
+        },
     }
 
-    with open(os.path.join(prompt_dir, "log.yml"), 'w') as f:
-        yaml.dump(step_trace, f)
+    with open(os.path.join(prompt_dir, "log.json"), 'w') as f:
+        # yaml.dump(step_trace, f)
+        json.dump(step_trace, f, indent=4, cls=EnhancedJSONEncoder)
 
     # TODO: What can we benifit from the logger?
     # logger.info(f'Input: {prompt}')

@@ -261,6 +261,7 @@ class Task:
         for idx, sub_task in enumerate(self.generate_prompts()):
             # print(sub_task)
             error = None
+            response = ''
             try:
                 # TODO: What is the difference between the first two cases???
                 match runner.runner_type:
@@ -311,7 +312,7 @@ class Task:
                         return None
             except Exception as e:
                 error = e
-            log_interaction(run_log, str(idx), sub_task, response, error)
+            log_interaction(run_log, str(idx), sub_task, response, str(error))
 
         
 
