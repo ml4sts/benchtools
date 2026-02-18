@@ -263,7 +263,6 @@ class Task:
             error = None
             response = ''
             try:
-                # TODO: What is the difference between the first two cases???
                 match runner.runner_type:
                     case "ollama":
                         completion: ChatResponse = chat(model=runner.model, messages=[
