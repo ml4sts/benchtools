@@ -15,7 +15,7 @@ kernelspec:
 
 # BenchTools as a Python Library
 
-## A tiny examle
+## A tiny example
 
 we can create a tiny benchmark programmatically
 ```{code-cell}
@@ -24,7 +24,7 @@ from benchtools import Bench
 tiny_bench = Bench('Tiniest Demo', concept ='the simplest test')
 ```
 
-
+we can also create a simple task programmatically
 ```{code-cell}
 from benchtools import Task
 
@@ -42,6 +42,10 @@ tt.score(response)
 
 ```{code-cell}
 tiny_bench.add_task(tt)
+```
+
+There are multiple ways to creating a Task object
+```
 add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
 tiny_bench.add_task(add_task)
 ```
@@ -52,6 +56,7 @@ For demo purposes we delete the folder, if it exists, before running.
 rm  -rf tiniest_demo
 ```
 
+We create a new folder for a benchmark to store it in the file system
 ```{code-cell}
 tiny_bench.initialize_dir()
 tiny_bench.run()

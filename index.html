@@ -375,7 +375,7 @@ and then the specific tasks in one of the forms above</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pylib.html">BenchTools as a Python Library</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pylib.html#a-tiny-examle">A tiny examle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pylib.html#a-tiny-example">A tiny example</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pylib.html#creating-a-benchmark-object">Creating a Benchmark object</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pylib.html#benchmark-class">Benchmark class</a></li>
 </ul>
@@ -404,8 +404,8 @@ and then the specific tasks in one of the forms above</p>
 </dd></dl>
 
 <dl class="std option">
-<dt class="sig sig-object std" id="cmdoption-benchtools-add-task-arg-task-source">
-<span id="cmdoption-benchtools-add-task-s"></span><span class="sig-name descname"><span class="pre">task-source</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;s&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-add-task-arg-task-source" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object std" id="cmdoption-benchtools-add-task-s">
+<span id="cmdoption-benchtools-add-task-task-source"></span><span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--task-source</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;task_source&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-add-task-s" title="Link to this definition">#</a></dt>
 <dd><p><strong>Required</strong> The relative path to  content that already exists`</p>
 </dd></dl>
 
@@ -472,6 +472,36 @@ and then the specific tasks in one of the forms above</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BENCHMARK_PATH
 </pre></div>
 </div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-r">
+<span id="cmdoption-benchtools-run-runner-type"></span><span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--runner-type</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;runner_type&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-r" title="Link to this definition">#</a></dt>
+<dd><p>The engine that will run your LLM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ollama | openai | aws</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-m">
+<span id="cmdoption-benchtools-run-model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;model&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-m" title="Link to this definition">#</a></dt>
+<dd><p>The LLM to be benchmarked.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-a">
+<span id="cmdoption-benchtools-run-api-url"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--api-url</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;api_url&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-a" title="Link to this definition">#</a></dt>
+<dd><p>The api call required to access the runner engine.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-l">
+<span id="cmdoption-benchtools-run-log-path"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--log-path</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;log_path&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-l" title="Link to this definition">#</a></dt>
+<dd><p>The path to a log directory.</p>
+</dd></dl>
+
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-benchtools-run-arg-BENCHMARK_PATH">
@@ -489,6 +519,36 @@ and then the specific tasks in one of the forms above</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>benchtools<span class="w"> </span>run-task<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>BENCHMARK_PATH<span class="w"> </span>TASK_NAME
 </pre></div>
 </div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-r">
+<span id="cmdoption-benchtools-run-task-runner-type"></span><span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--runner-type</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;runner_type&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-task-r" title="Link to this definition">#</a></dt>
+<dd><p>The engine that will run your LLM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Options<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ollama | openai | aws</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-m">
+<span id="cmdoption-benchtools-run-task-model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;model&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-task-m" title="Link to this definition">#</a></dt>
+<dd><p>The LLM to be benchmarked.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-a">
+<span id="cmdoption-benchtools-run-task-api-url"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--api-url</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;api_url&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-task-a" title="Link to this definition">#</a></dt>
+<dd><p>The api call required to access the runner engine.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-benchtools-run-task-l">
+<span id="cmdoption-benchtools-run-task-log-path"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--log-path</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;log_path&gt;</span></span><a class="headerlink" href="#cmdoption-benchtools-run-task-l" title="Link to this definition">#</a></dt>
+<dd><p>The path to a log directory.</p>
+</dd></dl>
+
 <p class="rubric">Arguments</p>
 <dl class="std option">
 <dt class="sig sig-object std" id="cmdoption-benchtools-run-task-arg-BENCHMARK_PATH">
