@@ -39,13 +39,13 @@ class Task:
             dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
         """
         self.name = task_name
-        self.id = task_name.strip().replace(" ", "_").lower() 
+        self.task_id = task_name.strip().replace(" ", "_").lower() 
         self.description = description 
 
         self.template = template
         self.variant_values = variant_values
         self.reference = reference
-        self.id_generator = prompt_id_generator_fx
+        self.prompt_id_generator = prompt_id_generator_fx
         
 
         self.storage_type = storage_type
@@ -143,9 +143,9 @@ class Task:
                     prompt_id_generator_fx =task_dict.get('id_generator', None))
 
     @classmethod
-    def from_dict(cls, task_dict):
+    def from_dict(cls, task_dict,prompt_id_generator_fx=concatenator_id_generator):
         '''
-        load a task from a dictionary, which could be useful for loading from yaml or json files. The dictionary should have the following structure:
+        load a task from a dictionary,  The dictionary should have the following structure:
         {
             "template": string,
             "values": list of dicts (optional),
@@ -154,14 +154,17 @@ class Task:
         }
         '''
         compact_values = task_dict.get("values", None)
-        print('in')
+        
         if compact_values:
+            #  this flips it to a list of dicts 
             expanded_values = pd.DataFrame(compact_values).to_dict(orient='records') 
         else:
             expanded_values = None
         
         if 'id' in task_dict.keys():
             prompt_id_generator_fx = selector_id_generator
+        
+
         return cls(task_dict.get("name", "unnamed_task"),
                    template = task_dict.get("template", ""), 
                    variant_values=expanded_values,
@@ -169,7 +172,7 @@ class Task:
                    scoring_function = task_dict.get("scoring_function", None), 
                    description = task_dict.get("description", None),
                    storage_type='yaml',
-                    prompt_id_generator_fx =task_dict.get('id_generator', None))
+                    prompt_id_generator_fx =task_dict.get('id_generator', prompt_id_generator_fx))
     
     @classmethod
     def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
@@ -199,7 +202,7 @@ class Task:
             for value_set in self.variant_values:
                 prompt = self.template
                 prompt = prompt.format(**value_set)
-                prompt_id = self.id_generator(self.id,value_set)
+                prompt_id = self.prompt_id_generator(self.task_id,value_set)
                 id_prompt_list.append((prompt_id,prompt))
             return id_prompt_list
         else:
@@ -211,7 +214,7 @@ class Task:
         '''
         return {
             "name": self.name,
-            "id": self.id,
+            "id": self.task_id,
             "storage_type": self.storage_type
         }
 
@@ -235,7 +238,7 @@ class Task:
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
             "description": self.description,
-            "id_generator":self.id_generator
+            "id_generator":self.prompt_id_generator.__name__ 
         }
         return task_dict
     
@@ -301,7 +304,7 @@ class Task:
 
 
         for prompt_name, sub_task in self.generate_prompts():
-            # print(sub_task)
+            
             error = None
             response = ''
             try:

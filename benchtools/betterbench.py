@@ -94,8 +94,7 @@ def better_session(bench_path) -> dict:
     # Loop until user opts out 
     for question, criteria in main_checklist.items(): 
         # TODO: add if(bench_checklist[skipped])
-        # print(question) # DEbugging
-        # # print(vals)
+        
         if len(criteria) == 4:
             choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...", type=click.Choice(["yes", "no", 'q', ''], case_sensitive=False), show_choices=True, default='')
         else:
@@ -114,7 +113,7 @@ def better_session(bench_path) -> dict:
                 score=0,
                 )
                 bench_checklist[question] = yaml.dump(item)
-                print(bench_checklist[question])
+                click.echo(bench_checklist[question])
             case 'yes':
                 score = click.prompt(f"Please pick score level:\n0- {criteria[0]}\n5- {criteria[1]}\n10- {criteria[2]}\n15- {criteria[3]}\n", type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
                 justification = click.prompt("Justification? ")
@@ -125,7 +124,7 @@ def better_session(bench_path) -> dict:
                 score=score,
                 )
                 bench_checklist[question] = yaml.dump(item)
-                print(bench_checklist[question])
+                click.echo(bench_checklist[question])
             case '':
                 continue
 
@@ -137,7 +136,7 @@ def better_session(bench_path) -> dict:
 
         
         
-    print(checklist_path) #debugging 
+    
     # Save current checklist into the benchmark repo
     if os.path.exists(checklist_path):
         with open(checklist_path, 'w') as f:

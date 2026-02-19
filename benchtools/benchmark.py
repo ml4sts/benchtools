@@ -8,6 +8,7 @@ import yaml
 from benchtools.task import Task
 from pathlib import PurePath
 from benchtools.runner import BenchRunner
+from .utils import load_asset
 
 
 about_template = """# {bench_name}
@@ -264,10 +265,11 @@ class Bench():
         except:
             print("git might not be initialized in your system. Please run \"git init . \" when setup")
         # Get python gitignore template and create .gitignore
-        ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
-        if ignore_text.status_code == 200:
-            with open(".gitignore", 'a') as f:
-                f.write(ignore_text.text)
+        ignore_text = load_asset('.gitignore')
+        # ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
+        # if ignore_text.status_code == 200:
+        with open(".gitignore", 'a') as f:
+            f.write(ignore_text)
         os.chdir(current_dir)
 
 
