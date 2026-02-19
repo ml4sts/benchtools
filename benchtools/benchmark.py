@@ -57,8 +57,7 @@ class Bench():
             list of tasks to be included in the benchmark. Each task should be an instance of the
         
         '''
-        # load tasks from file structre and instantiate task objects for each, store those in a list.
-        #    loading will 
+        # set up the object attributes
         self.display_name = name.strip()
         self.concept  = concept if concept else f'a benchmark about {name.strip()}'
         self.bench_name = name.strip().replace(" ", "_").lower()
@@ -86,7 +85,8 @@ class Bench():
         Parameters:
         -----------
         bench_path: str
-            The path to the benchmark folder. The folder should contain the about.md file, tasks folder and logs folder.
+            The path to the benchmark folder. The folder should contain the about.md file,
+              tasks folder and logs folder.
 
         Returns:
         --------
@@ -98,9 +98,9 @@ class Bench():
         
         
         content = os.listdir(bench_path)
-        if 'tasks.yml' in content:
-            with open(os.path.join(bench_path, 'info.yml'), 'r') as f:
-                info = yaml.safe_load(f)
+        if 'info.yml' in content:
+            # load the info
+            info = Bench.load_info(bench_path)
         else:
             info = {}
             info['bench_name'] = PurePath(bench_path).parts[-1]
@@ -222,7 +222,7 @@ class Bench():
     def write(self):
         info = {'bench_name': self.bench_name, 
                 'concept': self.concept, 
-                'tasks': list(self.tasks.keys())}
+                'tasks': [task.get_bench_data() for task in self.tasks.values()]}
         with open(os.path.join(self.bench_path, 'info.yml'), 'w') as f:
             yaml.dump(info, f)
 
