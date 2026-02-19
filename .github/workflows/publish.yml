@@ -16,40 +16,39 @@ on:
 # This job installs dependencies, build the book, and pushes it to `gh-pages`
 jobs:
   build-book:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4.1.1
-
-    # Install dependencies
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install -e . --no-deps --force-reinstall
-
-    # Build the book
-    - name: Build the docs
-      run: |
-        cd docs
-        make html
-  
-    - name: Upload static files as artifact
-      id: deployment
-      uses: actions/upload-pages-artifact@v4.0.0 # or specific "vX.X.X" version tag for this action
-      with:
-        path: docs/source/build
-  deploy-book:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    
     runs-on: ubuntu-latest
-    needs: build-book
     steps:
-      # Push the HTML to github-pages
+      - uses: actions/checkout@v6
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 18.x
+
+      # Install dependencies
+      - name: Install dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+        run: |
+          pip install -r requirements.txt
+          pip install -e . --no-deps --force-reinstall
+
+      # Build the book
+      - name: Build the docs
+        run: |
+          cd docs
+          make html
+  
+      - name: Upload static files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: source/build
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
