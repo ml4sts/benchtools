@@ -388,23 +388,23 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ConnectionError</span><span class="g g-Whitespace">                           </span>Traceback (most recent call last)
+<span class="ne">ValidationError</span><span class="g g-Whitespace">                           </span>Traceback (most recent call last)
 <span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
 <span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">response</span> <span class="o">=</span> <span class="n">tt</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
-<span class="nn">File ~/work/benchtools/benchtools/benchtools/task.py:307,</span> in <span class="ni">Task.run</span><span class="nt">(self, model, runner_type, api_url, logging_path)</span>
-<span class="g g-Whitespace">    </span><span class="mi">305</span> <span class="k">match</span> <span class="n">runner_type</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">306</span>     <span class="k">case</span> <span class="s2">&quot;ollama&quot;</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">307</span>         <span class="n">response</span><span class="p">:</span> <span class="n">ChatResponse</span> <span class="o">=</span> <span class="n">chat</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
-<span class="g g-Whitespace">    </span><span class="mi">308</span>             <span class="p">{</span>
-<span class="g g-Whitespace">    </span><span class="mi">309</span>               <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">310</span>               <span class="s1">&#39;content&#39;</span><span class="p">:</span><span class="n">sub_task</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">311</span>             <span class="p">},</span>
-<span class="g g-Whitespace">    </span><span class="mi">312</span>         <span class="p">])</span>
-<span class="g g-Whitespace">    </span><span class="mi">313</span>         <span class="c1"># print(&quot;response: &quot; + response.message.content)</span>
-<span class="g g-Whitespace">    </span><span class="mi">314</span>         <span class="n">responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<span class="nn">File ~/work/benchtools/benchtools/benchtools/task.py:348,</span> in <span class="ni">Task.run</span><span class="nt">(self, model, runner_type, api_url, logging_path)</span>
+<span class="g g-Whitespace">    </span><span class="mi">346</span> <span class="k">match</span> <span class="n">runner_type</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">347</span>     <span class="k">case</span> <span class="s2">&quot;ollama&quot;</span><span class="p">:</span>
+<span class="ne">--&gt; </span><span class="mi">348</span>         <span class="n">response</span><span class="p">:</span> <span class="n">ChatResponse</span> <span class="o">=</span> <span class="n">chat</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+<span class="g g-Whitespace">    </span><span class="mi">349</span>             <span class="p">{</span>
+<span class="g g-Whitespace">    </span><span class="mi">350</span>               <span class="s1">&#39;role&#39;</span><span class="p">:</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">351</span>               <span class="s1">&#39;content&#39;</span><span class="p">:</span><span class="n">sub_task</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">352</span>             <span class="p">},</span>
+<span class="g g-Whitespace">    </span><span class="mi">353</span>         <span class="p">])</span>
+<span class="g g-Whitespace">    </span><span class="mi">354</span>         <span class="c1"># print(&quot;response: &quot; + response.message.content)</span>
+<span class="g g-Whitespace">    </span><span class="mi">355</span>         <span class="n">responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/ollama/_client.py:365,</span> in <span class="ni">Client.chat</span><span class="nt">(self, model, messages, tools, stream, think, logprobs, top_logprobs, format, options, keep_alive)</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/ollama/_client.py:371,</span> in <span class="ni">Client.chat</span><span class="nt">(self, model, messages, tools, stream, think, logprobs, top_logprobs, format, options, keep_alive)</span>
 <span class="g g-Whitespace">    </span><span class="mi">318</span> <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span>
 <span class="g g-Whitespace">    </span><span class="mi">319</span>   <span class="bp">self</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">320</span>   <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
@@ -415,13 +415,13 @@
 <span class="g g-Whitespace">    </span><span class="mi">334</span><span class="sd"> </span>
 <span class="sd">   (...)    363   Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.</span>
 <span class="g g-Whitespace">    </span><span class="mi">364</span><span class="sd">   &quot;&quot;&quot;</span>
-<span class="ne">--&gt; </span><span class="mi">365</span>   <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">365</span>   <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
 <span class="g g-Whitespace">    </span><span class="mi">366</span>     <span class="n">ChatResponse</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">367</span>     <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">368</span>     <span class="s1">&#39;/api/chat&#39;</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">369</span>     <span class="n">json</span><span class="o">=</span><span class="n">ChatRequest</span><span class="p">(</span>
 <span class="g g-Whitespace">    </span><span class="mi">370</span>       <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">371</span>       <span class="n">messages</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">_copy_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)),</span>
+<span class="ne">--&gt; </span><span class="mi">371</span>       <span class="n">messages</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">_copy_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">)),</span>
 <span class="g g-Whitespace">    </span><span class="mi">372</span>       <span class="n">tools</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">_copy_tools</span><span class="p">(</span><span class="n">tools</span><span class="p">)),</span>
 <span class="g g-Whitespace">    </span><span class="mi">373</span>       <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">374</span>       <span class="n">think</span><span class="o">=</span><span class="n">think</span><span class="p">,</span>
@@ -434,17 +434,33 @@
 <span class="g g-Whitespace">    </span><span class="mi">381</span>     <span class="n">stream</span><span class="o">=</span><span class="n">stream</span><span class="p">,</span>
 <span class="g g-Whitespace">    </span><span class="mi">382</span>   <span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/ollama/_client.py:189,</span> in <span class="ni">Client._request</span><span class="nt">(self, cls, stream, *args, **kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">185</span>         <span class="k">yield</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">part</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">187</span>   <span class="k">return</span> <span class="n">inner</span><span class="p">()</span>
-<span class="ne">--&gt; </span><span class="mi">189</span> <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_request_raw</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/ollama/_client.py:1286,</span> in <span class="ni">_copy_messages</span><span class="nt">(messages)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1284</span> <span class="k">def</span><span class="w"> </span><span class="nf">_copy_messages</span><span class="p">(</span><span class="n">messages</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Message</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Message</span><span class="p">]:</span>
+<span class="g g-Whitespace">   </span><span class="mi">1285</span>   <span class="k">for</span> <span class="n">message</span> <span class="ow">in</span> <span class="n">messages</span> <span class="ow">or</span> <span class="p">[]:</span>
+<span class="ne">-&gt; </span><span class="mi">1286</span>     <span class="k">yield</span> <span class="n">Message</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+<span class="g g-Whitespace">   </span><span class="mi">1287</span>       <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">_copy_images</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;images&#39;</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">message</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">},</span>
+<span class="g g-Whitespace">   </span><span class="mi">1288</span>     <span class="p">)</span>
 
-<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/ollama/_client.py:135,</span> in <span class="ni">Client._request_raw</span><span class="nt">(self, *args, **kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">133</span>   <span class="k">raise</span> <span class="n">ResponseError</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
-<span class="g g-Whitespace">    </span><span class="mi">134</span> <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">ConnectError</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">135</span>   <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span><span class="n">CONNECTION_ERROR_MESSAGE</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+<span class="nn">File /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pydantic/main.py:716,</span> in <span class="ni">BaseModel.model_validate</span><span class="nt">(cls, obj, strict, extra, from_attributes, context, by_alias, by_name)</span>
+<span class="g g-Whitespace">    </span><span class="mi">710</span> <span class="k">if</span> <span class="n">by_alias</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">by_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+<span class="g g-Whitespace">    </span><span class="mi">711</span>     <span class="k">raise</span> <span class="n">PydanticUserError</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">712</span>         <span class="s1">&#39;At least one of `by_alias` or `by_name` must be set to True.&#39;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">713</span>         <span class="n">code</span><span class="o">=</span><span class="s1">&#39;validate-by-alias-and-name-false&#39;</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">714</span>     <span class="p">)</span>
+<span class="ne">--&gt; </span><span class="mi">716</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__pydantic_validator__</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span>
+<span class="g g-Whitespace">    </span><span class="mi">717</span>     <span class="n">obj</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">718</span>     <span class="n">strict</span><span class="o">=</span><span class="n">strict</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">719</span>     <span class="n">extra</span><span class="o">=</span><span class="n">extra</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">720</span>     <span class="n">from_attributes</span><span class="o">=</span><span class="n">from_attributes</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">721</span>     <span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">722</span>     <span class="n">by_alias</span><span class="o">=</span><span class="n">by_alias</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">723</span>     <span class="n">by_name</span><span class="o">=</span><span class="n">by_name</span><span class="p">,</span>
+<span class="g g-Whitespace">    </span><span class="mi">724</span> <span class="p">)</span>
 
-<span class="ne">ConnectionError</span>: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+<span class="ne">ValidationError</span>: 1 validation error for Message
+<span class="n">content</span>
+  <span class="n">Input</span> <span class="n">should</span> <span class="n">be</span> <span class="n">a</span> <span class="n">valid</span> <span class="n">string</span> <span class="p">[</span><span class="nb">type</span><span class="o">=</span><span class="n">string_type</span><span class="p">,</span> <span class="n">input_value</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;greeting&#39;</span><span class="p">,</span> <span class="s1">&#39;Hello there&#39;</span><span class="p">),</span> <span class="n">input_type</span><span class="o">=</span><span class="nb">tuple</span><span class="p">]</span>
+    <span class="n">For</span> <span class="n">further</span> <span class="n">information</span> <span class="n">visit</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">errors</span><span class="o">.</span><span class="n">pydantic</span><span class="o">.</span><span class="n">dev</span><span class="o">/</span><span class="mf">2.12</span><span class="o">/</span><span class="n">v</span><span class="o">/</span><span class="n">string_type</span>
 </pre></div>
 </div>
 </div>
