@@ -122,9 +122,9 @@ class Bench():
                 task_content = os.listdir(task_path)
                 if 'task_info.yml' in task_content:
                     task_info_file = os.path.join(task_path, 'task_info.yml')
-                    task = Task.from_dict(task_info_file, benchmark=info['bench_name'], bench_path=bench_path)
+                    task = Task.from_dict(task_info_file)
                 else:
-                    task = Task.from_txt_csv(task_path, benchmark=info['bench_name'], bench_path=bench_path)
+                    task = Task.from_txt_csv(task_path)
                 tasks.append(task)
         else:
             tasks = []
@@ -162,7 +162,7 @@ class Bench():
         
         tasks =[]
         for task_dict in task_list:
-            tasks.append(Task.from_dict(task_dict, benchmark=info['bench_name'], bench_path=bench_path))
+            tasks.append(Task.from_dict(task_dict))
 
 
         return cls(name = info['bench_name'], bench_path =bench_path,
@@ -337,6 +337,6 @@ class Bench():
 
         # TODO: Add log_dir to attributes?
         
-        return task_object.run(runner, log_dir)
+        return task_object.run(runner, log_dir, self.bench_name, self.bench_path)
 
 
