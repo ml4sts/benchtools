@@ -40,6 +40,8 @@ jobs:
         run: |
           cd docs
           make html
+          pwd
+          ls -la
   
       - name: Upload static files as artifact
         uses: actions/upload-pages-artifact@v4
