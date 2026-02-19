@@ -56,10 +56,13 @@ def init(benchmark_name, path, about, no_git):
     folder_name = benchmark_name.replace(" ", "_").lower()
     bench_path = os.path.join(path, folder_name)
 
-    # tasks = []
-    # if task_sources:
-    #     # TODO: Look at content to create Task objects and add them to tasks
-    #     continue
+    tasks_exist = click.confirm("Do you have task files already prepared?", default=False)
+    if tasks_exist:
+        click.echo("Please add your task files after the benchmark is created with `benchtool add-task` ")
+    else:
+        task_template = click.confirm("Would you like to add a task template to your benchmark?", default=True)
+        if task_template:
+            template_type = click.prompt("What type of template would you like to add?", type=click.Choice(['folders', 'list']), show_choices=True)
 
     click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
     benchmark = Bench(name =benchmark_name, bench_path = bench_path, 
