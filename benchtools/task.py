@@ -13,6 +13,8 @@ from benchtools.scorers import scoring_fx_list, contains, exact_match
 
 from .utils import concatenator_id_generator, selector_id_generator
 
+prompt_id_fx = {'concatenator_id_generator':concatenator_id_generator,
+                'selector_id_generator':selector_id_generator}
 
 class Task:
     """
@@ -45,6 +47,9 @@ class Task:
         self.template = template
         self.variant_values = variant_values
         self.reference = reference
+        if not callable(prompt_id_generator_fx):
+            prompt_id_generator_fx  = prompt_id_fx[prompt_id_generator_fx]
+
         self.prompt_id_generator = prompt_id_generator_fx
         
 
