@@ -113,7 +113,7 @@ class Task:
         template = 'Your {noun} for the model here with values that should vary\
               denoted in brackets. {verb} matching  ' + supplemental_files[storage_type]
         variant_values = {'noun':['text','task'],
-                          'verb':['use','select','employ']}
+                          'verb':['use','select']}
         description = 'give your task a short description '
         return cls(task_name, template= template, variant_values = variant_values, 
                    description = description,  reference='', 
@@ -256,16 +256,18 @@ class Task:
         write the task to a csv file with a task.txt template file
         '''
         # write the template 
-        with open(os.path.join(target_folder, 'template.txt'), 'w') as f:
+        with open(os.path.join(target_folder,self.task_id, 'template.txt'), 'w') as f:
             f.write(self.template)
 
          
-        with open(os.path.join(target_folder, 'description.txt'), 'w') as f:
+        with open(os.path.join(target_folder,self.task_id, 'description.txt'), 'w') as f:
             f.write(self.description)
 
         # write the values and answers to a csv
-        value_answer_df = pd.DataFrame(self.variant_values)
-        value_answer_df.to_csv(os.path.join(target_folder, 'values.csv'), index=False)
+        if self.variant_values:
+            value_answer_df = pd.DataFrame(self.variant_values)
+        
+            value_answer_df.to_csv(os.path.join(target_folder,self.task_id, 'values.csv'), index=False)
     
 
     
