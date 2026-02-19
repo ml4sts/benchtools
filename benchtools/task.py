@@ -61,8 +61,8 @@ class Task:
         else:
             self.scoring_function = exact_match 
 
+            
     @classmethod
-
     def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
                      prompt_id_generator_fx = concatenator_id_generator):
         '''

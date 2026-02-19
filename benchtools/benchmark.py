@@ -138,11 +138,7 @@ class Bench():
     @classmethod
     def from_yaml(cls, bench_path):
         """
-<<<<<<< HEAD
         Load tasks from a YAML file and generate Task objects and add them to the bench
-=======
-        Load tasks from a YAML file and generate Bench objects.
->>>>>>> c1c8320 (resolve conflict)
 
         Parameters
         ----------
