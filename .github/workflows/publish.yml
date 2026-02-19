@@ -10,8 +10,8 @@ on:
     # unrelated files, you can make this run only if a file within that specific
     # folder has been modified.
     #
-    paths:
-    - docs/**
+    # paths:
+    # - docs/**
 
 # This job installs dependencies, build the book, and pushes it to `gh-pages`
 jobs:
@@ -41,8 +41,7 @@ jobs:
       id: deployment
       uses: actions/upload-pages-artifact@v4.0.0 # or specific "vX.X.X" version tag for this action
       with:
-        path: docs/source/_static
-
+        path: docs/source/build
   deploy-book:
     environment:
       name: github-pages
