@@ -27,6 +27,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_click'
 ]
+nb_execution_mode = "off"
+
 
 templates_path = ['_templates']
 exclude_patterns = ["README.md", 'demobench/*', 'build/*', '_build', 'Thumbs.db', "*import_posts*"]
