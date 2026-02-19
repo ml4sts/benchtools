@@ -37,6 +37,10 @@ class Task:
             solution that will be passed with the model answer to the scoring function,
         variant_values: 
             dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
+        benchmark: 
+            The name of the benchmark this task is a part of (if any)
+        bench_path: 
+            Path to the benchmark directory
         """
         self.name = task_name
         self.id = task_name.strip().replace(" ", "_").lower() 
@@ -142,7 +146,7 @@ class Task:
                     prompt_id_generator_fx =task_dict.get('id_generator', None))
 
     @classmethod
-    def from_dict(cls, task_dict):
+    def from_dict(cls, task_dict, benchmark=None, bench_path=None):
         '''
         load a task from a dictionary, which could be useful for loading from yaml or json files. The dictionary should have the following structure:
         {
@@ -171,7 +175,7 @@ class Task:
                     prompt_id_generator_fx =task_dict.get('id_generator', None))
     
     @classmethod
-    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
+    def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution', benchmark=None, bench_path=None):
         '''
         dataset must have columns 'prompt' and 'canonical_solution' for now, can be expanded in the future.
         '''
@@ -185,7 +189,7 @@ class Task:
         description = f"a task base don the Hugging Face dataset {hf_path} with prompt column {prompt_column} and answer column {answer_column}"
 
         return cls(task_name, prommpt =description, variant_values = stored_tasks,
-                    reference=stored_answers, storage_type ='csv')
+                    reference=stored_answers, storage_type ='csv', benchmark=benchmark, bench_path=bench_path)
     
     def generate_prompts(self):
         '''
@@ -265,7 +269,7 @@ class Task:
     
 
     
-    def run(self, runner=BenchRunner(), log_dir='logs', benchmark=None, bench_path=None):
+    def run(self, runner=BenchRunner(), log_dir='logs'):
         """
         run the task on the stated model and log the interactions.
 
