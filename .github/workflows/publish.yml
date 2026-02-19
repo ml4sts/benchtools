@@ -38,10 +38,10 @@ jobs:
         make html
   
     - name: Upload static files as artifact
-        id: deployment
-        uses: actions/upload-pages-artifact@v4.0.0 # or specific "vX.X.X" version tag for this action
-        with:
-          path: build_outputs_folder/
+      id: deployment
+      uses: actions/upload-pages-artifact@v4.0.0 # or specific "vX.X.X" version tag for this action
+      with:
+        path: docs/source/_static
 
   deploy-book:
     environment:
