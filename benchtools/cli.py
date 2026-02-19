@@ -87,7 +87,8 @@ def init(benchmark_name, path, about, no_git):
 @click.argument('task-name',  required = True, type=str) 
 @click.option('-p','--benchmark-path', default='.', help="The path to the benchmark repository where the task will be added.", type=str)
 @click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
-@click.option('-t','--task-type', type=click.Choice(['folders', 'list']), help="The type of the task content being added. Options are csv or yml", required=True)
+@click.option('-t','--task-type', type=click.Choice(['folders', 'list']), 
+              help="The type of the task content being added. Options are csv or yml", required=True)
 def add_task(task_name, bench_path, task_source,task_type):
     """
     Set up a new task.
@@ -125,10 +126,14 @@ def add_task(task_name, bench_path, task_source,task_type):
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
-@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], default="ollama", help="The engine that will run your LLM.")
-@click.option('-m', '--model', type=str, default="gemma3", help="The LLM to be benchmarked.")
-@click.option('-a', '--api-url', type=str, default=None, help="The api call required to access the runner engine.")
-@click.option('-l', '--log-path', type=str, default=None, help="The path to a log directory.")
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'aws']), 
+                                                       default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3",
+               help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, 
+              help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None,
+               help="The path to a log directory.")
 def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_path):
     """
     Running the tasks and generating logs
@@ -149,14 +154,18 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
             benchmark = Bench.from_folders(benchmark_path)
 
     click.echo(f"Running {task_name} now")
-    benchmark.run([task_name], runner, log_path)
+    benchmark.run_task(task_name, runner, log_path)
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
-@click.option('-r', '--runner-type', type=click.Choice['ollama', 'openai', 'aws'], default="ollama", help="The engine that will run your LLM.")
-@click.option('-m', '--model', type=str, default="gemma3", help="The LLM to be benchmarked.")
-@click.option('-a', '--api-url', type=str, default=None, help="The api call required to access the runner engine.")
-@click.option('-l', '--log-path', type=str, default=None, help="The path to a log directory.")
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'aws']),
+               default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3", 
+              help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, 
+              help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None, 
+              help="The path to a log directory.")
 def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_path: str):
     """
     Running the benchmark and generating logs

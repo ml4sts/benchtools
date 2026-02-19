@@ -303,6 +303,9 @@ class Bench():
 
 
     def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None): 
+        '''
+        run a specific task
+        '''
         if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
 
