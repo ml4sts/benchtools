@@ -12,7 +12,11 @@ A library for building and running benchmarks
 
 ## Install 
 
-You can install after cloning to work locally or directly from github. 
+You can install  directly from github or after cloning
+
+### diect install 
+
+
 
 ### By clone
 
@@ -38,8 +42,8 @@ To update, pull and install again.
 ## Usage 
 
 benchtools allows you to express templated tasks in multiple ways:
-- a yaml format
-- a txt file with tempalte and a csv file of values 
+- a yaml format listing the tasks with a values key
+- a folder for each task with txt file with template and a csv file of values for variations of the task
 
 a  benchmark can consist of tasks that all fit a single format above or a mixture of meta-tasks each represented as a folder
 and then the specific tasks in one of the forms above
