@@ -43,16 +43,16 @@ def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path
     run_dir = os.path.join(task_dir, str(timestamp))
     os.mkdir(run_dir)
 
-    # Create trace.yml with all the metadata
-    trace = {} 
-    for key, item in task_info.items():
-        trace[key] = item
+    # Create run_info.yml with all the metadata
+    run_info =  task_info
     if benchmark:
-        trace['bench_name'] = benchmark
-        trace['bench_path'] = bench_path
+        run_info['bench_name'] = benchmark
+        run_info['bench_path'] = bench_path
+    run_info['run_id'] = str(timestamp)
+    run_info['log_path'] = str(run_dir)
     
-    with open(os.path.join(run_dir,'trace.yml'), 'w') as f:
-        yaml.dump(trace, f)
+    with open(os.path.join(run_dir,'run_info.yml'), 'w') as f:
+        yaml.dump(run_info, f)
 
 
 
@@ -75,7 +75,7 @@ def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path
 
     return run_dir
 
-def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
+def log_interaction(run_log_dir, prompt_name, prompt, response, error):
     """
     Logs the event to the log folder specified by the user
 
@@ -83,7 +83,7 @@ def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
     -------------
     run_log_dir: str
         Path to a run-specific directory in a log directory specified in a call to the run method
-    prompt_idx: str
+    prompt_name: str
         Index of the sub-task being logged
     prompt: str
         The input provided to the model.
@@ -94,7 +94,7 @@ def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
     """
 
     # Making this into a directory in case more files (possibly steps) were to be held in here
-    prompt_dir = os.path.join(run_log_dir, f"prompt_{prompt_idx}")
+    prompt_dir = os.path.join(run_log_dir, prompt_name)
     os.mkdir(prompt_dir)
 
     with open(os.path.join(prompt_dir, "log.txt"), 'w') as f:
@@ -103,14 +103,14 @@ def log_interaction(run_log_dir, prompt_idx, prompt, response, error):
         f.write("------ response ------\n")
         f.write(f"{response}\n\n")
     
-    # Gather trace info
-    with open(os.path.join(run_log_dir, "trace.yml"), 'r') as f:
-            trace = yaml.safe_load(f) 
+    # Gather run_info info
+    with open(os.path.join(run_log_dir, "run_info.yml"), 'r') as f:
+            run_info = yaml.safe_load(f) 
 
     step_trace = {
-        'task_name': trace['name'],
-        'template': trace['template'],
-        'idx': prompt_idx,
+        'task_name': run_info['name'],
+        'template': run_info['template'],
+        'prompt_name': prompt_name,
         'error': error,
         'steps':{ 
             0:{ # In case a subtask had more than one step we can always make the 0 dynamic

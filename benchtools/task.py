@@ -258,7 +258,7 @@ class Task:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
 
-        for idx, sub_task in enumerate(self.generate_prompts()):
+        for prompt_name, sub_task in self.generate_prompts():
             # print(sub_task)
             error = None
             response = ''
@@ -311,7 +311,7 @@ class Task:
                         return None
             except Exception as e:
                 error = e
-            log_interaction(run_log, str(idx), sub_task, response, str(error))
+            log_interaction(run_log, prompt_name, sub_task, response, str(error))
 
         
 
