@@ -57,6 +57,7 @@ There are two main ways to use BenchTools. The user can mix and match between th
 cli.md
 pylib.md
 concept.md
+demo.md
 ```
 
 
