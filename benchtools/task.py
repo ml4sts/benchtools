@@ -233,7 +233,7 @@ class Task:
             case 'yaml':
                 self.write_yaml(target_path)
             case 'csv':
-                self.write_csv(target_path)
+                self.write_csv(os.path.join(target_path,'tasks'))
 
     def get_dict(self):
         task_dict = {

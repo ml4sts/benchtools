@@ -72,7 +72,8 @@ class Bench():
             self.base_path = base_path
             self.bench_path = os.path.join(base_path, self.bench_name)
 
-        self.tasks_folder = os.path.join(self.bench_path, 'tasks')
+        
+        
         if tasks:
             # All task objects have to be initialized before adding them to a benchmark
             self.tasks = {t.name:t for t in tasks} 
@@ -194,9 +195,7 @@ class Bench():
 
         # Create benchmark skeleton 
         os.mkdir(self.bench_path)
-        # Create a benchmarks folder with tasks in them
-        tasks_path = os.path.join(self.bench_path, "tasks")
-        os.mkdir(tasks_path)
+        
 
         # Create about.md
         about_path = os.path.join(self.bench_path, "about.md")
@@ -210,17 +209,19 @@ class Bench():
         if not no_git:
             self.init_repo(self.bench_path)
 
+        # store tasks
         task_types = set([task.storage_type for task in self.tasks.values()])
         if 'csv' in task_types:
+            os.mkdir(self.bench_path,'tasks')
             for task_name, task_object in self.tasks.items(): 
-                task_object.write(tasks_path)
+                task_object.write(self.bench_path)
         
         if task_types == {'yaml'}:
             task_list = []
             for task in self.tasks.values():
                 task_list.append(task.get_dict())
 
-            with open(os.path.join(tasks_path,'tasks.yml'), 'w') as file:
+            with open(os.path.join(self.bench_path,'tasks.yml'), 'w') as file:
                 yaml.dump(task_list, file)
 
         self.write()    
@@ -240,7 +241,7 @@ class Bench():
     
     def write_tasks(self):
         for task in self.tasks:
-            task.write(self.tasks_folder)
+            task.write(self.bench_path)
         
 
     ### Initialize git repository
@@ -276,13 +277,7 @@ class Bench():
 
         # Check if written or not to write the task in the directory
         if self.written:
-            task_folder = os.path.join(self.tasks_folder, task_object.id)
-            if not os.path.exists(task_folder):
-                os.mkdir(task_folder)
-            else:
-                # TODO: What happens if true?
-                pass
-            task_object.write(task_folder)
+            task_object.write(self.bench_path)
 
 
     def run(self, runner=BenchRunner(), log_dir=None):
