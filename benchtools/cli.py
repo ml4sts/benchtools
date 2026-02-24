@@ -136,7 +136,7 @@ def add_task(task_name, bench_path, task_source,task_type):
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
-@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'aws']), 
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'bedrock']), 
                                                        default="ollama", help="The engine that will run your LLM.")
 @click.option('-m', '--model', type=str, default="gemma3",
                help="The LLM to be benchmarked.")
@@ -168,7 +168,7 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
-@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'aws']),
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'bedrock']),
                default="ollama", help="The engine that will run your LLM.")
 @click.option('-m', '--model', type=str, default="gemma3", 
               help="The LLM to be benchmarked.")
