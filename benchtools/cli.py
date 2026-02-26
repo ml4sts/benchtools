@@ -100,14 +100,22 @@ def init(benchmark_name, path, about, no_git):
 @click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
 @click.option('-t','--task-type', type=click.Choice(['folders', 'list']), 
               help="The type of the task content being added. Options are csv or yml", required=True)
-def add_task(task_name, bench_path, task_source,task_type):
+def add_task(task_name, benchmark_path, task_source,task_type):
     """
     Set up a new task.
 
     """
     
-    if os.path.exists(bench_path):
-        benchmark = Bench.load(bench_path)
+    # check folder to see if folder or yaml type to load benchmark
+    if os.path.isdir(benchmark_path):
+        content = os.listdir(benchmark_path)
+        if 'info.yml' in content:
+            benchmark = Bench.from_yaml(benchmark_path)
+        else:
+            benchmark = Bench.from_folders(benchmark_path)
+    
+    if benchmark.written:
+        # Create Task object
         if task_source: 
             if os.path.isdir(task_source):
                 task = Task.from_txt_csv(task_source)
@@ -120,17 +128,17 @@ def add_task(task_name, bench_path, task_source,task_type):
                 case 'list':
                     storage_type = 'yaml'
             task = Task.from_example(name=task_name, storage_type=storage_type)
-            task.write()
+            # task.write()
         else:
             click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
             exit(4356)
 
-        # TODO: handle adding to benchmark with metadata
-        # benchmark.add_task(task)
-        task.write(bench_path)
+        # Add Task to Bench
+        benchmark.add_task(task)
         click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
-    else:
-        click.echo("No benchmark reposiory at " + bench_path)
+
+    else: 
+        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
 
 
 @benchtool.command()
@@ -158,16 +166,19 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):
         content = os.listdir(benchmark_path)
-        if 'tasks.yml' in content:
+        if 'info.yml' in content:
             benchmark = Bench.from_yaml(benchmark_path)
         else:
             benchmark = Bench.from_folders(benchmark_path)
-
-    click.echo(f"Running {task_name} now")
-    benchmark.run_task(task_name, runner, log_path)
+    
+    if benchmark.bench_name:
+        click.echo(f"Running {task_name} of benchmark {benchmark.bench_name} now")
+        benchmark.run_task(task_name, runner, log_path)
+    else: 
+        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
 
 @benchtool.command()
-@click.argument('benchmark-path', required = True, type=str)
+@click.argument('benchmark-path', required = False, type=str, default='.')
 @click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'aws']),
                default="ollama", help="The engine that will run your LLM.")
 @click.option('-m', '--model', type=str, default="gemma3", 
@@ -179,7 +190,8 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
 def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_path: str):
     """
     Running the benchmark and generating logs
-    , help="The path to the benchmark repository where all the task reside."
+    Parameters:
+        benchmark-path: The path to the benchmark repository where all the task reside.
     """
     # Create BenchRunner object
     runner = BenchRunner(runner_type, model, api_url)
@@ -187,12 +199,16 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):
         content = os.listdir(benchmark_path)
-        if 'tasks.yml' in content:
+        if 'info.yml' in content:
             benchmark = Bench.from_yaml(benchmark_path)
         else:
             benchmark = Bench.from_folders(benchmark_path)
-    click.echo(f"Running {benchmark.bench_name} now")
-    benchmark.run(runner, log_path)
+    
+    if benchmark.bench_name:
+        click.echo(f"Running {benchmark.bench_name} now")
+        benchmark.run(runner, log_path)
+    else: 
+        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
 
 
 @click.group()
