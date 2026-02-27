@@ -133,7 +133,7 @@ def add_task(task_name, benchmark_path, task_source,task_type):
             click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
             exit(4356)
 
-        # Add Task to Bench
+        # Add Task to Bench, will write as well
         benchmark.add_task(task)
         click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
 
@@ -166,7 +166,7 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):
         content = os.listdir(benchmark_path)
-        if 'info.yml' in content:
+        if 'tasks.yml' in content:
             benchmark = Bench.from_yaml(benchmark_path)
         else:
             benchmark = Bench.from_folders(benchmark_path)
@@ -199,7 +199,7 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     # check folder to see if folder or yaml type to load benchmark
     if os.path.isdir(benchmark_path):
         content = os.listdir(benchmark_path)
-        if 'info.yml' in content:
+        if 'tasks.yml' in content:
             benchmark = Bench.from_yaml(benchmark_path)
         else:
             benchmark = Bench.from_folders(benchmark_path)
