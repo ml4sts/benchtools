@@ -69,8 +69,8 @@ def better_session(bench_path) -> dict:
 
     # Intro
     click.echo("Entering interactive session for BetterBench!")
-    click.echo("This interactive session is meant guide the benchmark to follow \
-               the standards developed by reuel et. al. named the BetterBench Checklist!")
+    click.echo("This interactive session is meant guide the benchmark to follow " \
+                "the standards developed by reuel et. al. named the BetterBench Checklist!")
     click.echo("This interactive session is optional and you can always come back " \
                 "to it with the `betterbench resume` command")
     
@@ -154,7 +154,7 @@ def better_session(bench_path) -> dict:
         
     print(checklist_path) #debugging 
     # Save current checklist into the benchmark repo
-    if os.path.exists(checklist_path):
+    if os.path.exists(bench_path):
         with open(checklist_path, 'w') as f:
             yaml.dump(bench_checklist, f)
 
