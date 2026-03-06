@@ -106,39 +106,30 @@ def add_task(task_name, benchmark_path, task_source,task_type):
 
     """
     
-    # check folder to see if folder or yaml type to load benchmark
-    if os.path.isdir(benchmark_path):
-        content = os.listdir(benchmark_path)
-        if 'info.yml' in content:
-            benchmark = Bench.from_yaml(benchmark_path)
-        else:
-            benchmark = Bench.from_folders(benchmark_path)
+    benchmark = Bench.load(bench_path)
     
-    if benchmark.written:
-        # Create Task object
-        if task_source: 
-            if os.path.isdir(task_source):
-                task = Task.from_txt_csv(task_source)
-            elif os.path.isfile(task_source):
-                task = Task.from_yaml(task_source)
-        elif task_type:
-            match task_type: 
-                case 'folders':
-                    storage_type = 'csv'
-                case 'list':
-                    storage_type = 'yaml'
-            task = Task.from_example(name=task_name, storage_type=storage_type)
-            # task.write()
-        else:
-            click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
-            exit(4356)
+    # Create Task object
+    if task_source: 
+        if os.path.isdir(task_source):
+            task = Task.from_txt_csv(task_source)
+        elif os.path.isfile(task_source):
+            task = Task.from_yaml(task_source)
+    elif task_type:
+        match task_type: 
+            case 'folders':
+                storage_type = 'csv'
+            case 'list':
+                storage_type = 'yaml'
+        task = Task.from_example(name=task_name, storage_type=storage_type)
+        # task.write()
+    else:
+        click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
+        exit(4356)
 
         # Add Task to Bench, will write as well
         benchmark.add_task(task)
         click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
 
-    else: 
-        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
 
 
 @benchtool.command()
@@ -163,19 +154,11 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     # Create BenchRunner object
     runner = BenchRunner(runner_type, model, api_url)
 
-    # check folder to see if folder or yaml type to load benchmark
-    if os.path.isdir(benchmark_path):
-        content = os.listdir(benchmark_path)
-        if 'tasks.yml' in content:
-            benchmark = Bench.from_yaml(benchmark_path)
-        else:
-            benchmark = Bench.from_folders(benchmark_path)
+    benchmark = Bench.load(bench_path)
+
     
-    if benchmark.bench_name:
-        click.echo(f"Running {task_name} of benchmark {benchmark.bench_name} now")
-        benchmark.run_task(task_name, runner, log_path)
-    else: 
-        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
+    click.echo(f"Running {task_name} of benchmark {benchmark.bench_name} now")
+    benchmark.run_task(task_name, runner, log_path)
 
 @benchtool.command()
 @click.argument('benchmark-path', required = False, type=str, default='.')
@@ -196,19 +179,12 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     # Create BenchRunner object
     runner = BenchRunner(runner_type, model, api_url)
 
-    # check folder to see if folder or yaml type to load benchmark
-    if os.path.isdir(benchmark_path):
-        content = os.listdir(benchmark_path)
-        if 'tasks.yml' in content:
-            benchmark = Bench.from_yaml(benchmark_path)
-        else:
-            benchmark = Bench.from_folders(benchmark_path)
+    benchmark = Bench.load(bench_path)
+
     
-    if benchmark.bench_name:
-        click.echo(f"Running {benchmark.bench_name} now")
-        benchmark.run(runner, log_path)
-    else: 
-        click.echo(f"path {benchmark_path} doesn't seem to have a benchmark in it")
+    click.echo(f"Running {benchmark.bench_name} now")
+    benchmark.run(runner, log_path)
+
 
 
 @click.group()

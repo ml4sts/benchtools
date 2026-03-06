@@ -161,6 +161,36 @@ class Bench():
         return cls(name = info['bench_name'], bench_path =bench_path,
                    concept= info['concept'], tasks=tasks)
 
+    @classmethod
+    def load(cls, bench_path):
+        '''
+        Load a benchmark object from a given path.
+        If the path given is has a yaml tasks file, load tasks from 
+        it and generate Task objects and add them to the bench.
+        Otherwise load the bench object from existing task folders.
+
+        Parameters:
+        -----------
+        bench_path: str
+            The path to the benchmark folder. The folder should contain the about.md file,
+              tasks.yaml file or tasks folder.
+
+        Returns:
+        --------
+        Bench
+            An instance of the Bench class with the loaded benchmark.
+        '''
+        # check folder to see if folder or yaml type to load benchmark
+        if not os.path.isdir(benchmark_path):
+            raise ValueError("The passed path doesn't exist.")
+        else: 
+            content = os.listdir(benchmark_path)
+            if 'tasks.yml' in content:
+                return cls.from_yaml(benchmark_path)
+            else:
+                return cls.from_folders(benchmark_path)
+        
+
     @staticmethod
     def load_info(bench_path):
         with open(os.path.join(bench_path, 'info.yml'), 'r') as f:
