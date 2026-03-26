@@ -3,7 +3,7 @@
 
 
 
-##  install
+##  install from Source
 
 Installing from source means you can pull to update. 
 
@@ -25,6 +25,8 @@ Resolving deltas: 100% (513/513), done.
 
 ```
 
+
+See it creates a folder
 ```{code-cell} bash
 :tags: ["skip-execution"]
 ls
@@ -37,8 +39,10 @@ benchtools
 
 Then install: 
 ::::::{important}
-this needs to be `benchtools/` for it to be the path; `benchtools` will pull from pypi. Alternatively, `cd benchtools` then `pip install .`
+this needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
 :::::::
+
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
 pip install benchtools/
@@ -130,10 +134,6 @@ template.txt	values.csv
 what is {a} + {b}?
 ```
 
-```{code-cell} bash
-:tags: ["skip-execution"]
-cat values.csv 
-```
 
 ```{code-block} console
 :filename: values.csv
@@ -144,43 +144,36 @@ a,b,reference
 ```
 
 :::::{important}
-The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there)
+The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks(each row is a subtask)
 :::::::
 
 we can look at the other task too:
-```{code-cell} bash
-:tags: ["skip-execution"]
-cd ../symbols/
 
-```
 
-```{code-cell} bash
-:tags: ["skip-execution"]
-cat template.txt 
-```
-
-```{code-block} console
+```{code-cell} console
+:filename: sybmols/template.txt 
 what is the name for the following symbol? {symb}
 ```
 
-```{code-cell} bash
-:tags: ["skip-execution"]
-cat values.csv 
-```
 
-```{code-block} console 
+
+```{code-block}  console
+:filename: symbols/values.csv 
 symb, reference
 @, at
 #, pound
 \$, dollar sign
 ```
 
+## Running a benchmark
+Then back int he top of the benchmark folder
 ```{code-cell} bash
 :tags: ["skip-execution"]
 cd ../../../
 ```
 
 
+We can see the help for the command
 
 
 ```{code-cell} bash
@@ -209,6 +202,8 @@ Options:
 this will be filled in later
 :::::::
 
+
+We can run a benchmark by name
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool run listbench/
@@ -222,13 +217,6 @@ Running list_bench now
 ```{code-cell} bash
 :tags: ["skip-execution"]
 cd listbench/
-```
-
-```{code-block} console
-
-```
-
-```{code-cell} bash
 :tags: ["skip-execution"]
 ls
 ```
@@ -238,12 +226,12 @@ info.yml	logs		tasks.yml
 
 ```
 
-```{code-cell} bash
-:tags: ["skip-execution"]
-cat tasks.yml 
-```
+it creates a `logs` folder if one does not already exist
 
-```{code-block} console
+
+### Exploring a yaml benchmark
+```{code-cell} console
+:filename tasks.yml 
 - name: product
   template: "find the product of {a} and {b}"
   values:
@@ -269,6 +257,8 @@ gemma3
 
 ```
 
+there will be a folder per log
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
 ls logs/gemma3/
@@ -278,6 +268,7 @@ ls logs/gemma3/
 product	symbol
 
 ```
+then per task
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
@@ -288,6 +279,7 @@ ls logs/gemma3/product/
 1771533769
 
 ```
+then per run, named by the timestamp of the run start
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
@@ -327,6 +319,7 @@ values:
   b: 5
 
 ```
+it stored overall information for the run
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
@@ -338,6 +331,7 @@ log.json	log.txt
 
 ```
 
+and a log for each prompt in both text and json format
 ```{code-cell} bash
 :tags: ["skip-execution"]
 cat logs/gemma3/product/1771533769/product_2-3/log.txt 
@@ -375,7 +369,7 @@ cat logs/gemma3/product/1771533769/product_2-3/log.json
 }
 ```
 
-
+## Initializing a new benchmark
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
@@ -421,6 +415,7 @@ Options:
 
 ```
 
+it asks questions interactively
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool init example --about 'in class example benchmark'
@@ -567,99 +562,5 @@ and re-installing:
 ```{code-cell} bash
 :tags: ["skip-execution"]
 pip install .
-```
-
-```{code-block} console
-
-Processing /Users/brownsarahm/Documents/inclass/benchmarks/benchtools
-  Installing build dependencies ... done
-  Getting requirements to build wheel ... done
-  Preparing metadata (pyproject.toml) ... done
-Requirement already satisfied: click in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (8.3.0)
-Requirement already satisfied: datasets in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (4.5.0)
-Requirement already satisfied: ollama in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (0.6.1)
-Requirement already satisfied: openai in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (2.21.0)
-Requirement already satisfied: pandas in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (2.3.2)
-Requirement already satisfied: pyyaml in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from benchtools==0.2.0) (6.0.3)
-Requirement already satisfied: filelock in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (3.20.0)
-Requirement already satisfied: numpy>=1.17 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (2.3.3)
-Requirement already satisfied: pyarrow>=21.0.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (23.0.0)
-Requirement already satisfied: dill<0.4.1,>=0.3.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (0.4.0)
-Requirement already satisfied: requests>=2.32.2 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (2.32.4)
-Requirement already satisfied: httpx<1.0.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (0.28.1)
-Requirement already satisfied: tqdm>=4.66.3 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (4.67.1)
-Requirement already satisfied: xxhash in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (3.6.0)
-Requirement already satisfied: multiprocess<0.70.19 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (0.70.18)
-Requirement already satisfied: fsspec<=2025.10.0,>=2023.1.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (2025.10.0)
-Requirement already satisfied: huggingface-hub<2.0,>=0.25.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (1.4.1)
-Requirement already satisfied: packaging in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from datasets->benchtools==0.2.0) (25.0)
-Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (3.13.3)
-Requirement already satisfied: anyio in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from httpx<1.0.0->datasets->benchtools==0.2.0) (4.11.0)
-Requirement already satisfied: certifi in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from httpx<1.0.0->datasets->benchtools==0.2.0) (2025.10.5)
-Requirement already satisfied: httpcore==1.* in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from httpx<1.0.0->datasets->benchtools==0.2.0) (1.0.9)
-Requirement already satisfied: idna in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from httpx<1.0.0->datasets->benchtools==0.2.0) (3.10)
-Requirement already satisfied: h11>=0.16 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from httpcore==1.*->httpx<1.0.0->datasets->benchtools==0.2.0) (0.16.0)
-Requirement already satisfied: hf-xet<2.0.0,>=1.2.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (1.2.0)
-Requirement already satisfied: shellingham in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (1.5.4)
-Requirement already satisfied: typer-slim in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (0.23.1)
-Requirement already satisfied: typing-extensions>=4.1.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (4.15.0)
-Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (2.6.1)
-Requirement already satisfied: aiosignal>=1.4.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (1.4.0)
-Requirement already satisfied: attrs>=17.3.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (25.3.0)
-Requirement already satisfied: frozenlist>=1.1.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (1.8.0)
-Requirement already satisfied: multidict<7.0,>=4.5 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (6.7.1)
-Requirement already satisfied: propcache>=0.2.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (0.4.1)
-Requirement already satisfied: yarl<2.0,>=1.17.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->fsspec[http]<=2025.10.0,>=2023.1.0->datasets->benchtools==0.2.0) (1.22.0)
-Requirement already satisfied: charset_normalizer<4,>=2 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from requests>=2.32.2->datasets->benchtools==0.2.0) (3.4.2)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from requests>=2.32.2->datasets->benchtools==0.2.0) (2.5.0)
-Requirement already satisfied: sniffio>=1.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from anyio->httpx<1.0.0->datasets->benchtools==0.2.0) (1.3.1)
-Requirement already satisfied: pydantic>=2.9 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from ollama->benchtools==0.2.0) (2.12.5)
-Requirement already satisfied: annotated-types>=0.6.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pydantic>=2.9->ollama->benchtools==0.2.0) (0.7.0)
-Requirement already satisfied: pydantic-core==2.41.5 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pydantic>=2.9->ollama->benchtools==0.2.0) (2.41.5)
-Requirement already satisfied: typing-inspection>=0.4.2 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pydantic>=2.9->ollama->benchtools==0.2.0) (0.4.2)
-Requirement already satisfied: distro<2,>=1.7.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from openai->benchtools==0.2.0) (1.9.0)
-Requirement already satisfied: jiter<1,>=0.10.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from openai->benchtools==0.2.0) (0.13.0)
-Requirement already satisfied: python-dateutil>=2.8.2 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pandas->benchtools==0.2.0) (2.9.0.post0)
-Requirement already satisfied: pytz>=2020.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pandas->benchtools==0.2.0) (2025.2)
-Requirement already satisfied: tzdata>=2022.7 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from pandas->benchtools==0.2.0) (2025.2)
-Requirement already satisfied: six>=1.5 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from python-dateutil>=2.8.2->pandas->benchtools==0.2.0) (1.17.0)
-Requirement already satisfied: typer>=0.23.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (0.23.1)
-Requirement already satisfied: rich>=10.11.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from typer>=0.23.1->typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (14.3.2)
-Requirement already satisfied: annotated-doc>=0.0.2 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from typer>=0.23.1->typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (0.0.4)
-Requirement already satisfied: markdown-it-py>=2.2.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from rich>=10.11.0->typer>=0.23.1->typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (3.0.0)
-Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from rich>=10.11.0->typer>=0.23.1->typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (2.19.2)
-Requirement already satisfied: mdurl~=0.1 in /Users/brownsarahm/miniforge3/lib/python3.12/site-packages (from markdown-it-py>=2.2.0->rich>=10.11.0->typer>=0.23.1->typer-slim->huggingface-hub<2.0,>=0.25.0->datasets->benchtools==0.2.0) (0.1.2)
-Building wheels for collected packages: benchtools
-  Building wheel for benchtools (pyproject.toml) ... done
-  Created wheel for benchtools: filename=benchtools-0.2.0-py3-none-any.whl size=25379 sha256=cbaa73c7bbd64125d8066422631e6e44b30cc5e3b56af606d509a768cf1fe708
-  Stored in directory: /private/var/folders/kj/kqly3_f917189vwrjg18kgvh0000gn/T/pip-ephem-wheel-cache-ebxkovdj/wheels/10/8a/b7/122083acfdf1e043b6947b84186debcd103f8f527cb995787a
-Successfully built benchtools
-Installing collected packages: benchtools
-  Attempting uninstall: benchtools
-    Found existing installation: benchtools 0.2.0
-    Uninstalling benchtools-0.2.0:
-      Successfully uninstalled benchtools-0.2.0
-Successfully installed benchtools-0.2.0
-
-```
-
-```{code-cell} bash
-:tags: ["skip-execution"]
-ls
-benchtools	example
-
-```
-
-```{code-cell} bash
-:tags: ["skip-execution"]
-benchtool run example/
-Running example now
-
-```
-
-```{code-cell} bash
-:tags: ["skip-execution"]
-cd benchtools/
-
 ```
 
