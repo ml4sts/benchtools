@@ -325,9 +325,10 @@ class Task:
             try:
                 match runner.runner_type:
                     case "ollama":
-                        completion: ChatResponse = chat(model=runner.model, 
-                                                        format = self.FormatClass.model_json_schema(),
-                                                        messages=[
+                        completion: ChatResponse = chat(
+                            model=runner.model, 
+                            format = self.FormatClass.model_json_schema(),
+                            messages=[
                             {
                             'role': 'user',
                             'content':prompt,
@@ -343,6 +344,7 @@ class Task:
                         )
                         completion = client.chat(
                             runner.model,
+                            format = self.FormatClass.model_json_schema(),
                             messages=[
                                 {
                                     "role": "user",
