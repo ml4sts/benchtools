@@ -387,7 +387,7 @@ class Task:
                                     'messages': [
                                         {
                                         'role': 'user',
-                                        'content': sub_task
+                                        'content': prompt
                                         }
                                     ]
                                 }
