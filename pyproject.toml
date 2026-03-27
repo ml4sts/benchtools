@@ -13,6 +13,7 @@ dependencies = [
   "openai",
   "ollama",
   "boto3"
+  "pydantic"
 ]
 requires-python = ">=3.10"
 authors = [
