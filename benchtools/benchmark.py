@@ -212,7 +212,7 @@ class Bench():
         # store tasks
         task_types = set([task.storage_type for task in self.tasks.values()])
         if 'csv' in task_types:
-            os.mkdir(self.bench_path,'tasks')
+            os.mkdir(os.path.join(self.bench_path,'tasks'))
             for task_name, task_object in self.tasks.items(): 
                 task_object.write(self.bench_path)
         
