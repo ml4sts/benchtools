@@ -92,7 +92,7 @@ class Task:
         # load and strip whitespace from column names
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()) 
         
-        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
+        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records') # This is correct
         reference = value_answer_df['reference'].tolist()
 
         if 'id' in value_answer_df.columns:
@@ -121,6 +121,7 @@ class Task:
               denoted in brackets. {verb} matching  ' + supplemental_files[storage_type]
         variant_values = {'noun':['text','task'],
                           'verb':['use','select']}
+        variant_values = [{k:v for k,v in zip(variant_values.keys(),vals)} for vals in zip(*variant_values.values())]
         description = 'give your task a short description '
         return cls(task_name, template= template, variant_values = variant_values, 
                    description = description,  reference='', 
@@ -207,15 +208,10 @@ class Task:
         if self.variant_values:
             id_prompt_list = []
             
-            keys = self.variant_values.keys()
-
-            for i in range(len(list(self.variant_values.values())[0])):
-                single_dict={}
+            for value_set in self.variant_values:
                 prompt = self.template
-                for key in keys:
-                    single_dict.update({key: self.variant_values[key][i]})
-                prompt = prompt.format(**single_dict)
-                prompt_id = self.prompt_id_generator(self.task_id,single_dict)
+                prompt = prompt.format(**value_set)
+                prompt_id = self.prompt_id_generator(self.task_id,value_set)
                 id_prompt_list.append((prompt_id,prompt))
 
             return id_prompt_list
