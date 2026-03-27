@@ -1,7 +1,9 @@
 #  defines a class object for a task
 # from openai import OpenAI
 import os
-import yaml # requires pyyaml
+import yaml
+import json
+import boto3
 import pandas as pd
 from ollama import chat, ChatResponse, Client
 from .logger import init_log_folder, log_interaction
@@ -97,7 +99,7 @@ class Task:
         # load and strip whitespace from column names
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()) 
         
-        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
+        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records') # This is correct
         reference = value_answer_df['reference'].tolist()
 
         if 'id' in value_answer_df.columns:
@@ -126,6 +128,7 @@ class Task:
               denoted in brackets. {verb} matching  ' + supplemental_files[storage_type]
         variant_values = {'noun':['text','task'],
                           'verb':['use','select']}
+        variant_values = [{k:v for k,v in zip(variant_values.keys(),vals)} for vals in zip(*variant_values.values())]
         description = 'give your task a short description '
         return cls(task_name, template= template, variant_values = variant_values, 
                    description = description,  reference='', 
@@ -211,11 +214,13 @@ class Task:
         # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
         if self.variant_values:
             id_prompt_list = []
+            
             for value_set in self.variant_values:
                 prompt = self.template
                 prompt = prompt.format(**value_set)
                 prompt_id = self.prompt_id_generator(self.task_id,value_set)
                 id_prompt_list.append((prompt_id,prompt))
+
             return id_prompt_list
         else:
             return [(self.name, self.template)]
@@ -267,6 +272,9 @@ class Task:
         '''
         write the task to a csv file with a task.txt template file
         '''
+        # Create task folder 
+        os.mkdir(os.path.join(target_folder, self.task_id))
+        
         # write the template 
         with open(os.path.join(target_folder,self.task_id, 'template.txt'), 'w') as f:
             f.write(self.template)
@@ -369,6 +377,24 @@ class Task:
                             ],
                         )
                         response = chat_completion.choices[0].message.content
+                        responses.append(response)
+                    case "bedrock":
+                        bedrock_client = boto3.client('bedrock-runtime')
+                        completeion = bedrock_client.invoke_model(
+                            modelId = runner.model,
+                            body = json.dumps(
+                                {
+                                    'messages': [
+                                        {
+                                        'role': 'user',
+                                        'content': sub_task
+                                        }
+                                    ]
+                                }
+                            )
+                        )
+                        response = json.loads(completeion['body'].read())
+                        response = response['choices'][0]['message']['content']
                         responses.append(response)
                     case _:
                         print(f"Runner type {runner.runner_type} not supported")
