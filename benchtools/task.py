@@ -482,12 +482,3 @@ class Task:
 
 # likely an agent task that can pass environment assets
 
-if __name__ == '__main__':
-    # tt = Task.from_txt_csv('demos/folderbench/tasks/add', 'add')
-    # tt = Task.from_yaml('demos/listbench')
-    # tt = Task('greeting','Hello there','hi', 'contains')
-    tt = Task.from_example('test', 'yaml')
-    runner = BenchRunner()
-    print(f"model: {runner.model}, type: {runner.runner_type}")
-    # exit(000)
-    tt.run(runner, 'test_logs')
