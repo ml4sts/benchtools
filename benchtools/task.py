@@ -20,6 +20,17 @@ from .utils import concatenator_id_generator, selector_id_generator
 prompt_id_fx = {'concatenator_id_generator':concatenator_id_generator,
                 'selector_id_generator':selector_id_generator}
 
+class UnMatchedModel(Exception):
+    """
+    Exception raised for a bedrock model that isn't accounted for in the match statement
+    Follow https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html for a list of available models on bedrock and their inferance parameters
+    """
+    def __init__(self, model):
+        self.model = model
+        message = f"Cannot call the model ${attempted_withdrawal} using aws Bedrock. Please fetch the correct inferance parameters for it and add it in a PR to BenchTools."
+        super().__init__(message) # Call the base class constructor
+
+
 class Task:
     """
     defines a basic prompt task with a simple scoring function
@@ -380,21 +391,56 @@ class Task:
                         responses.append(response)
                     case "bedrock":
                         bedrock_client = boto3.client('bedrock-runtime')
-                        completeion = bedrock_client.invoke_model(
-                            modelId = runner.model,
-                            body = json.dumps(
-                                {
-                                    'messages': [
-                                        {
-                                        'role': 'user',
-                                        'content': prompt
-                                        }
-                                    ]
+                        # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
+                        # for available foundational models and their inferance parameters follow 
+                        # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+                        # Catch the model family first
+                        model_fam = None
+                        if runner.model.startswith("meta"): model_fam = "llama"
+                        elif runner.model.startswith("google"): model_fam = "gemma"
+                        match model_fam:
+                            case "llama":
+                                # Embed the prompt in Llama 3's instruction format.
+                                formatted_prompt = f"""
+<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+{prompt}
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"""
+                                # Format the request payload using the model's native structure.
+                                request = {
+                                    "prompt": formatted_prompt,
+                                    # "max_gen_len": 512,
+                                    # "temperature": 0.5,
                                 }
-                            )
-                        )
-                        response = json.loads(completeion['body'].read())
-                        response = response['choices'][0]['message']['content']
+                                # Convert the native request to JSON.
+                                request = json.dumps(request)
+                                completeion = bedrock_client.invoke_model(
+                                    modelId = runner.model,
+                                    body = request
+                                )
+                                # Decode the response body.
+                                response = json.loads(completeion["body"].read())
+                                response = response["generation"]
+                            case "gemma":
+                                completeion = bedrock_client.invoke_model(
+                                    modelId = runner.model,
+                                    body = json.dumps(
+                                        {
+                                            'messages': [
+                                                {
+                                                'role': 'user',
+                                                'content': prompt
+                                                }
+                                            ]
+                                        }
+                                    )
+                                )
+                                # Decode the response body.
+                                response = json.loads(completeion['body'].read())
+                                response = response['choices'][0]['message']['content']
+                            case _:
+                                raise UnMatchedModel(runner.model)
                         responses.append(response)
                     case _:
                         print(f"Runner type {runner.runner_type} not supported")
@@ -436,3 +482,12 @@ class Task:
 
 # likely an agent task that can pass environment assets
 
+if __name__ == '__main__':
+    # tt = Task.from_txt_csv('demos/folderbench/tasks/add', 'add')
+    # tt = Task.from_yaml('demos/listbench')
+    # tt = Task('greeting','Hello there','hi', 'contains')
+    tt = Task.from_example('test', 'yaml')
+    runner = BenchRunner()
+    print(f"model: {runner.model}, type: {runner.runner_type}")
+    # exit(000)
+    tt.run(runner, 'test_logs')
