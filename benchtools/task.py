@@ -260,6 +260,8 @@ class Task:
         '''
         write the task to a csv file with a task.txt template file
         '''
+        if not os.path.exists(os.path.join(target_folder, self.task_id)):
+            os.mkdir(os.path.join(target_folder, self.task_id))
         # write the template 
         with open(os.path.join(target_folder,self.task_id, 'template.txt'), 'w') as f:
             f.write(self.template)
@@ -271,7 +273,8 @@ class Task:
         # write the values and answers to a csv
         if self.variant_values:
             value_answer_df = pd.DataFrame(self.variant_values)
-        
+            # Add the references to the values
+            value_answer_df['reference'] = self.reference
             value_answer_df.to_csv(os.path.join(target_folder,self.task_id, 'values.csv'), index=False)
     
 
