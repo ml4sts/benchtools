@@ -297,7 +297,8 @@ class Task:
         # write the values and answers to a csv
         if self.variant_values:
             value_answer_df = pd.DataFrame(self.variant_values)
-        
+            # Add the references to the values
+            value_answer_df['reference'] = self.reference
             value_answer_df.to_csv(os.path.join(target_folder,self.task_id, 'values.csv'), index=False)
     
 
