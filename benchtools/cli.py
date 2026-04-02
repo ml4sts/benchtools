@@ -126,9 +126,9 @@ def add_task(task_name, bench_path, task_source,task_type):
         click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
         exit(4356)
 
-        # Add Task to Bench, will write as well
-        benchmark.add_task(task)
-        click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
+    # Add Task to Bench, will write as well
+    benchmark.add_task(task)
+    click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
 
 
 
