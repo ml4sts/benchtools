@@ -162,7 +162,7 @@ class Bench():
                    concept= info['concept'], tasks=tasks)
 
     @classmethod
-    def load(cls, bench_path):
+    def load(cls, benchmark_path):
         '''
         Load a benchmark object from a given path.
         If the path given is has a yaml tasks file, load tasks from 
