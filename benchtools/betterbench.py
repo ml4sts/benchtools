@@ -68,22 +68,31 @@ def better_session(bench_path) -> dict:
     main_checklist = load_asset_yml("betterbench.yml") 
 
     # Intro
-    click.echo("Entering interactive session for BetterBench!")
-    click.echo("This interactive session is meant guide the benchmark to follow " \
-                "the standards developed by reuel et. al. named the BetterBench Checklist!")
-    click.echo("This interactive session is optional and you can always come back " \
-                "to it with the `betterbench resume` command")
+    welcome_prompt='''
+#########################################################################
+# Entering interactive session for BetterBench!                         #
+# This interactive session is meant guide the benchmark to follow the   #
+# standards developed by reuel et. al. named the BetterBench Checklist! #
+# This interactive session is optional and you can always come back to  #
+# it with the `betterbench resume` command                              #
+#########################################################################
+
+'''
+    click.echo(welcome_prompt)
     
+    if not os.path.exists(bench_path):
+        click.echo("No benchmark reposiory at " + bench_path)
+
     # Load existing BetterBench checklist if applicable 
-    bench_checklist={}
     checklist_path = os.path.join(bench_path, "betterbench.yml")
+    bench_checklist={}
     if os.path.exists(checklist_path):
         with open(checklist_path, 'r') as f:
            bench_checklist = yaml.safe_load(f)
-    
-    if not bench_checklist:
+    else:
         # Create checklist items and add them to new checklist
-        bench_checklist={}
+
+        # for catagory is main_checklist.keys()
         for question in main_checklist.keys():
             # print(question) # Debugging
             item = ChecklistItem(
@@ -94,10 +103,10 @@ def better_session(bench_path) -> dict:
             )
             bench_checklist[question] = asdict(item)
 
-        # Save empty checklist into the benchmark repo
-        if os.path.exists(bench_path):
-            with open(checklist_path, 'w') as f:
-                yaml.dump(bench_checklist, f)
+        # # Save empty checklist into the benchmark repo
+        # if os.path.exists(bench_path):
+        #     with open(checklist_path, 'w') as f:
+        #         yaml.dump(bench_checklist, f)
 
     
     # TODO: check if want to change answer on any questions
@@ -154,9 +163,8 @@ def better_session(bench_path) -> dict:
         
     print(checklist_path) #debugging 
     # Save current checklist into the benchmark repo
-    if os.path.exists(bench_path):
-        with open(checklist_path, 'w') as f:
-            yaml.dump(bench_checklist, f)
+    with open(checklist_path, 'w') as f:
+        yaml.dump(bench_checklist, f)
 
 
 def get_score() -> int:
