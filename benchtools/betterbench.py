@@ -139,10 +139,12 @@ def better_session(bench_path) -> dict:
                 )
                 
             case 'yes':
-                criteria_text = "\n ".join([f"{i*5}- {crit}" for i,crit in enumerate(criteria)])
+                criteria_dict = {i*5: crit for i,crit in enumerate(criteria)}
+                criteria_text = "\n ".join([f"{i}- {crit}" for i,crit in criteria_dict.items()])
                 score = click.prompt(f"Please pick score level:\n {criteria_text}",
                                        type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
-                justification = click.prompt("Justification:  ")
+                justification = click.edit(f"Justification: {criteria_dict[score]}")
+                justification = justification.split('Justification: ', 1)[1].strip()
                 item = dict(
                                     skipped=False,
                                     response=choice,
