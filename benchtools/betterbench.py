@@ -25,14 +25,14 @@ class Question:
     criteria: list[str]
     NA: bool
 
-@dataclass
-class ChecklistItem:
-    # question: Question # Again, we'll see...
-    skipped: bool
-    response: str
-    justification: str
-    score: int
-    # criteria: list[str]
+# @dataclass
+# class ChecklistItem:
+#     # question: Question # Again, we'll see...
+#     skipped: bool
+#     response: str
+#     justification: str
+#     score: int
+#     # criteria: list[str]
 
 # def calculate_score(response: str, justification: str) -> int:
 #     if response == 'no':
@@ -95,13 +95,13 @@ def better_session(bench_path) -> dict:
         # for catagory is main_checklist.keys()
         for question in main_checklist.keys():
             # print(question) # Debugging
-            item = ChecklistItem(
+            item = dict(
                 skipped=True,
                 response="",
                 justification="",
                 score=0,
             )
-            bench_checklist[question] = asdict(item)
+            bench_checklist[question] = item
 
         # # Save empty checklist into the benchmark repo
         # if os.path.exists(bench_path):
@@ -131,7 +131,7 @@ def better_session(bench_path) -> dict:
             case '':
                 continue
             case 'no':
-                item = ChecklistItem(
+                item = dict(
                                     skipped=False,
                                     response=choice,
                                     justification=criteria[0],
@@ -143,14 +143,14 @@ def better_session(bench_path) -> dict:
                 score = click.prompt(f"Please pick score level:\n {criteria_text}",
                                        type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
                 justification = click.prompt("Justification:  ")
-                item = ChecklistItem(
+                item = dict(
                                     skipped=False,
                                     response=choice,
                                     justification=justification,
                                     score=score,
                                     )
         # store this question
-        bench_checklist[question] = asdict(item)
+        bench_checklist[question] = item
         print(bench_checklist[question]) # remove this
 
         
