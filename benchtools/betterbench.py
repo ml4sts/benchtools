@@ -119,7 +119,58 @@ def better_session(bench_path) -> dict:
         yaml.dump(bench_checklist, f)
 
 
-def get_score() -> int:
-    return 99
+def score_checklist(bench_checklist: dict) -> (int,int):
+    '''
+    Score betterbench checklist. 
+
+    Attributes
+    ----------
+    bench_checklist: dict
+        A dictionary of betterbench questions and values as established by better_session function
+    '''
+
+    score = 0
+    total = 0
+    for _ , vals in bench_checklist.items():
+        if not vals['response']=='na':
+            total += 15
+            if not vals['skipped']:
+                score += vals['score']
+
+    return (score,total)
+        
+
+def get_score(bench_path) -> int:
+    '''
+    Score benchmark using the betterbench checklist. 
+    This function is meant to be run using the CLI.
+
+    Attributes
+    ----------
+    bench_path: str
+        Path to where the benchmark folder and all its content reside
+    '''
+
+    # Confirm the benchmark exists
+    if not os.path.exists(bench_path):
+        click.echo("No benchmark reposiory at " + bench_path)
+
+    # Load existing BetterBench checklist if applicable 
+    checklist_path = os.path.join(bench_path, "betterbench.yml")
+    bench_checklist={}
+    if os.path.exists(checklist_path):
+        with open(checklist_path, 'r') as f:
+           bench_checklist = yaml.safe_load(f)
+    if bench_checklist:
+        score, total = score_checklist(bench_checklist)
+    else:
+        click.confirm("BetterBench checklist file empty or not initialized.\n"\
+                        f"Would you like to initialize one for the benchmark in {bench_path}?",
+                        default=True, abort=True)
+        better_session(bench_path) # TODO: Change this to new betterbench function
+        with open(checklist_path, 'r') as f:
+           bench_checklist = yaml.safe_load(f)
+        score, total = score_checklist(bench_checklist)
     
+    click.echo(f"Your benchmark's score: {score}/{total}")
 
