@@ -140,7 +140,7 @@ def score_checklist(bench_checklist: dict) -> (int,int):
     return (score,total)
         
 
-def get_score(bench_path) -> int:
+def get_score(bench_path):
     '''
     Score benchmark using the betterbench checklist. 
     This function is meant to be run using the CLI.
@@ -154,6 +154,7 @@ def get_score(bench_path) -> int:
     # Confirm the benchmark exists
     if not os.path.exists(bench_path):
         click.echo("No benchmark reposiory at " + bench_path)
+        return
 
     # Load existing BetterBench checklist if applicable 
     checklist_path = os.path.join(bench_path, "betterbench.yml")
