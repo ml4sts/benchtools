@@ -56,14 +56,25 @@ def init(benchmark_name, path, about, no_git):
     folder_name = benchmark_name.replace(" ", "_").lower()
     bench_path = os.path.join(path, folder_name)
 
-    # tasks = []
-    # if task_sources:
-    #     # TODO: Look at content to create Task objects and add them to tasks
-    #     continue
+    tasks = []
+    tasks_desired = click.confirm("Do you want to add any tasks now?")
+    while tasks_desired:
+        tasks_exist = click.confirm("Do you have task files already prepared?", default=False)
+        if tasks_exist:
+            path = click.prompt('Enter the path to the files')
+        else:
+            template_type = click.prompt("What type of template would you like to add?",
+                                          type=click.Choice(['csv', 'yaml']), 
+                                          show_choices=True)
+            task_name = click.prompt("what is the name of your task?")
+            tasks.append(Task.from_example(task_name,template_type))
+
+        tasks_desired = click.confirm("Do you want to add another?")
+
 
     click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
     benchmark = Bench(name =benchmark_name, bench_path = bench_path, 
-                      concept = about)
+                      concept = about, tasks=tasks)
 
     # Build the benchmark folder
     if benchmark.initialize_dir(no_git):
@@ -84,48 +95,55 @@ def init(benchmark_name, path, about, no_git):
 
 
 @benchtool.command()
-@click.argument('task-name',  required = True, type=str) 
-@click.option('-p','--benchmark-path', default='.', help="The path to the benchmark repository where the task will be added.", type=str)
-@click.option('-s','task-source', type=str,help="The relative path to  content that already exists`", required=True)
-@click.option('-t','--task-type', type=click.Choice(['folders', 'list']), help="The type of the task content being added. Options are csv or yml", required=True)
+@click.argument('task-name',  required = True, type=str, ) 
+@click.option('-p','--bench-path', default='.', help="The path to the benchmark repository where the task will be added.", type=str)
+@click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
+@click.option('-t','--task-type', type=click.Choice(['folders', 'list']), 
+              help="The type of the task content being added. Options are csv or yml", required=True)
 def add_task(task_name, bench_path, task_source,task_type):
     """
     Set up a new task.
 
     """
     
-    if os.path.exists(bench_path):
-        benchmark = Bench.load(bench_path)
-        if task_source: 
-            if os.path.isdir(task_source):
-                task = Task.from_txt_csv(task_source)
-            elif os.path.isfile(task_source):
-                task = Task.from_yaml(task_source)
-        elif task_type:
-            match task_type: 
-                case 'folders':
-                    storage_type = 'csv'
-                case 'list':
-                    storage_type = 'yaml'
-            task = Task(name=task_name, template= "fill in your prompt template here",
-                            description = "add a description of your task here",
-                        storage_type=storage_type)
-        else:
-            click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
-            exit(4356)
-
-        # TODO: handle adding to benchmark with metadata
-        # benchmark.add_task(task)
-        task.write(bench_path)
-        click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
+    benchmark = Bench.load(bench_path)    
+    
+    # Create Task object
+    if task_source: 
+        if os.path.isdir(task_source):
+            task = Task.from_txt_csv(task_source)
+        elif os.path.isfile(task_source):
+            task = Task.from_yaml(task_source)
+    elif task_type:
+        match task_type: 
+            case 'folders':
+                storage_type = 'csv'
+            case 'list':
+                storage_type = 'yaml'
+        task = Task.from_example(name=task_name, storage_type=storage_type)
+        # task.write()
     else:
-        click.echo("No benchmark reposiory at " + bench_path)
+        click.echo("Invalid task content type. Either provide content with --task-source or specify the type of task content with --type.")
+        exit(4356)
+
+    # Add Task to Bench, will write as well
+    benchmark.add_task(task)
+    click.echo(f"Added {task_name} to {benchmark.bench_name} benchmark successfully!")
+
 
 
 @benchtool.command()
 @click.argument('benchmark-path', required = True, type=str)
 @click.argument('task_name', required = True)
-def run_task(benchmark_path: str, task_name):
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'bedrock']), 
+                                                       default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3",
+               help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, 
+              help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None,
+               help="The path to a log directory.")
+def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_path):
     """
     Running the tasks and generating logs
 
@@ -133,26 +151,40 @@ def run_task(benchmark_path: str, task_name):
     , help="The name of the specific task you would like to run"
     """
     
-    benchmark = Bench.load(benchmark_path)
-    click.echo(f"Running {task_name} now")
-    benchmark.run([task_name])
+    # Create BenchRunner object
+    runner = BenchRunner(runner_type, model, api_url)
+
+    benchmark = Bench.load(bench_path)
+
+    
+    click.echo(f"Running {task_name} of benchmark {benchmark.bench_name} now")
+    benchmark.run_task(task_name, runner, log_path)
 
 @benchtool.command()
-@click.argument('benchmark-path', required = True, type=str)
-def run(benchmark_path: str):
+@click.argument('benchmark-path', required = False, type=str, default='.')
+@click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'bedrock']),
+               default="ollama", help="The engine that will run your LLM.")
+@click.option('-m', '--model', type=str, default="gemma3", 
+              help="The LLM to be benchmarked.")
+@click.option('-a', '--api-url', type=str, default=None, 
+              help="The api call required to access the runner engine.")
+@click.option('-l', '--log-path', type=str, default=None, 
+              help="The path to a log directory.")
+def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_path: str):
     """
     Running the benchmark and generating logs
-    , help="The path to the benchmark repository where all the task reside."
+    Parameters:
+        benchmark-path: The path to the benchmark repository where all the task reside.
     """
-    # check folder to see if folder or yaml type to load benchmark
-    if os.path.isdir(benchmark_path):
-        content = os.listdir(benchmark_path)
-        if 'tasks.yml' in content:
-            benchmark = Bench.from_yaml(benchmark_path)
-        else:
-            benchmark = Bench.from_folders(benchmark_path)
+    # Create BenchRunner object
+    runner = BenchRunner(runner_type, model, api_url)
+
+    benchmark = Bench.load(bench_path)
+
+    
     click.echo(f"Running {benchmark.bench_name} now")
-    benchmark.run()
+    benchmark.run(runner, log_path)
+
 
 
 @click.group()

@@ -1,7 +1,7 @@
 # CLI
 
 
-We an initialize without tasks
+We can initialize without tasks
 
 ```bash
 cd demos

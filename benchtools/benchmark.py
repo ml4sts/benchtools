@@ -5,8 +5,11 @@ import shutil
 import requests
 import yaml
 # from pathlib import Path # ???
-from .task import Task
+from benchtools.task import Task
 from pathlib import PurePath
+from benchtools.runner import BenchRunner
+from .utils import load_asset
+
 
 about_template = """# {bench_name}
 
@@ -42,7 +45,7 @@ class Bench():
     run()
         Run one task or all tasks of the benchmark.
     '''
-    def __init__(self, name, base_path='.', bench_path=None, concept = None, tasks=[]):
+    def __init__(self, name, base_path='.', bench_path=None, concept=None, tasks=[]):
         '''
         Initialize the benchmark object with the name and path to the benchmark folder.
 
@@ -52,13 +55,11 @@ class Bench():
             name of the benchmark will be used for folder
         path: str or buffer
             path where the benchmark will be stored 
-        
         tasks: list of Task objects
-            list of tasks to be included in the benchmark. Each task should be an instance of the
-        
+            list of tasks to be included in the benchmark. Each task should be an instance of the Task class
         '''
-        # load tasks from file structre and instantiate task objects for each, store those in a list.
-        #    loading will 
+
+        # set up the object attributes
         self.display_name = name.strip()
         self.concept  = concept if concept else f'a benchmark about {name.strip()}'
         self.bench_name = name.strip().replace(" ", "_").lower()
@@ -67,26 +68,33 @@ class Bench():
             self.base_path = PurePath(bench_path).parent
             self.bench_path = bench_path
         else:
+            # TODO: this way we don't have a base_path if above were true
             self.base_path = base_path
             self.bench_path = os.path.join(base_path, self.bench_name)
 
-        self.tasks_folder = os.path.join(self.bench_path, 'tasks')
+        
+        
         if tasks:
-            self.tasks = {t.name:t for t in tasks} # initialize a task object for each task.
+            # All task objects have to be initialized before adding them to a benchmark
+            self.tasks = {t.name:t for t in tasks} 
         else:
             self.tasks = {}
         
+        # Written if the benchmark directory has been initialized
         self.written = os.path.exists(self.bench_path)
 
+    
     @classmethod
     def from_folders(cls, bench_path):
         '''
-        Load a benchmark from a given path. The path should point to the benchmark folder.
+        Load a benchmark object from a given path. 
+        The path should point to the benchmark folder.
 
         Parameters:
         -----------
         bench_path: str
-            The path to the benchmark folder. The folder should contain the about.md file, tasks folder and logs folder.
+            The path to the benchmark folder. The folder should contain the about.md file,
+              tasks folder and logs folder.
 
         Returns:
         --------
@@ -98,9 +106,9 @@ class Bench():
         
         
         content = os.listdir(bench_path)
-        if 'tasks.yml' in content:
-            with open(os.path.join(bench_path, 'info.yml'), 'r') as f:
-                info = yaml.safe_load(f)
+        if 'info.yml' in content:
+            # load the info
+            info = Bench.load_info(bench_path)
         else:
             info = {}
             info['bench_name'] = PurePath(bench_path).parts[-1]
@@ -126,7 +134,7 @@ class Bench():
     @classmethod
     def from_yaml(cls, bench_path):
         """
-        Load tasks from a YAML file and generate Task objects.
+        Load tasks from a YAML file and generate Task objects and add them to the bench
 
         Parameters
         ----------
@@ -152,6 +160,36 @@ class Bench():
 
         return cls(name = info['bench_name'], bench_path =bench_path,
                    concept= info['concept'], tasks=tasks)
+
+    @classmethod
+    def load(cls, benchmark_path):
+        '''
+        Load a benchmark object from a given path.
+        If the path given is has a yaml tasks file, load tasks from 
+        it and generate Task objects and add them to the bench.
+        Otherwise load the bench object from existing task folders.
+
+        Parameters:
+        -----------
+        bench_path: str
+            The path to the benchmark folder. The folder should contain the about.md file,
+              tasks.yaml file or tasks folder.
+
+        Returns:
+        --------
+        Bench
+            An instance of the Bench class with the loaded benchmark.
+        '''
+        # check folder to see if folder or yaml type to load benchmark
+        if not os.path.isdir(benchmark_path):
+            raise ValueError("The passed path doesn't exist.")
+        else: 
+            content = os.listdir(benchmark_path)
+            if 'tasks.yml' in content:
+                return cls.from_yaml(benchmark_path)
+            else:
+                return cls.from_folders(benchmark_path)
+        
 
     @staticmethod
     def load_info(bench_path):
@@ -182,15 +220,10 @@ class Bench():
 
         # Create benchmark skeleton 
         os.mkdir(self.bench_path)
-        # Create a benchmarks folder with tasks in them
-        tasks_path = os.path.join(self.bench_path, "tasks")
-        os.mkdir(tasks_path)
-        log_path = os.path.join(self.bench_path, "logs") # Do we want a log dir?
-        os.mkdir(log_path) # Do we want a log dir?
+        
 
         # Create about.md
         about_path = os.path.join(self.bench_path, "about.md")
-        
         about_body = f"*{self.concept}*"
         about_text= about_template.format(bench_name=self.bench_name, 
                                            text = about_body)
@@ -201,17 +234,19 @@ class Bench():
         if not no_git:
             self.init_repo(self.bench_path)
 
+        # store tasks
         task_types = set([task.storage_type for task in self.tasks.values()])
         if 'csv' in task_types:
+            os.mkdir(os.path.join(self.bench_path,'tasks'))
             for task_name, task_object in self.tasks.items(): 
-                task_object.write(tasks_path)
+                task_object.write(self.bench_path)
         
         if task_types == {'yaml'}:
             task_list = []
             for task in self.tasks.values():
                 task_list.append(task.get_dict())
 
-            with open(os.path.join(tasks_path,'tasks.yml'), 'w') as file:
+            with open(os.path.join(self.bench_path,'tasks.yml'), 'w') as file:
                 yaml.dump(task_list, file)
 
         self.write()    
@@ -222,7 +257,7 @@ class Bench():
     def write(self):
         info = {'bench_name': self.bench_name, 
                 'concept': self.concept, 
-                'tasks': list(self.tasks.keys())}
+                'tasks': [task.get_bench_data() for task in self.tasks.values()]}
         with open(os.path.join(self.bench_path, 'info.yml'), 'w') as f:
             yaml.dump(info, f)
 
@@ -231,7 +266,7 @@ class Bench():
     
     def write_tasks(self):
         for task in self.tasks:
-            task.write(self.tasks_folder)
+            task.write(self.bench_path)
         
 
     ### Initialize git repository
@@ -252,36 +287,61 @@ class Bench():
         except:
             print("git might not be initialized in your system. Please run \"git init . \" when setup")
         # Get python gitignore template and create .gitignore
-        ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
-        if ignore_text.status_code == 200:
-            with open(".gitignore", 'a') as f:
-                f.write(ignore_text.text)
+        ignore_text = load_asset('.gitignore')
+        # ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
+        # if ignore_text.status_code == 200:
+        with open(".gitignore", 'a') as f:
+            f.write(ignore_text)
         os.chdir(current_dir)
 
 
-    def add_task(self, task_object):
-        # TODO: Look at content to create Task objects and add them to tasks
-        # setup_task(self.tasks_folder, task_name, task_source))
+    def add_task(self, task_object:Task):
 
-        # self.tasks.append(task)
+        # Add task object to bench's tasks
         self.tasks[task_object.name] = task_object
 
+        # Check if written or not to write the task in the directory
+        if self.written:
+            task_object.write(self.bench_path)
 
-    def run(self,model='gemma3',runner_type="ollama", api_url=None,):
+
+    def run(self, runner=BenchRunner(), log_dir=None):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
         -----------
-        model: str default 'gemma3'
-            The name of the model to use for running the tasks. Default is 'gemma3'.
+        runner: BenchRunner 
+            define which runner should be used for the task.
+        
+            runner.model : string
+                the model to run the task on
+            runner.api_url : string
+                the url of the api to use for the task
+            runner.runner_type: {ollama,openai}
+                to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
+                to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
+        log_dir: str
+            Path to where the logs should be saved
         '''
-        if not self.written:
+        if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
-        # TODO deal with results 
+        
+        # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, model,runner_type, api_url)
+            self.run_task(task, runner, log_dir)
 
-    def run_task(self, target_task=None, model='gemma3',runner_type="ollama", api_url=None): 
+
+    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None): 
+        '''
+        run a specific task
+        '''
+        if not log_dir and not self.written:
+            raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
+
+        # If user doesn't specify a log_dir, default to logs folder inside bench folder
+        if not log_dir:
+            log_dir = os.path.join(self.bench_path, 'logs')
+
         if not(target_task):
             # TODO: use a generator and make this have a state
             target_task = list[self.tasks.keys()][0] 
@@ -292,8 +352,9 @@ class Bench():
             task_object = target_task
         else:
             raise ValueError("target_task should be either a string (task name) or a Task object.")
+
+        # TODO: Add log_dir to attributes?
         
-        logging_path = os.path.join(self.bench_path, 'logs')
-        return task_object.run(model,runner_type, api_url,logging_path)
+        return task_object.run(runner, log_dir, self.bench_name, self.bench_path)
 
 

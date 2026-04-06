@@ -1,14 +1,34 @@
 #  defines a class object for a task
 # from openai import OpenAI
 import os
-import yaml # requires pyyaml
+import yaml
+import json
+import boto3
 import pandas as pd
 from ollama import chat, ChatResponse, Client
-from benchtools.logger import init_logger, log_interaction
+from .logger import init_log_folder, log_interaction
 from pathlib import PurePath
 from datasets import load_dataset
+from .runner import BenchRunner
+import sys
+from .response import StringAnswer, StringJustification, IntAnswer, IntJustification
 
-from benchtools.scorers import scoring_fx_list, contains, exact_match
+from .scorers import scoring_fx_list, contains, exact_match
+
+from .utils import concatenator_id_generator, selector_id_generator
+
+prompt_id_fx = {'concatenator_id_generator':concatenator_id_generator,
+                'selector_id_generator':selector_id_generator}
+
+class UnMatchedModel(Exception):
+    """
+    Exception raised for a bedrock model that isn't accounted for in the match statement
+    Follow https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html for a list of available models on bedrock and their inferance parameters
+    """
+    def __init__(self, model):
+        self.model = model
+        message = f"Cannot call the model ${attempted_withdrawal} using aws Bedrock. Please fetch the correct inferance parameters for it and add it in a PR to BenchTools."
+        super().__init__(message) # Call the base class constructor
 
 
 class Task:
@@ -17,7 +37,9 @@ class Task:
     """
 
     def __init__(self, task_name, template, reference=None, scoring_function=None,
-                  variant_values = None, storage_type = 'yaml', description = None):
+                  variant_values = None, storage_type = 'yaml', description = None, 
+                  prompt_id_generator_fx = concatenator_id_generator,
+                  format='StringAnswer'):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -35,13 +57,21 @@ class Task:
             dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
         """
         self.name = task_name
-        self.id = task_name.strip().replace(" ", "_").lower() 
+        self.task_id = task_name.strip().replace(" ", "_").lower() 
+        self.description = description 
 
         self.template = template
         self.variant_values = variant_values
-        self.description = description 
         self.reference = reference
+
+        # set up to name individual prompts
+        if not callable(prompt_id_generator_fx):
+            prompt_id_generator_fx  = prompt_id_fx[prompt_id_generator_fx]
+        self.prompt_id_generator = prompt_id_generator_fx
         
+        # setup for response format
+        mod = sys.modules[__name__]
+        self.FormatClass = getattr(mod,format)
 
         self.storage_type = storage_type
         if scoring_function: 
@@ -54,27 +84,12 @@ class Task:
                 raise ValueError(f"Scoring function {scoring_function} is not valid, must be a string name"+
                            "of a built in function or a function handle")   
         else:
-            self.scoring_function = exact_match
+            self.scoring_function = exact_match 
 
-    def generate_prompts(self):
-        '''
-        if the task is a template based task, generate the prompts by filling 
-        in the template with the variant values
-        '''
-        # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
-        if self.variant_values:
-            prompt_list = []
-            for value_set in self.variant_values:
-                prompt = self.template
-                prompt = prompt.format(**value_set)
-                prompt_list.append(prompt)
-            return prompt_list
-        else:
-            return [self.template]
-
-
+            
     @classmethod
-    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None):
+    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
+                     prompt_id_generator_fx = concatenator_id_generator):
         '''
         load a template from txt and create task objects for each row of a csv
 
@@ -95,8 +110,11 @@ class Task:
         # load and strip whitespace from column names
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()) 
         
-        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
+        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records') # This is correct
         reference = value_answer_df['reference'].tolist()
+
+        if 'id' in value_answer_df.columns:
+            prompt_id_generator_fx = selector_id_generator
         
         # TODO: improve this 
         if os.path.exists(os.path.join(source_folder, "description.txt")):
@@ -105,9 +123,29 @@ class Task:
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        return cls(task_name, template= prompt, variant_values = variant_values, description = description,
-                    reference=reference, storage_type ='csv', scoring_function=scoring_function)
+        return cls(task_name, template= prompt, variant_values = variant_values, 
+                   description = description, reference=reference, storage_type ='csv', 
+                    scoring_function=scoring_function,
+                    prompt_id_generator_fx =prompt_id_generator_fx)
     
+    @classmethod
+    def from_example(cls, task_name, storage_type):
+        '''
+        make a blank task 
+        '''
+        supplemental_files = {'csv':'columns in the csv file',
+                              'yaml':'keys below' }
+        template = 'Your {noun} for the model here with values that should vary\
+              denoted in brackets. {verb} matching  ' + supplemental_files[storage_type]
+        variant_values = {'noun':['text','task'],
+                          'verb':['use','select']}
+        variant_values = [{k:v for k,v in zip(variant_values.keys(),vals)} for vals in zip(*variant_values.values())]
+        description = 'give your task a short description '
+        return cls(task_name, template= template, variant_values = variant_values, 
+                   description = description,  reference='', 
+                   storage_type = storage_type, scoring_function = exact_match)
+
+
     @classmethod
     def from_yaml(cls, source_folder, task_name = None, scoring_function = None):
         '''
@@ -127,12 +165,13 @@ class Task:
                    description = task_dict.get('description', None),
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
-                      scoring_function=task_dict.get('scorer', None) or scoring_function)
+                      scoring_function=task_dict.get('scorer', None) or scoring_function,
+                    prompt_id_generator_fx =task_dict.get('id_generator', None))
 
     @classmethod
-    def from_dict(cls, task_dict):
+    def from_dict(cls, task_dict,prompt_id_generator_fx=concatenator_id_generator):
         '''
-        load a task from a dictionary, which could be useful for loading from yaml or json files. The dictionary should have the following structure:
+        load a task from a dictionary,  The dictionary should have the following structure:
         {
             "template": string,
             "values": list of dicts (optional),
@@ -141,20 +180,25 @@ class Task:
         }
         '''
         compact_values = task_dict.get("values", None)
-        print('in')
+        
         if compact_values:
+            #  this flips it to a list of dicts 
             expanded_values = pd.DataFrame(compact_values).to_dict(orient='records') 
         else:
             expanded_values = None
         
+        if 'id' in task_dict.keys():
+            prompt_id_generator_fx = selector_id_generator
         
+
         return cls(task_dict.get("name", "unnamed_task"),
                    template = task_dict.get("template", ""), 
                    variant_values=expanded_values,
                    reference = task_dict.get("reference", None), 
                    scoring_function = task_dict.get("scoring_function", None), 
                    description = task_dict.get("description", None),
-                   storage_type='yaml')
+                   storage_type='yaml',
+                    prompt_id_generator_fx =task_dict.get('id_generator', prompt_id_generator_fx))
     
     @classmethod
     def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
@@ -173,6 +217,36 @@ class Task:
         return cls(task_name, prommpt =description, variant_values = stored_tasks,
                     reference=stored_answers, storage_type ='csv')
     
+    def generate_prompts(self):
+        '''
+        if the task is a template based task, generate the prompts by filling 
+        in the template with the variant values
+        '''
+        # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
+        if self.variant_values:
+            id_prompt_list = []
+            
+            for value_set in self.variant_values:
+                prompt = self.template
+                prompt = prompt.format(**value_set)
+                prompt_id = self.prompt_id_generator(self.task_id,value_set)
+                id_prompt_list.append((prompt_id,prompt))
+
+            return id_prompt_list
+        else:
+            return [(self.name, self.template)]
+        
+    def get_bench_data(self):
+        '''
+        get the data for the benchark info file, which includes the name, and storage type.
+        '''
+        return {
+            "name": self.name,
+            "id": self.task_id,
+            "storage_type": self.storage_type
+        }
+
+
     def write(self, target_path):
         '''
         write the task
@@ -182,17 +256,17 @@ class Task:
             case 'yaml':
                 self.write_yaml(target_path)
             case 'csv':
-                self.write_csv(target_path)
+                self.write_csv(os.path.join(target_path,'tasks'))
 
     def get_dict(self):
-
         task_dict = {
             "name": self.name,
             "template": self.template,
             "values": self.variant_values,
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
-            "description": self.description
+            "description": self.description,
+            "id_generator":self.prompt_id_generator.__name__ 
         }
         return task_dict
     
@@ -201,152 +275,181 @@ class Task:
         write the task to a yaml file
         '''
         data = self.get_dict()
-        task_path = os.path.join(target_path, self.id)
-        os.makedirs(task_path, exist_ok=True)
-        with open(os.path.join(task_path,'task_info.yml'), 'w') as file:
+        
+        with open(os.path.join(target_path,'task_info.yml'), 'w') as file:
             yaml.dump(data, file)
 
     def write_csv(self, target_folder):
         '''
         write the task to a csv file with a task.txt template file
         '''
+        # Create task folder 
+        os.mkdir(os.path.join(target_folder, self.task_id))
+        
         # write the template 
-        with open(os.path.join(target_folder, 'template.txt'), 'w') as f:
+        with open(os.path.join(target_folder,self.task_id, 'template.txt'), 'w') as f:
             f.write(self.template)
 
          
-        with open(os.path.join(target_folder, 'description.txt'), 'w') as f:
+        with open(os.path.join(target_folder,self.task_id, 'description.txt'), 'w') as f:
             f.write(self.description)
 
         # write the values and answers to a csv
-        value_answer_df = pd.DataFrame(self.variant_values)
-        value_answer_df.to_csv(os.path.join(target_folder, 'values.csv'), index=False)
-
-        
-
-    # Create a benchmarks folder with tasks in them
-    def initialize_task_dir(tasks_path, task_name: str, task_source=None,
-                            is_huggingface=False):
-        '''
-        Initialize a new task folder in the benchmark repo
-
-        *probably to be deprecated* 
-
-        Parameters:
-        -----------
-        tasks_path: str
-            The path to the tasks folder inside the benchmark folder
-        task_name: str
-            The name of the task to be added. This will be used for the task folder name
-        task_source: str or buffer
-            The source of the task data. This can be a path to a local file or folder, 
-            or a Hugging Face dataset identifier. 
-            The content
-        is_huggingface: bool
-            Whether the task source is a Hugging Face dataset. If True, the task_source 
-            should be like ownser/dataset_name
-        '''
-
-        # print(f"Setting up {task_name}...", end='')
-        task_folder = os.path.join(tasks_path, task_name)
-        os.mkdir(task_folder) # TODO: check if folder exists and handle
-
-        # if is_huggingface:
-        #     download_dataset(task_folder, task_source)
-        #     print("Success")
-        #     return
-
-
-        # # Path could be absolute or relative, check and work accordingly
-        # # if not task_source.startswith('/'):
-        # #     if task_source.startswith('./'):
-        # #         # TODO: Path could have one or more `../` use relpath to fix this block 
-        # #         task_source = task_source[2:]
-        # #     task_source = os.path.join(os.getcwd(), task_source)
-        #     # print(f" path {task_source}\n\n") # Debugging
-        
-        # #  could be a single file or a folder check and work accordignly
-        # if os.path.isdir(task_source):
-        #     for sub in os.listdir(task_source):
-        #         shutil.copy2(os.path.join(task_source, sub), task_folder)
-        # else:
-        #     shutil.copy2(task_source, task_folder)
-        # print("Success")
-
+        if self.variant_values:
+            value_answer_df = pd.DataFrame(self.variant_values)
+            # Add the references to the values
+            value_answer_df['reference'] = self.reference
+            value_answer_df.to_csv(os.path.join(target_folder,self.task_id, 'values.csv'), index=False)
     
 
     
-    def run(self, model='gemma3',runner_type="ollama", api_url=None,logging_path = None):
+    def run(self, runner=BenchRunner(), log_dir='logs', benchmark=None, bench_path=None):
         """
         run the task on the stated model and log the interactions.
 
         Parameters
         ----------
-        model : string
-            the model to run the task on
-        api_url : string
-            the url of the api to use for the task
-        runner_type: string {ollama,openai}
+        runner: BenchRunner 
             define which runner should be used for the task.
-            to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
-            to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
+        
+            runner.model : string
+                the model to run the task on
+            runner.api_url : string
+                the url of the api to use for the task
+            runner.runner_type: {ollama,openai}
+                to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
+                to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
+        log_dir: str
+            Path to where the logs should be saved. If empty a log folder will be created in the current working directory
         """
+
         responses = []
 
-        if not logging_path:
-            logging_path = 'logs'
-        if not os.path.exists(logging_path):
-            os.mkdir(logging_path)
-        self.logger = init_logger(logging_path, self.name)
+        # Create log directory if it doesn't exist
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
 
-        for sub_task in self.generate_prompts():
-            # print(sub_task)
+        run_log=""
+        # Create logging structure for a task within a log directory
+        try:
+            run_log = init_log_folder(log_dir, runner.model, self.get_dict(), benchmark, bench_path)
+        except Exception as e:
+            print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
-            match runner_type:
-                case "ollama":
-                    response: ChatResponse = chat(model=model, messages=[
-                        {
-                          'role': 'user',
-                          'content':sub_task,
-                        },
-                    ])
-                    # print("response: " + response.message.content)
-                    responses.append(response.message.content)
 
-                case "ollama_api":
-                    client = Client(
-                        host=api_url if api_url else "http://localhost:11434",
-                    )
-                    response = client.chat(
-                        model,
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": sub_task,
-                            },
-                        ],
-                    )
-                    responses.append(response["message"]["content"])
 
-                case "openai":
-                    client = OpenAI(
-                        base_url=api_url if api_url else "https://api.openai.com/v1",
-                    )
-                    chat_completion = client.chat.completions.create(
-                        model=model,
-                        messages=[
-                            {
-                                "role": "user",
-                                "content": sub_task,
-                            }
-                        ],
-                    )
-                    responses.append(chat_completion.choices[0].message.content)
-                case _:
-                    print(f"Runner type {runner_type} not supported")
-                    return None
+        for prompt_name, prompt in self.generate_prompts():
             
-            log_interaction(self.logger, sub_task, response.message.content)
+            error = None
+            response = ''
+            try:
+                match runner.runner_type:
+                    case "ollama":
+                        completion: ChatResponse = chat(
+                            model=runner.model, 
+                            format = self.FormatClass.model_json_schema(),
+                            messages=[
+                            {
+                            'role': 'user',
+                            'content':prompt,
+                            },
+                        ])
+                        # print("response: " + response.message.content)
+                        response = completion.message.content
+                        responses.append(response)
+
+                    case "ollama_api":
+                        client = Client(
+                            host=runner.api_url if runner.api_url else "http://localhost:11434",
+                        )
+                        completion = client.chat(
+                            runner.model,
+                            format = self.FormatClass.model_json_schema(),
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": prompt,
+                                },
+                            ],
+                        )
+                        response = completion["message"]["content"]
+                        responses.append(response)
+
+                    case "openai":
+                        client = OpenAI(
+                            base_url=runner.api_url if runner.api_url else "https://api.openai.com/v1",
+                        )
+                        chat_completion = client.chat.completions.create(
+                            model=runner.model,
+                            messages=[
+                                {
+                                    "role": "user",
+                                    "content": prompt,
+                                }
+                            ],
+                        )
+                        response = chat_completion.choices[0].message.content
+                        responses.append(response)
+                    case "bedrock":
+                        bedrock_client = boto3.client('bedrock-runtime')
+                        # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
+                        # for available foundational models and their inferance parameters follow 
+                        # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+                        # Catch the model family first
+                        model_fam = None
+                        if runner.model.startswith("meta"): model_fam = "llama"
+                        elif runner.model.startswith("google"): model_fam = "gemma"
+                        match model_fam:
+                            case "llama":
+                                # Embed the prompt in Llama 3's instruction format.
+                                formatted_prompt = f"""
+<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+{prompt}
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"""
+                                # Format the request payload using the model's native structure.
+                                request = {
+                                    "prompt": formatted_prompt,
+                                    # "max_gen_len": 512,
+                                    # "temperature": 0.5,
+                                }
+                                # Convert the native request to JSON.
+                                request = json.dumps(request)
+                                completeion = bedrock_client.invoke_model(
+                                    modelId = runner.model,
+                                    body = request
+                                )
+                                # Decode the response body.
+                                response = json.loads(completeion["body"].read())
+                                response = response["generation"]
+                            case "gemma":
+                                completeion = bedrock_client.invoke_model(
+                                    modelId = runner.model,
+                                    body = json.dumps(
+                                        {
+                                            'messages': [
+                                                {
+                                                'role': 'user',
+                                                'content': prompt
+                                                }
+                                            ]
+                                        }
+                                    )
+                                )
+                                # Decode the response body.
+                                response = json.loads(completeion['body'].read())
+                                response = response['choices'][0]['message']['content']
+                            case _:
+                                raise UnMatchedModel(runner.model)
+                        responses.append(response)
+                    case _:
+                        print(f"Runner type {runner.runner_type} not supported")
+                        return None
+            except Exception as e:
+                error = e
+            log_interaction(run_log, prompt_name, prompt, response, str(error))
+
         
 
         if self.variant_values:
@@ -379,3 +482,4 @@ class Task:
 # additional classes for other types of tasks
 
 # likely an agent task that can pass environment assets
+
