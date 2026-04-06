@@ -1,44 +1,8 @@
 import os
 import yaml
-# import json
 import click
-# import dataclasses
-from dataclasses import dataclass, asdict
 from .utils import load_asset_yml
 # from click_prompt import choice_option
-
-
-# class EnhancedJSONEncoder(json.JSONEncoder):
-#     def default(self, o):
-#         if dataclasses.is_dataclass(o):
-#             return dataclasses.asdict(o)
-#         #if it is a function, use its string name
-#         elif hasattr(o, '__call__'):
-#             return o.__name__
-#         return super().default(o)
-
-# We'll see if this is needed:
-@dataclass
-class Question:
-    question_text: str
-    justification: str
-    criteria: list[str]
-    NA: bool
-
-# @dataclass
-# class ChecklistItem:
-#     # question: Question # Again, we'll see...
-#     skipped: bool
-#     response: str
-#     justification: str
-#     score: int
-#     # criteria: list[str]
-
-# def calculate_score(response: str, justification: str) -> int:
-#     if response == 'no':
-#         return 0
-#     else:
-#         TODO
 
 
 def better_session(bench_path) -> dict:
