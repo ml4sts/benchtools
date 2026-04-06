@@ -41,7 +41,6 @@ class Question:
 #         TODO
 
 
-
 def better_session(bench_path) -> dict:
 # def betterbench(checklist_path) -> dict:
     """
@@ -80,6 +79,7 @@ def better_session(bench_path) -> dict:
 '''
     click.echo(welcome_prompt)
     
+    # Confirm the benchmark exists
     if not os.path.exists(bench_path):
         click.echo("No benchmark reposiory at " + bench_path)
 
@@ -89,81 +89,67 @@ def better_session(bench_path) -> dict:
     if os.path.exists(checklist_path):
         with open(checklist_path, 'r') as f:
            bench_checklist = yaml.safe_load(f)
-    else:
-        # Create checklist items and add them to new checklist
-
-        # for catagory is main_checklist.keys()
-        for question in main_checklist.keys():
-            # print(question) # Debugging
-            item = dict(
-                skipped=True,
-                response="",
-                justification="",
-                score=0,
-            )
-            bench_checklist[question] = item
-
-        # # Save empty checklist into the benchmark repo
-        # if os.path.exists(bench_path):
-        #     with open(checklist_path, 'w') as f:
-        #         yaml.dump(bench_checklist, f)
 
     
-    # TODO: check if want to change answer on any questions
-
+    # Check if want to change answer on any questions
+    review = click.confirm("Would you like to review previous respopnses? ", default=False)
+    
+    opt_out = False
     # Loop until user opts out 
     for question, criteria in main_checklist.items(): 
-        # TODO: add if(bench_checklist[skipped])
-        # print(question) # DEbugging
-        # # print(vals)
-        available_choices = ["yes", "no", 'q', '']
-        available_choices+= ['n/a'] if len(criteria) >4  else []
-        
-        choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...", 
-                              type=click.Choice(available_choices , case_sensitive=False), 
-                              show_choices=True, default='')
-        
-        # TODO: check for n/a
-        # Check for user opt out
-        match choice:
-            case 'q':
-                break    
-            case '':
+        # declare an empty checklist item
+        if not question in bench_checklist:
+            bench_checklist[question] = dict(skipped=True,
+                                                response="",
+                                                justification="",
+                                                score=0)
+        if not opt_out:
+            available_choices = ["yes", "no", 'q', '']
+            available_choices+= ['na'] if len(criteria) >4  else []
+
+            if bench_checklist[question]['skipped']:
+                choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
+                                  type=click.Choice(available_choices , case_sensitive=False),
+                                  show_choices=True, default='')
+            elif review:
+                previous = f'reviewing {question}:\nResponse: {bench_checklist[question]['response']}\nJustification: '\
+                    f'{bench_checklist[question]['justification']}\nScore: {bench_checklist[question]['score']}'
+                click.echo(previous)
+                choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
+                                  type=click.Choice(available_choices , case_sensitive=False),
+                                  show_choices=True, default='')
+            else:
                 continue
-            case 'no':
-                item = dict(
-                                    skipped=False,
-                                    response=choice,
-                                    justification=criteria[0],
-                                    score=0,
-                )
-                
-            case 'yes':
-                criteria_dict = {i*5: crit for i,crit in enumerate(criteria)}
-                criteria_text = "\n ".join([f"{i}- {crit}" for i,crit in criteria_dict.items()])
-                score = click.prompt(f"Please pick score level:\n {criteria_text}",
-                                       type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
-                justification = click.edit(f"Justification: {criteria_dict[score]}")
-                justification = justification.split('Justification: ', 1)[1].strip()
-                item = dict(
-                                    skipped=False,
-                                    response=choice,
-                                    justification=justification,
-                                    score=score,
-                                    )
-        # store this question
-        bench_checklist[question] = item
-        print(bench_checklist[question]) # remove this
 
-        
-        # score = calculate_score(choice, justification)
-        # checklist[question]['response'] = choice
-        # checklist[question]['justification'] = justification
-        # checklist[question]['score'] = score
-
-        
-        
-    print(checklist_path) #debugging 
+            match choice:
+                case 'q':
+                    opt_out = True
+                    continue
+                case '':
+                    continue
+                case 'no':
+                    bench_checklist[question]['skipped'] = False
+                    bench_checklist[question]['response'] = choice
+                    bench_checklist[question]['justification'] = criteria[0]
+                    bench_checklist[question]['score'] = 0
+                case 'na':
+                    bench_checklist[question]['skipped'] = False
+                    bench_checklist[question]['response'] = choice
+                    bench_checklist[question]['justification'] = criteria[4]
+                    bench_checklist[question]['score'] = None
+                case 'yes':
+                    criteria_dict = {i*5: crit for i,crit in enumerate(criteria)}
+                    if len(criteria) >4: criteria_dict.pop(20) # n/a criterion
+                    criteria_text = "\n ".join([f"{i}- {crit}" for i,crit in criteria_dict.items()])
+                    score = click.prompt(f"Please pick score level:\n {criteria_text}",
+                                           type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
+                    justification = click.edit(f"Justification: {criteria_dict[score]}")
+                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else criteria_dict[score]
+                    bench_checklist[question]['skipped'] = False
+                    bench_checklist[question]['response'] = choice # no if score==0?
+                    bench_checklist[question]['justification'] = justification
+                    bench_checklist[question]['score'] = score
+            
     # Save current checklist into the benchmark repo
     with open(checklist_path, 'w') as f:
         yaml.dump(bench_checklist, f)
