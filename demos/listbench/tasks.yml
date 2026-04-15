@@ -9,5 +9,6 @@
   template: "what is the name for the following symbol? {symb}"
   values: 
      symb: ["@","$","#"]
+     exmeta: ['internet', 'world', 'internet']
   reference: ["at", "dollar sign", "pound"]
   scorer: "contains"
