@@ -107,8 +107,8 @@ class Task:
             prompt = f.read()
 
         values_file = os.path.join(source_folder, "values.csv")
-        # load and strip whitespace from column names
-        value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()) 
+        # load and strip whitespace from column names and values
+        value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()).applymap(lambda x: x.strip() if isinstance(x, str) else x)
         
         variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records') # This is correct
         reference = value_answer_df['reference'].tolist()
@@ -324,6 +324,8 @@ class Task:
         """
 
         responses = []
+        # Gerenate all the prompts of the task
+        id_prompt_list = self.generate_prompts()
 
         # Create log directory if it doesn't exist
         if not os.path.exists(log_dir):
@@ -332,13 +334,13 @@ class Task:
         run_log=""
         # Create logging structure for a task within a log directory
         try:
-            run_log = init_log_folder(log_dir, runner.model, self.get_dict(), benchmark, bench_path)
+            run_log = init_log_folder(log_dir, runner.model, self.get_dict(), 
+                                        id_prompt_list, benchmark, bench_path)
         except Exception as e:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
 
-
-        for prompt_name, prompt in self.generate_prompts():
+        for prompt_id, prompt in id_prompt_list:
             
             error = None
             response = ''
@@ -448,7 +450,7 @@ class Task:
                         return None
             except Exception as e:
                 error = e
-            log_interaction(run_log, prompt_name, prompt, response, str(error))
+            log_interaction(run_log, prompt_id, prompt, response, str(error))
 
         
 

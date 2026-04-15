@@ -16,7 +16,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path=None):
+def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benchmark=None, bench_path=None):
     ''''
     Creates the log directories and sub-directories for a specific task.
     
@@ -50,6 +50,10 @@ def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path
         run_info['bench_path'] = bench_path
     run_info['run_id'] = str(timestamp)
     run_info['log_path'] = str(run_dir)
+
+    # Add prompt_id of each value set to values
+    for idx, (prompt_id, _) in enumerate(id_prompt_list):
+        run_info['values'][idx].update({'prompt_id': prompt_id})
     
     with open(os.path.join(run_dir,'run_info.yml'), 'w') as f:
         yaml.dump(run_info, f)
@@ -75,7 +79,7 @@ def init_log_folder(log_path, model, task_info: dict, benchmark=None, bench_path
 
     return run_dir
 
-def log_interaction(run_log_dir, prompt_name, prompt, response, error):
+def log_interaction(run_log_dir, prompt_id, prompt, response, error):
     """
     Logs the event to the log folder specified by the user
 
@@ -83,7 +87,7 @@ def log_interaction(run_log_dir, prompt_name, prompt, response, error):
     -------------
     run_log_dir: str
         Path to a run-specific directory in a log directory specified in a call to the run method
-    prompt_name: str
+    prompt_id: str
         Index of the sub-task being logged
     prompt: str
         The input provided to the model.
@@ -94,7 +98,7 @@ def log_interaction(run_log_dir, prompt_name, prompt, response, error):
     """
 
     # Making this into a directory in case more files (possibly steps) were to be held in here
-    prompt_dir = os.path.join(run_log_dir, prompt_name)
+    prompt_dir = os.path.join(run_log_dir, prompt_id)
     os.mkdir(prompt_dir)
 
     with open(os.path.join(prompt_dir, "log.txt"), 'w') as f:
@@ -110,7 +114,7 @@ def log_interaction(run_log_dir, prompt_name, prompt, response, error):
     step_trace = {
         'task_name': run_info['name'],
         'template': run_info['template'],
-        'prompt_name': prompt_name,
+        'prompt_id': prompt_id,
         'error': error,
         'steps':{ 
             0:{ # In case a subtask had more than one step we can always make the 0 dynamic
