@@ -200,7 +200,6 @@ def resume(bench_path: str):
     """
     Running the betterbench interactive session
     """
-    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
     better_session(bench_path)
 
     
@@ -211,11 +210,10 @@ def score(bench_path: str):
     """
     Running the betterbench scoring function
     """
-    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
-    click.echo(f"Scoring now...")
-    score = get_score()
-    click.echo(f"Score: {score}")
+    click.echo(f"Scoring benchmark now...")
+    score = get_score(bench_path)
 
 
+# benchtool.add_command(betterbench) # To add betterbench as a benchtool command/subtool
 
 
