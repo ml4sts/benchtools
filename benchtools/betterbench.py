@@ -128,7 +128,7 @@ def better_session(bench_path) -> dict:
         yaml.dump(bench_checklist, f)
 
 
-def score_checklist(bench_checklist: dict) -> (int,int):
+def score_checklist(bench_checklist: dict) -> dict:
     '''
     Score betterbench checklist. 
 
@@ -138,15 +138,43 @@ def score_checklist(bench_checklist: dict) -> (int,int):
         A dictionary of betterbench questions and values as established by better_session function
     '''
 
-    score = 0
-    total = 0
+    scores = dict(design_score = 0,
+                    design_total = 0,
+                    implementation_score = 0,
+                    implementation_total = 0,
+                    documentation_score = 0,
+                    documentation_total = 0,
+                    maintenance_score = 0,
+                    maintenance_total = 0,
+                    score = 0,
+                    total = 0,
+                    )
     for _ , vals in bench_checklist.items():
         if not vals['response']=='na':
-            total += 15
-            if not vals['skipped']:
-                score += vals['score']
+            scores['total'] += 15
+            match vals['category_name']:
+                case 'Design':
+                    scores['design_total'] += 15
+                    if not vals['skipped']:
+                        scores['score'] += vals['score']
+                        scores['design_score'] += vals['score']
+                case 'Implementation':
+                    scores['implementation_total'] += 15
+                    if not vals['skipped']:
+                        scores['score'] += vals['score']
+                        scores['implementation_score'] += vals['score']
+                case 'Documentation':
+                    scores['documentation_total'] += 15
+                    if not vals['skipped']:
+                        scores['score'] += vals['score']
+                        scores['documentation_score'] += vals['score']
+                case 'Maintenance':
+                    scores['maintenance_total'] += 15
+                    if not vals['skipped']:
+                        scores['score'] += vals['score']
+                        scores['maintenance_score'] += vals['score']
 
-    return (score,total)
+    return (scores)
         
 
 def get_score(bench_path):
@@ -172,7 +200,7 @@ def get_score(bench_path):
         with open(checklist_path, 'r') as f:
            bench_checklist = yaml.safe_load(f)
     if bench_checklist:
-        score, total = score_checklist(bench_checklist)
+        scores = score_checklist(bench_checklist)
     else:
         click.confirm("BetterBench checklist file empty or not initialized.\n"\
                         f"Would you like to initialize one for the benchmark in {bench_path}?",
@@ -180,7 +208,14 @@ def get_score(bench_path):
         better_session(bench_path) # TODO: Change this to new betterbench function
         with open(checklist_path, 'r') as f:
            bench_checklist = yaml.safe_load(f)
-        score, total = score_checklist(bench_checklist)
+        scores = score_checklist(bench_checklist)
     
-    click.echo(f"Your benchmark's score: {score}/{total}")
+    output = f"""
+Design: {scores['design_score']}/{scores['design_total']}
+Implementation: {scores['implementation_score']}/{scores['implementation_total']}
+Documentation: {scores['documentation_score']}/{scores['documentation_total']}
+Maintenance: {scores['maintenance_score']}/{scores['maintenance_total']}
+Your benchmark's score: {scores['score']}/{scores['total']}
+"""
+    click.echo(output)
 
