@@ -52,7 +52,8 @@ def better_session(bench_path) -> dict:
     bench_checklist={}
     if os.path.exists(checklist_path):
         with open(checklist_path, 'r') as f:
-           bench_checklist = yaml.safe_load(f)
+           checklist = yaml.safe_load(f)
+           if checklist: bench_checklist = checklist
 
     
     # Check if want to change answer on any questions
@@ -60,24 +61,31 @@ def better_session(bench_path) -> dict:
     
     opt_out = False
     # Loop until user opts out 
-    for question, criteria in main_checklist.items(): 
+    for new_item in main_checklist: 
+        question = new_item["criterion_text"]
+        rubric = new_item["rubric"]
+        cid = new_item["criterion_id"]
+        category = new_item["category_name"]
         # declare an empty checklist item
-        if not question in bench_checklist:
-            bench_checklist[question] = dict(skipped=True,
-                                                response="",
-                                                justification="",
-                                                score=0)
+        if not cid in bench_checklist:
+            bench_checklist[cid] = dict(category_name=category,
+                                        question=question,
+                                        response="",
+                                        justification="",
+                                        score=0,
+                                        skipped=True,
+                                        )
         if not opt_out:
             available_choices = ["yes", "no", 'q', '']
-            available_choices+= ['na'] if len(criteria) >4  else []
+            available_choices+= ['na'] if rubric['na'] else []
 
-            if bench_checklist[question]['skipped']:
+            if bench_checklist[cid]['skipped']:
                 choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
                                   type=click.Choice(available_choices , case_sensitive=False),
                                   show_choices=True, default='')
             elif review:
-                previous = f'reviewing {question}:\nResponse: {bench_checklist[question]['response']}\nJustification: '\
-                    f'{bench_checklist[question]['justification']}\nScore: {bench_checklist[question]['score']}'
+                previous = f'reviewing {question}:\nResponse: {bench_checklist[cid]['response']}\nJustification: '\
+                    f'{bench_checklist[cid]['justification']}\nScore: {bench_checklist[cid]['score']}'
                 click.echo(previous)
                 choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
                                   type=click.Choice(available_choices , case_sensitive=False),
@@ -92,27 +100,28 @@ def better_session(bench_path) -> dict:
                 case '':
                     continue
                 case 'no':
-                    bench_checklist[question]['skipped'] = False
-                    bench_checklist[question]['response'] = choice
-                    bench_checklist[question]['justification'] = criteria[0]
-                    bench_checklist[question]['score'] = 0
+                    bench_checklist[cid]['skipped'] = False
+                    bench_checklist[cid]['response'] = choice
+                    bench_checklist[cid]['justification'] = rubric[0]
+                    bench_checklist[cid]['score'] = 0
                 case 'na':
-                    bench_checklist[question]['skipped'] = False
-                    bench_checklist[question]['response'] = choice
-                    bench_checklist[question]['justification'] = criteria[4]
-                    bench_checklist[question]['score'] = None
+                    bench_checklist[cid]['skipped'] = False
+                    bench_checklist[cid]['response'] = choice
+                    bench_checklist[cid]['justification'] = rubric['na']
+                    bench_checklist[cid]['score'] = None
                 case 'yes':
-                    criteria_dict = {i*5: crit for i,crit in enumerate(criteria)}
-                    if len(criteria) >4: criteria_dict.pop(20) # n/a criterion
-                    criteria_text = "\n ".join([f"{i}- {crit}" for i,crit in criteria_dict.items()])
-                    score = click.prompt(f"Please pick score level:\n {criteria_text}",
+                    if not rubric['na']: rubric.pop('na') # n/a criterion
+                    rubric_text = "\n ".join([f"{i}- {crit}" for i,crit in rubric.items()])
+                    # TODO: Score is dynamic val
+                    score = click.prompt(f"Please pick score level:\n {rubric_text}",
                                            type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
-                    justification = click.edit(f"Justification: {criteria_dict[score]}")
-                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else criteria_dict[score]
-                    bench_checklist[question]['skipped'] = False
-                    bench_checklist[question]['response'] = choice # no if score==0?
-                    bench_checklist[question]['justification'] = justification
-                    bench_checklist[question]['score'] = score
+                    # TODO: pick justification closer to score
+                    justification = click.edit(f"Justification: {rubric[score]}")
+                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else rubric[score]
+                    bench_checklist[cid]['skipped'] = False
+                    bench_checklist[cid]['response'] = choice # no if score==0?
+                    bench_checklist[cid]['justification'] = justification
+                    bench_checklist[cid]['score'] = score
             
     # Save current checklist into the benchmark repo
     with open(checklist_path, 'w') as f:
