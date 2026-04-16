@@ -112,14 +112,14 @@ def better_session(bench_path) -> dict:
                 case 'yes':
                     if not rubric['na']: rubric.pop('na') # n/a criterion
                     rubric_text = "\n ".join([f"{i}- {crit}" for i,crit in rubric.items()])
-                    # TODO: Score is dynamic val
-                    score = click.prompt(f"Please pick score level:\n {rubric_text}",
-                                           type=click.Choice([0, 5, 10, 15]), show_choices=True, default=5)
+                    score = click.prompt(f"Please enter score based on the rubric:\n {rubric_text}",
+                                           type=click.IntRange(0,15,True), show_choices=True, default=5)
+                    rubric_idx = 0 if score == 0 else ((score-1)//5+1)*5
                     # TODO: pick justification closer to score
-                    justification = click.edit(f"Justification: {rubric[score]}")
-                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else rubric[score]
+                    justification = click.edit(f"Justification: {rubric[rubric_idx]}")
+                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else rubric[rubric_idx]
                     bench_checklist[cid]['skipped'] = False
-                    bench_checklist[cid]['response'] = choice # no if score==0?
+                    bench_checklist[cid]['response'] = choice if score > 0 else 'no'
                     bench_checklist[cid]['justification'] = justification
                     bench_checklist[cid]['score'] = score
             
