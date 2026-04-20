@@ -3,8 +3,8 @@ import click
 from benchtools.task import Task
 from benchtools.benchmark import Bench
 from benchtools.runner import BenchRunner
-from benchtools.betterbench import better_session, get_score
-# from task import PromptTask
+from benchtools.betterbench import BetterCheckList
+
 
 @click.group()
 def benchtool():
@@ -200,20 +200,22 @@ def resume(bench_path: str):
     """
     Running the betterbench interactive session
     """
-    better_session(bench_path)
-
+    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    checklist.interactive_session()
+    checklist.save(bench_path)
     
 
 @betterbench.command()
-@click.argument('bench-path', required = True, type=str)
+@click.argument('bench-path', default='.', type=str)
 def score(bench_path: str):
     """
     Running the betterbench scoring function
     """
     click.echo(f"Scoring benchmark now...")
-    score = get_score(bench_path)
+    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    checklist.print_score()
 
 
-# benchtool.add_command(betterbench) # To add betterbench as a benchtool command/subtool
+benchtool.add_command(betterbench) # To add betterbench as a benchtool command/subtool
 
 
