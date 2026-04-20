@@ -4,34 +4,98 @@ import click
 from .utils import load_asset_yml
 # from click_prompt import choice_option
 
+class CheckListItem():
 
-def better_session(bench_path) -> dict:
-# def betterbench(checklist_path) -> dict:
-    """
+    def __init__(self, category: str, question: str, cid: str, rubric: dict, response: str, justification: str, skipped: bool, score: int):
+        self.category=category
+        self.question=question
+        self.cid=cid
+        self.rubric=rubric
+        self.response=response
+        self.justification=justification
+        self.skipped=skipped
+        self.score=score
+    
+
+class BetterCheckList():
+    '''
     The checklist below is based on the benchmark quality assessment proposed in
     BetterBench. It is supposed to help authors identify if they adhere to best 
     practices in their benchmark development. If you want to have your benchmark
     added to the BetterBench Repository, please also fill out the justifications.
-      These should be about one sentence long each, and include the page numbers 
-      of your paper or your webpage where the information can be found. You can 
-      also copy-paste quotes from any of your publicly available materials here 
-      as evidence. In this case, please also add a link to the source.
-    Reuel et. al.
+    These should be about one sentence long each, and include the page numbers of
+    your paper or your webpage where the information can be found. You can also
+    copy-paste quotes from any of your publicly available materials here as
+    evidence. In this case, please also add a link to the source. Reuel et. al.
 
     To understand methodology and justification of questions please view 
     [BetterBench Methodology](https://betterbench.stanford.edu/methodology.html)
+        
+    Attributes
+    ----------
+        checklist: list[CheckListItem]
+
+    Methods
+    -------
+            Add a CheckListItem to the checklist
+        add_item()
+            Modify a CheckListItem in the checklist
+        modify_item()
+            Initiate an interactive session to fill out the checklist
+        better_session()
+
+    '''
+
+    def __init__(self, items: list[CheckListItem]):
+        self.items: list[CheckListItem] = items
+        self.ids = [item.cid for item in self.items]
+        self.categories = list({item.category for item in self.items})
+        # self.total_score = 15 * len(self.items)
+
+    @classmethod
+    def from_template(cls):
+        main_checklist = load_asset_yml("betterbench.yml")
+        bench_checklist=[]
+        # Loop until user opts out 
+        for item in main_checklist: 
+            bench_checklist.append(CheckListItem(category=item["category_name"],
+                                                question=item["criterion_text"],
+                                                cid=item["criterion_id"],
+                                                rubric=item["rubric"],
+                                                response="",
+                                                justification="",
+                                                score=0,
+                                                skipped=True,
+                                                ))
+
+        return cls(bench_checklist)
 
 
-    ---- 
-    checklist_path: Path to Benchmark's betterbench checklist file
-    
-    """
+    @classmethod
+    def from_file(cls, checklist_path: str):
+        bench_checklist = []
+        # Confirm the benchmark exists
+        if not checklist_path.endswith('.yml') or not os.path.exists(checklist_path):
+            click.echo("Incorrect betterbench checklist path: " + checklist_path)
+            exit()
 
-    
-    main_checklist = load_asset_yml("betterbench.yml") 
+        # Load existing BetterBench checklist if applicable 
+        bench_checklist=[]
+        with open(checklist_path, 'r') as f:
+           checklist_dict = yaml.safe_load(f)
+           if checklist_dict: bench_checklist = checklist_dict
+           else: click.echo("WARNING: The provided checklist path was empty or failed to load. Returning empty list.")
 
-    # Intro
-    welcome_prompt='''
+        if bench_checklist: better_checklist = [CheckListItem(**item) for item in bench_checklist]
+        return cls(better_checklist)
+
+    # def interactive_session(self, questions:list = None, file:str = None):
+    #     pass
+
+    def interactive_session(self):
+
+        # Intro
+        welcome_prompt='''
 #########################################################################
 # Entering interactive session for BetterBench!                         #
 # This interactive session is meant guide the benchmark to follow the   #
@@ -41,181 +105,111 @@ def better_session(bench_path) -> dict:
 #########################################################################
 
 '''
-    click.echo(welcome_prompt)
-    
-    # Confirm the benchmark exists
-    if not os.path.exists(bench_path):
-        click.echo("No benchmark reposiory at " + bench_path)
+        click.echo(welcome_prompt)
 
-    # Load existing BetterBench checklist if applicable 
-    checklist_path = os.path.join(bench_path, "betterbench.yml")
-    bench_checklist={}
-    if os.path.exists(checklist_path):
-        with open(checklist_path, 'r') as f:
-           checklist = yaml.safe_load(f)
-           if checklist: bench_checklist = checklist
+        # Check if want to change answer on any questions
+        review = click.confirm("Would you like to review previous respopnses? ", default=False)
 
-    
-    # Check if want to change answer on any questions
-    review = click.confirm("Would you like to review previous respopnses? ", default=False)
-    
-    opt_out = False
-    # Loop until user opts out 
-    for new_item in main_checklist: 
-        question = new_item["criterion_text"]
-        rubric = new_item["rubric"]
-        cid = new_item["criterion_id"]
-        category = new_item["category_name"]
-        # declare an empty checklist item
-        if not cid in bench_checklist:
-            bench_checklist[cid] = dict(category_name=category,
-                                        question=question,
-                                        response="",
-                                        justification="",
-                                        score=0,
-                                        skipped=True,
-                                        )
-        if not opt_out:
-            available_choices = ["yes", "no", 'q', '']
-            available_choices+= ['na'] if rubric['na'] else []
+        opt_out = False
+        # Loop until user opts out 
+        for item in self.items: 
 
-            if bench_checklist[cid]['skipped']:
-                choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
-                                  type=click.Choice(available_choices , case_sensitive=False),
-                                  show_choices=True, default='')
-            elif review:
-                previous = f'reviewing {question}:\nResponse: {bench_checklist[cid]['response']}\nJustification: '\
-                    f'{bench_checklist[cid]['justification']}\nScore: {bench_checklist[cid]['score']}'
-                click.echo(previous)
-                choice = click.prompt(f"{question}?\nEnter to skip. q to end this session...",
-                                  type=click.Choice(available_choices , case_sensitive=False),
-                                  show_choices=True, default='')
-            else:
-                continue
+            if not opt_out:
+                available_choices = ["yes", "no", 'q', '']
+                available_choices+= ['na'] if item.rubric['na'] else []
 
-            match choice:
-                case 'q':
-                    opt_out = True
+                if item.skipped:
+                    choice = click.prompt(f"{item.question}?\nEnter to skip. q to end this session...",
+                                      type=click.Choice(available_choices , case_sensitive=False),
+                                      show_choices=True, default='')
+                elif review:
+                    previous = f'Reviewing {item.question}:\nResponse: {item.response}\n'\
+                        f'Justification: {item.justification}\nScore: {item.score}'
+                    click.echo(previous)
+                    choice = click.prompt(f"{item.question}?\nEnter to skip. q to end this session...",
+                                      type=click.Choice(available_choices , case_sensitive=False),
+                                      show_choices=True, default='')
+                else:
                     continue
-                case '':
-                    continue
-                case 'no':
-                    bench_checklist[cid]['skipped'] = False
-                    bench_checklist[cid]['response'] = choice
-                    bench_checklist[cid]['justification'] = rubric[0]
-                    bench_checklist[cid]['score'] = 0
-                case 'na':
-                    bench_checklist[cid]['skipped'] = False
-                    bench_checklist[cid]['response'] = choice
-                    bench_checklist[cid]['justification'] = rubric['na']
-                    bench_checklist[cid]['score'] = None
-                case 'yes':
-                    if not rubric['na']: rubric.pop('na') # n/a criterion
-                    rubric_text = "\n ".join([f"{i}- {crit}" for i,crit in rubric.items()])
-                    score = click.prompt(f"Please enter score based on the rubric:\n {rubric_text}",
-                                           type=click.IntRange(0,15,True), show_choices=True, default=5)
-                    rubric_idx = 0 if score == 0 else ((score-1)//5+1)*5
-                    # TODO: pick justification closer to score
-                    justification = click.edit(f"Justification: {rubric[rubric_idx]}")
-                    justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else rubric[rubric_idx]
-                    bench_checklist[cid]['skipped'] = False
-                    bench_checklist[cid]['response'] = choice if score > 0 else 'no'
-                    bench_checklist[cid]['justification'] = justification
-                    bench_checklist[cid]['score'] = score
-            
-    # Save current checklist into the benchmark repo
-    with open(checklist_path, 'w') as f:
-        yaml.dump(bench_checklist, f)
+
+                match choice:
+                    case 'q':
+                        opt_out = True
+                        break
+                    case '':
+                        continue
+                    case 'no':
+                        item.skipped = False
+                        item.response = choice
+                        item.justification = item.rubric[0]
+                        item.score = 0
+                    case 'na':
+                        item.skipped = False
+                        item.response = choice
+                        item.justification = item.rubric['na']
+                        item.score = None
+                        # self.total_score -=15
+                    case 'yes':
+                        if not item.rubric['na']: item.rubric.pop('na') # n/a criterion
+                        rubric_text = "\n ".join([f"{i}- {crit}" for i,crit in item.rubric.items()])
+                        score = click.prompt(f"Please enter score based on the rubric:\n {rubric_text}",
+                                               type=click.IntRange(min=0,max=15,clamp=True), show_choices=True, default=5)
+                        # Pick justification closer to score
+                        rubric_idx = 0 if score == 0 else ((score-1)//5+1)*5
+                        justification = click.edit(f"Justification: {item.rubric[rubric_idx]}")
+                        justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else item.rubric[rubric_idx]
+                        item.skipped = False
+                        item.response = choice if score > 0 else 'no'
+                        item.justification = justification
+                        item.score = score
 
 
-def score_checklist(bench_checklist: dict) -> dict:
-    '''
-    Score betterbench checklist. 
+    def score_checklist(self):
+        '''
+        Score betterbench checklist. 
+        '''
 
-    Attributes
-    ----------
-    bench_checklist: dict
-        A dictionary of betterbench questions and values as established by better_session function
-    '''
-
-    scores = dict(design_score = 0,
-                    design_total = 0,
-                    implementation_score = 0,
-                    implementation_total = 0,
-                    documentation_score = 0,
-                    documentation_total = 0,
-                    maintenance_score = 0,
-                    maintenance_total = 0,
-                    score = 0,
-                    total = 0,
-                    )
-    for _ , vals in bench_checklist.items():
-        if not vals['response']=='na':
-            scores['total'] += 15
-            match vals['category_name']:
-                case 'Design':
-                    scores['design_total'] += 15
-                    if not vals['skipped']:
-                        scores['score'] += vals['score']
-                        scores['design_score'] += vals['score']
-                case 'Implementation':
-                    scores['implementation_total'] += 15
-                    if not vals['skipped']:
-                        scores['score'] += vals['score']
-                        scores['implementation_score'] += vals['score']
-                case 'Documentation':
-                    scores['documentation_total'] += 15
-                    if not vals['skipped']:
-                        scores['score'] += vals['score']
-                        scores['documentation_score'] += vals['score']
-                case 'Maintenance':
-                    scores['maintenance_total'] += 15
-                    if not vals['skipped']:
-                        scores['score'] += vals['score']
-                        scores['maintenance_score'] += vals['score']
-
-    return (scores)
         
+        scores = dict(score = 0,
+                        total = 0,
+                        )
+        
+        for category in self.categories:
+            scores.update({f'{category}_score': 0})
+            scores.update({f'{category}_total': 0})
+        
+        for item in self.items:
+            if not item.response =='na':
+                scores['total'] += 15
+                scores[f'{item.category}_total'] += 15
+                if not item.skipped:
+                    scores['score'] += item.score
+                    scores[f'{item.category}_score'] += item.score
 
-def get_score(bench_path):
-    '''
-    Score benchmark using the betterbench checklist. 
-    This function is meant to be run using the CLI.
+        return (scores)
 
-    Attributes
-    ----------
-    bench_path: str
-        Path to where the benchmark folder and all its content reside
-    '''
-
-    # Confirm the benchmark exists
-    if not os.path.exists(bench_path):
-        click.echo("No benchmark reposiory at " + bench_path)
-        return
-
-    # Load existing BetterBench checklist if applicable 
-    checklist_path = os.path.join(bench_path, "betterbench.yml")
-    bench_checklist={}
-    if os.path.exists(checklist_path):
-        with open(checklist_path, 'r') as f:
-           bench_checklist = yaml.safe_load(f)
-    if bench_checklist:
-        scores = score_checklist(bench_checklist)
-    else:
-        click.confirm("BetterBench checklist file empty or not initialized.\n"\
-                        f"Would you like to initialize one for the benchmark in {bench_path}?",
-                        default=True, abort=True)
-        better_session(bench_path) # TODO: Change this to new betterbench function
-        with open(checklist_path, 'r') as f:
-           bench_checklist = yaml.safe_load(f)
-        scores = score_checklist(bench_checklist)
-    
-    output = f"""
-Design: {scores['design_score']}/{scores['design_total']}
-Implementation: {scores['implementation_score']}/{scores['implementation_total']}
-Documentation: {scores['documentation_score']}/{scores['documentation_total']}
-Maintenance: {scores['maintenance_score']}/{scores['maintenance_total']}
-Your benchmark's score: {scores['score']}/{scores['total']}
+    def print_score(self):
+        scores = self.score_checklist()
+        output = f"""
+Your benchmark's score: {scores.pop('score')}/{scores.pop('total')}
 """
-    click.echo(output)
+        for key in scores.keys():
+            if "_score" in key:
+                category_name = key.split('_',1)[0]
+                output += f"\n{category_name}: {scores[f'{category_name}_score']}/{scores[f'{category_name}_total']}"
+
+        click.echo(output)
+
+    def save(self, bench_path: str):
+        # Confirm the benchmark exists
+        if not os.path.exists(bench_path):
+            click.echo("No benchmark reposiory at " + bench_path)
+
+        # Load existing BetterBench checklist if applicable 
+        checklist_path = os.path.join(bench_path, "betterbench.yml")
+        # Convert objects to a list of dicts before saving
+        bench_checklist = [item.__dict__ for item in self.items]
+        # Save current checklist into the benchmark repo
+        with open(checklist_path, 'w') as f:
+            yaml.dump(bench_checklist, f)
 
