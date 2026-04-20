@@ -17,6 +17,7 @@ class CheckListItem():
         self.score=score
     
 
+
 class BetterCheckList():
     '''
     The checklist below is based on the benchmark quality assessment proposed in
@@ -37,12 +38,18 @@ class BetterCheckList():
 
     Methods
     -------
-            Add a CheckListItem to the checklist
-        add_item()
-            Modify a CheckListItem in the checklist
-        modify_item()
+            Create a new checklist using the BetterBench template
+        from_template()
+            Load a betterbench checklist from a yaml file
+        from_file(checklist_path: str)
             Initiate an interactive session to fill out the checklist
-        better_session()
+        interactive_session()
+            Add a CheckListItem to the checklist
+        add_item(item)
+            score checklist object
+        score_checklist()
+            print betterbench scores
+        print_score()
 
     '''
 
@@ -89,8 +96,12 @@ class BetterCheckList():
         if bench_checklist: better_checklist = [CheckListItem(**item) for item in bench_checklist]
         return cls(better_checklist)
 
+    def add_item(self, item: CheckListItem):
+        self.items.append(item)
+
     # def interactive_session(self, questions:list = None, file:str = None):
     #     pass
+
 
     def interactive_session(self):
 
@@ -168,7 +179,6 @@ class BetterCheckList():
         '''
         Score betterbench checklist. 
         '''
-
         
         scores = dict(score = 0,
                         total = 0,
@@ -187,6 +197,7 @@ class BetterCheckList():
                     scores[f'{item.category}_score'] += item.score
 
         return (scores)
+
 
     def print_score(self):
         scores = self.score_checklist()
