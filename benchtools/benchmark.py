@@ -4,6 +4,7 @@ import os
 import shutil
 import requests
 import yaml
+import json
 # from pathlib import Path # ???
 from benchtools.task import Task
 from pathlib import PurePath
@@ -329,6 +330,40 @@ class Bench():
         # Run each task
         for name, task in self.tasks.items():
             self.run_task(task, runner, log_dir)
+
+    def score(self, model=None,task=None, run =None):
+        '''
+        Run the benchmark by running each task in the benchmark and logging the interactions.
+        Parameters:
+        -----------
+        model : str, list
+            model to score
+        task: str, list
+            task to sore
+
+
+        '''
+        
+        log_path = os.path.join(self.bench_path,'logs')
+        model_list = [os.path.join(log_path,m) for m in os.listdir(log_path) 
+                                    if os.path.isdir(os.path.join(log_path,m))]
+        last_runs = {}
+        for model_path in model_list:
+            for task in os.listdir(model_path):
+                last_run = sorted(os.listdir(os.path.join(model_path,task)))[-1]
+                last_runs[task]
+        
+        if not(task):
+            task_list = self.tasks.items()
+        # TODO: implement subsetting
+        
+        # Run each task
+        for name, task in task_list:
+            # load response json
+            with open('data.json', 'r', encoding='utf-8') as file:
+                log = json.load(file)
+            response = log['response']
+            self.score(task,response)
 
 
     def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None): 

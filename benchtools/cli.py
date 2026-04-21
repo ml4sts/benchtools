@@ -185,6 +185,26 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     click.echo(f"Running {benchmark.bench_name} now")
     benchmark.run(runner, log_path)
 
+@benchtool.command()
+@click.argument('benchmark-path', required = False, type=str, default='.')
+@click.option('-r', '--result-path', type=str, default=None, 
+              help="The path to a log directory.")
+def score(benchmark_path: str, result_path):
+    """
+    Running the benchmark and generating logs
+    Parameters:
+        benchmark-path: The path to the benchmark repository where all the task reside.
+    """
+    # Create BenchRunner object
+    if not(result_path):
+
+
+    benchmark = Bench.load(def score(benchmark_path: str, result_path):
+)
+
+    
+    click.echo(f"Running {benchmark.bench_name} now")
+    benchmark.run(runner, log_path)
 
 
 @click.group()
