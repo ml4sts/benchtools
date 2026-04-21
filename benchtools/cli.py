@@ -54,7 +54,7 @@ def init(benchmark_name, path, about, no_git):
 
     # create full path
     folder_name = benchmark_name.replace(" ", "_").lower()
-    bench_path = os.path.join(path, folder_name)
+    benchmark_path = os.path.join(path, folder_name)
 
     tasks = []
     tasks_desired = click.confirm("Do you want to add any tasks now?")
@@ -72,8 +72,8 @@ def init(benchmark_name, path, about, no_git):
         tasks_desired = click.confirm("Do you want to add another?")
 
 
-    click.echo(f"Creating {benchmark_name} Benchmark in {bench_path}")
-    benchmark = Bench(name =benchmark_name, bench_path = bench_path, 
+    click.echo(f"Creating {benchmark_name} Benchmark in {benchmark_path}")
+    benchmark = Bench(name =benchmark_name, benchmark_path = benchmark_path, 
                       concept = about, tasks=tasks)
 
     # Build the benchmark folder
@@ -82,7 +82,7 @@ def init(benchmark_name, path, about, no_git):
 
     # TODO: Call betterbench CLI here
     if click.confirm("Do you want to go through the BetterBench checklist now?", default=True) :
-        better_session(bench_path)
+        better_session(benchmark_path)
 
     # Run?
     if benchmark.tasks:
@@ -100,13 +100,13 @@ def init(benchmark_name, path, about, no_git):
 @click.option('-s','--task-source', type=str,help="The relative path to  content that already exists`", required=True)
 @click.option('-t','--task-type', type=click.Choice(['folders', 'list']), 
               help="The type of the task content being added. Options are csv or yml", required=True)
-def add_task(task_name, bench_path, task_source,task_type):
+def add_task(task_name, benchmark_path, task_source,task_type):
     """
     Set up a new task.
 
     """
     
-    benchmark = Bench.load(bench_path)    
+    benchmark = Bench.load(benchmark_path)    
     
     # Create Task object
     if task_source: 
@@ -154,7 +154,7 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     # Create BenchRunner object
     runner = BenchRunner(runner_type, model, api_url)
 
-    benchmark = Bench.load(bench_path)
+    benchmark = Bench.load(benchmark_path)
 
     
     click.echo(f"Running {task_name} of benchmark {benchmark.bench_name} now")
@@ -179,7 +179,7 @@ def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_pat
     # Create BenchRunner object
     runner = BenchRunner(runner_type, model, api_url)
 
-    benchmark = Bench.load(bench_path)
+    benchmark = Bench.load(benchmark_path)
 
     
     click.echo(f"Running {benchmark.bench_name} now")
@@ -196,22 +196,22 @@ def betterbench():
     
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
-def resume(bench_path: str):
+def resume(benchmark_path: str):
     """
     Running the betterbench interactive session
     """
-    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
-    better_session(bench_path)
+    # benchmark = Bench.load(benchmark_path) # IS this needed? Maybe just check if written?
+    better_session(benchmark_path)
 
     
 
 @betterbench.command()
 @click.argument('bench-path', required = True, type=str)
-def score(bench_path: str):
+def score(benchmark_path: str):
     """
     Running the betterbench scoring function
     """
-    # benchmark = Bench.load(bench_path) # IS this needed? Maybe just check if written?
+    # benchmark = Bench.load(benchmark_path) # IS this needed? Maybe just check if written?
     click.echo(f"Scoring now...")
     score = get_score()
     click.echo(f"Score: {score}")
