@@ -345,25 +345,34 @@ class Bench():
         '''
         
         log_path = os.path.join(self.bench_path,'logs')
-        model_list = [os.path.join(log_path,m) for m in os.listdir(log_path) 
-                                    if os.path.isdir(os.path.join(log_path,m))]
-        last_runs = {}
-        for model_path in model_list:
-            for task in os.listdir(model_path):
-                last_run = sorted(os.listdir(os.path.join(model_path,task)))[-1]
-                last_runs[task]
+        model_list = {m:os.path.join(log_path,m) for m in os.listdir(log_path) 
+                                    if os.path.isdir(os.path.join(log_path,m))}
+        
         
         if not(task):
             task_list = self.tasks.items()
         # TODO: implement subsetting
         
+        score_dict = {}
         # Run each task
-        for name, task in task_list:
-            # load response json
-            with open('data.json', 'r', encoding='utf-8') as file:
-                log = json.load(file)
-            response = log['response']
-            self.score(task,response)
+        for model_name, model_path in model_list:
+            score_dict[model_name] = {}
+            for name, task in task_list:
+
+                score_dict[model_name][name] = {}
+                # load response json
+                run_id = sorted(os.listdir(os.path.join(model_path,name)))[-1]
+                log_file = os.path.join(model_path,name,run_id,'log.json')
+                with open(log_file, 'r', encoding='utf-8') as file:
+                    log = json.load(file)
+                
+
+                score_dict[model_name][name][run_id] = log
+                    
+
+                for step_id,step in log['steps'].items()
+                    response = step['response']
+                    self.score(task,response)
 
 
     def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None): 
