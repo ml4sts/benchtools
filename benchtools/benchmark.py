@@ -156,7 +156,7 @@ class Bench():
         
         tasks =[]
         for task_dict in task_list:
-            tasks.append(Task.from_dict(task_dict))
+            tasks.append(Task.from_dict(task_dict,source_path=bench_path))
 
 
         return cls(name = info['bench_name'], bench_path =bench_path,
@@ -306,7 +306,7 @@ class Bench():
             task_object.write(self.bench_path)
 
 
-    def run(self, runner=BenchRunner(), log_dir=None):
+    def run(self, runner=BenchRunner(), log_dir=None, score=False):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -329,9 +329,9 @@ class Bench():
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, runner, log_dir)
+            self.run_task(task, runner, log_dir,score)
 
-    def score(self, model=None,task=None, run =None):
+    def score(self, model=None,task=None, run ='last'):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -340,7 +340,8 @@ class Bench():
             model to score
         task: str, list
             task to sore
-
+        run: str or list
+            'last', 'all', runid or list of run ids
 
         '''
         
@@ -348,34 +349,74 @@ class Bench():
         model_list = {m:os.path.join(log_path,m) for m in os.listdir(log_path) 
                                     if os.path.isdir(os.path.join(log_path,m))}
         
+        run_selector = {'last': lambda runs: runs[-1],
+                        'all': lambda runs: runs
+                        }
         
-        if not(task):
-            task_list = self.tasks.items()
+        
+        # if not(task):
+        task_list = self.tasks.items()
+        
         # TODO: implement subsetting
         
-        score_dict = {}
+        score_list = []
         # Run each task
-        for model_name, model_path in model_list:
-            score_dict[model_name] = {}
+        
+        for model_name, model_path in model_list.items():
+            
+            
             for name, task in task_list:
 
-                score_dict[model_name][name] = {}
+                
                 # load response json
-                run_id = sorted(os.listdir(os.path.join(model_path,name)))[-1]
-                log_file = os.path.join(model_path,name,run_id,'log.json')
-                with open(log_file, 'r', encoding='utf-8') as file:
-                    log = json.load(file)
+                task_path = os.path.join(model_path,name)
+                all_runs = sorted(os.listdir(task_path))
+                
+                if run in run_selector.keys():
+                    selected_runs = [run_selector[run](all_runs)]
+                else:
+                    if type(run) == str:
+                        selected_runs = [run]
+                    else:
+                        selected_runs = [r for r in all_runs if r in run]
+
                 
 
-                score_dict[model_name][name][run_id] = log
+                for run_id in selected_runs: 
+                    
+                    run_path = os.path.join(task_path,run_id)
+                    
+                    prompt_id_list = [d for d in os.listdir(run_path) 
+                                      if os.path.isdir(os.path.join(run_path,d))]
+                    # print(prompt_id_list)
+                    for prompt_id in prompt_id_list: 
+                        log_file = os.path.join(run_path,prompt_id,'log.json')
+                        with open(log_file, 'r', encoding='utf-8') as file:
+                            log = json.load(file)
+                        
+                        # print('soring',prompt_id)
+                        score_dict = log
+                        score_dict.update({'model':model_name,
+                                           'task':name,
+                                           'run':run_id,
+                                           'prompt_id':prompt_id})
                     
 
-                for step_id,step in log['steps'].items()
-                    response = step['response']
-                    self.score(task,response)
+                        for step_id,step in log['steps'].items():
+                            response = step['response']
+                            score_dict['steps'][step_id]['score'] = task.score(response,prompt_id)
+                        
+                        score_list.append(score_dict)
+        
+        
+        
+
+        return score_list
 
 
-    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None): 
+
+    def run_task(self, target_task=None, runner=BenchRunner(), 
+                 log_dir=None, score=False): 
         '''
         run a specific task
         '''
@@ -399,6 +440,6 @@ class Bench():
 
         # TODO: Add log_dir to attributes?
         
-        return task_object.run(runner, log_dir, self.bench_name, self.bench_path)
+        return task_object.run(runner, log_dir, self.bench_name, self.bench_path,score)
 
 

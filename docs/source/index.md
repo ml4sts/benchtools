@@ -58,6 +58,7 @@ cli.md
 pylib.md
 concept.md
 demo.md
+scoring.md
 ```
 
 

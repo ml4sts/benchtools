@@ -10,6 +10,7 @@ from .logger import init_log_folder, log_interaction
 from pathlib import PurePath
 from datasets import load_dataset
 from .runner import BenchRunner
+import importlib
 import sys
 from .response import StringAnswer, StringJustification, IntAnswer, IntJustification
 
@@ -39,7 +40,7 @@ class Task:
     def __init__(self, task_name, template, reference=None, scoring_function=None,
                   variant_values = None, storage_type = 'yaml', description = None, 
                   prompt_id_generator_fx = concatenator_id_generator,
-                  format='StringAnswer'):
+                  format='StringAnswer', source_path=None):
         """
         init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
 
@@ -62,51 +63,69 @@ class Task:
 
         self.template = template
         self.variant_values = variant_values
-        self.reference = reference
 
         # set up to name individual prompts
         if not callable(prompt_id_generator_fx):
             prompt_id_generator_fx  = prompt_id_fx[prompt_id_generator_fx]
         self.prompt_id_generator = prompt_id_generator_fx
+
+
+        if reference == "calculated":
+            self.reference = variant_values
+        else:
+            self.reference = reference
+        self.label_references()
         
         # setup for response format
+        #  TODO allow others by checking first then loading from file
         mod = sys.modules[__name__]
         self.FormatClass = getattr(mod,format)
 
         self.storage_type = storage_type
+        
         if scoring_function: 
+            
             if isinstance(scoring_function, str):
-                self.scoring_function = scoring_fx_list.get(scoring_function, exact_match)
+                self.scoring_function = scoring_fx_list.get(scoring_function,'custom')
             elif callable(scoring_function):
                 self.scoring_function = scoring_function
-            else:
-                # throw an error that scoring is not valid
-                raise ValueError(f"Scoring function {scoring_function} is not valid, must be a string name"+
-                           "of a built in function or a function handle")   
+
+            if self.scoring_function =='custom': 
+                
+                custom_path = os.path.join(source_path,'custom_scorer.py')
+                spec = importlib.util.spec_from_file_location('custom_scorer',custom_path )
+                scoring_module = importlib.util.module_from_spec(spec)
+                
+                spec.loader.exec_module(scoring_module)
+                
+                self.scoring_function = getattr(scoring_module,scoring_function)
         else:
             self.scoring_function = exact_match 
 
             
     @classmethod
-    def from_txt_csv(cls, source_folder, task_name = None, scoring_function = None,
+    def from_txt_csv(cls, source_path, task_name = None,
+                      scoring_function = None,
                      prompt_id_generator_fx = concatenator_id_generator):
         '''
         load a template from txt and create task objects for each row of a csv
 
-        folder must contain a template.txt file with the template, and a values.csv file with the values to fill in the template, and the reference answers. The csv should be structured as follows:
+        folder must contain a template.txt file with the template, 
+        and a values.csv file with the values to fill in the template, 
+        and the reference answers.
         '''
 
 
         if not task_name:
             # get the folder name if not provided
-            task_name = PurePath(source_folder).parts[-1]
+            task_name = PurePath(source_path).parts[-1]
             # decide if using this: .replace("_", " ").title()
 
         prompt = ""
-        with open(os.path.join(source_folder, "template.txt"), "r") as f:
+        with open(os.path.join(source_path, "template.txt"), "r") as f:
             prompt = f.read()
 
-        values_file = os.path.join(source_folder, "values.csv")
+        values_file = os.path.join(source_path, "values.csv")
         # load and strip whitespace from column names and values
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()).applymap(lambda x: x.strip() if isinstance(x, str) else x)
         
@@ -117,8 +136,8 @@ class Task:
             prompt_id_generator_fx = selector_id_generator
         
         # TODO: improve this 
-        if os.path.exists(os.path.join(source_folder, "description.txt")):
-            with open(os.path.join(source_folder, "description.txt"), "r") as f:
+        if os.path.exists(os.path.join(source_path, "description.txt")):
+            with open(os.path.join(source_path, "description.txt"), "r") as f:
                 description = f.read()
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
@@ -126,7 +145,8 @@ class Task:
         return cls(task_name, template= prompt, variant_values = variant_values, 
                    description = description, reference=reference, storage_type ='csv', 
                     scoring_function=scoring_function,
-                    prompt_id_generator_fx =prompt_id_generator_fx)
+                    prompt_id_generator_fx =prompt_id_generator_fx,
+                    source_path=source_path)
     
     @classmethod
     def from_example(cls, task_name, storage_type):
@@ -143,33 +163,49 @@ class Task:
         description = 'give your task a short description '
         return cls(task_name, template= template, variant_values = variant_values, 
                    description = description,  reference='', 
-                   storage_type = storage_type, scoring_function = exact_match)
+                   storage_type = storage_type, scoring_function = exact_match,
+                   source_path=None)
 
 
     @classmethod
-    def from_yaml(cls, source_folder, task_name = None, scoring_function = None):
+    def from_yaml(cls, source_path, task_name = None, scoring_function = None):
         '''
         load a task from a yaml file. The yaml file should have the following structure:
         name: string
         template: string
         values: list of dicts (optional)
-        reference: string, number, or list of strings or numbers the same shape as variant values (optional)
+        reference: "calculated" or string, number, or list of strings or numbers the same 
+            shape as variant values (optional)
         scoring_function: string or function handle (optional)
         '''
-        yaml_file = os.path.join(source_folder, "task_info.yml")
+        yaml_file = os.path.join(source_path, "task_info.yml")
         with open(yaml_file, 'r') as file:
-            task_dict = yaml.safe_load(file)    
+            task_dict = yaml.safe_load(file)  
+
+        match task_dict.get('value_combinations','tuple'):
+            case 'tuple':
+                variant_values = pd.DataFrame(task_dict['values']).to_dict(orient='records')
+            case 'combinations':
+                # TODO, process and fix here to make combinations
+                variant_values = task_dict['values'] 
+
         
-        return cls(task_dict['name'], template= task_dict['template'], 
-                   variant_values = task_dict['values'], 
+        
+        return cls(task_dict['name'], 
+                   template= task_dict['template'], 
+                   variant_values = variant_values, 
                    description = task_dict.get('description', None),
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
-                      scoring_function=task_dict.get('scorer', None) or scoring_function,
-                    prompt_id_generator_fx =task_dict.get('id_generator', None))
+                      scoring_function=task_dict.get('scorer', scoring_function),
+                    prompt_id_generator_fx =task_dict.get('id_generator', None),
+                    format = task_dict.get('format', 'StringAnswer'),
+                    source_path=source_path),
+
 
     @classmethod
-    def from_dict(cls, task_dict,prompt_id_generator_fx=concatenator_id_generator):
+    def from_dict(cls, task_dict,prompt_id_generator_fx=concatenator_id_generator,
+                  source_path=None):
         '''
         load a task from a dictionary,  The dictionary should have the following structure:
         {
@@ -195,9 +231,11 @@ class Task:
                    template = task_dict.get("template", ""), 
                    variant_values=expanded_values,
                    reference = task_dict.get("reference", None), 
-                   scoring_function = task_dict.get("scoring_function", None), 
+                   scoring_function = task_dict.get("scorer", None), 
                    description = task_dict.get("description", None),
                    storage_type='yaml',
+                   format = task_dict.get('format', 'StringAnswer'),
+                   source_path = source_path,
                     prompt_id_generator_fx =task_dict.get('id_generator', prompt_id_generator_fx))
     
     @classmethod
@@ -235,6 +273,20 @@ class Task:
             return id_prompt_list
         else:
             return [(self.name, self.template)]
+        
+    def label_references(self):
+        if self.variant_values:
+            labeled_refs = {}
+            
+            for value_set,ref in zip(self.variant_values,self.reference):
+                
+                prompt_id = self.prompt_id_generator(self.task_id,value_set)
+                labeled_refs[prompt_id] = ref
+
+            self.reference = labeled_refs
+        else:
+            self.reference = {self.name: self.reference}
+
         
     def get_bench_data(self):
         '''
@@ -303,7 +355,9 @@ class Task:
     
 
     
-    def run(self, runner=BenchRunner(), log_dir='logs', benchmark=None, bench_path=None):
+    def run(self, runner=BenchRunner(), log_dir='logs', 
+            benchmark=None, bench_path=None,
+            score = False):
         """
         run the task on the stated model and log the interactions.
 
@@ -321,6 +375,11 @@ class Task:
                 to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         log_dir: str
             Path to where the logs should be saved. If empty a log folder will be created in the current working directory
+
+        Returns
+        -------
+        response : list
+            model response(s)
         """
 
         responses = []
@@ -340,7 +399,7 @@ class Task:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
 
-        for prompt_id, prompt in id_prompt_list:
+        for (prompt_id, prompt),reference,values in zip(id_prompt_list,self.reference,self.variant_values):
             
             error = None
             response = ''
@@ -358,7 +417,7 @@ class Task:
                         ])
                         # print("response: " + response.message.content)
                         response = completion.message.content
-                        responses.append(response)
+                        
 
                     case "ollama_api":
                         client = Client(
@@ -375,7 +434,7 @@ class Task:
                             ],
                         )
                         response = completion["message"]["content"]
-                        responses.append(response)
+                        
 
                     case "openai":
                         client = OpenAI(
@@ -391,7 +450,7 @@ class Task:
                             ],
                         )
                         response = chat_completion.choices[0].message.content
-                        responses.append(response)
+                        
                     case "bedrock":
                         bedrock_client = boto3.client('bedrock-runtime')
                         # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
@@ -444,26 +503,30 @@ class Task:
                                 response = response['choices'][0]['message']['content']
                             case _:
                                 raise UnMatchedModel(runner.model)
-                        responses.append(response)
+                        
                     case _:
                         print(f"Runner type {runner.runner_type} not supported")
                         return None
             except Exception as e:
                 error = e
-            log_interaction(run_log, prompt_id, prompt, response, str(error))
+            if score:
+                score_val = self.scoring_function(response, reference)
+                
+            else: 
+                score_val = None
+
+            log_interaction(run_log, prompt_id, prompt, response, str(error),values,score_val)
+            responses.append(response)
 
         
+        self.responses = responses 
+        
 
-        if self.variant_values:
-            self.responses = responses
-            # dict(zip([str(v) for v in self.variant_values], responses))
-        else:
-            self.responses = responses 
 
         return self.responses
 
-
-    def score(self, response):
+    
+    def score(self, response,prompt_id=None):
         """
         score the response using the defined function
 
@@ -472,11 +535,9 @@ class Task:
         response : string
             the value to score
         """
-        if isinstance(self.reference, list) and isinstance(response, list):
-            # TODO: error if the lengths don't match
-            # if there are multiple reference answers, score against each 
-            scores = [self.scoring_function(resp, ref) for resp,ref in zip(self.reference)]
-            return scores
+                
+        if prompt_id:
+            return self.scoring_function(response,self.reference[prompt_id])
         else:
             return self.scoring_function(response, self.reference)
 

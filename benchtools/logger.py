@@ -79,7 +79,7 @@ def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benc
 
     return run_dir
 
-def log_interaction(run_log_dir, prompt_id, prompt, response, error):
+def log_interaction(run_log_dir, prompt_id, prompt, response, error,values,score=None):
     """
     Logs the event to the log folder specified by the user
 
@@ -111,18 +111,22 @@ def log_interaction(run_log_dir, prompt_id, prompt, response, error):
     with open(os.path.join(run_log_dir, "run_info.yml"), 'r') as f:
             run_info = yaml.safe_load(f) 
 
+    
     step_trace = {
         'task_name': run_info['name'],
         'template': run_info['template'],
         'prompt_id': prompt_id,
         'error': error,
+        'values':values,
         'steps':{ 
-            0:{ # In case a subtask had more than one step we can always make the 0 dynamic
+            0: { # In case a subtask had more than one step we can always make the 0 dynamic
                 'prompt': prompt,
                 'response': response,
             },
         },
     }
+    if not(score is None):
+        step_trace['steps'][0]['score'] = score
 
     with open(os.path.join(prompt_dir, "log.json"), 'w') as f:
         # yaml.dump(step_trace, f)
