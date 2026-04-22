@@ -1,4 +1,4 @@
-symb, reference
-@, at
-#, pound
-$, dollar sign
+symb, reference, exmeta
+@, at, email
+#, pound, number
+$, dollar sign, currency
