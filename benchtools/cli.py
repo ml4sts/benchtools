@@ -1,5 +1,8 @@
 import os
 import click
+import json
+import pandas as pd
+from datetime import datetime
 from benchtools.task import Task
 from benchtools.benchmark import Bench
 from benchtools.runner import BenchRunner
@@ -170,20 +173,54 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
               help="The api call required to access the runner engine.")
 @click.option('-l', '--log-path', type=str, default=None, 
               help="The path to a log directory.")
-def run(benchmark_path: str, runner_type: str, model: str, api_url: str, log_path: str):
+@click.option('-s','--score',is_flag=True,
+              help='flag to score each task while running')
+def run(benchmark_path: str, runner_type: str, 
+        model: str, api_url: str, log_path: str,
+        score: bool):
+    '''
+    Run the benchmark, generate logs, and optionally sore
+    '''
+    # Create BenchRunner object
+    runner = BenchRunner(runner_type, model, api_url)
+
+    benchmark = Bench.load(benchmark_path)
+    
+    click.echo(f"Running {benchmark.bench_name} now")
+    benchmark.run(runner, log_path,score)
+
+@benchtool.command()
+@click.argument('benchmark-path', required = False, type=str, default='.')
+@click.option('-r', '--result-id', type=str, default=None, 
+              help="runs to score: 'last','all' or specific ids")
+@click.option('-c','--csv',is_flag=True,
+              help ='save csv of eval in additon to json')
+# TODO: change to accept list
+def score(benchmark_path: str, result_id,csv):
     """
     Running the benchmark and generating logs
     Parameters:
         benchmark-path: The path to the benchmark repository where all the task reside.
     """
-    # Create BenchRunner object
-    runner = BenchRunner(runner_type, model, api_url)
-
-    benchmark = Bench.load(benchmark_path)
-
+    # if not provided do the last one for each model-task combination
     
-    click.echo(f"Running {benchmark.bench_name} now")
-    benchmark.run(runner, log_path)
+    benchmark = Bench.load(benchmark_path)
+    score_list = benchmark.score(result_id)
+
+    timestamp = str(int(datetime.now().timestamp()))
+    eval_base = os.path.join(benchmark_path,'eval'+timestamp)
+    with open(eval_base+'.json','w') as f:
+        json.dump(score_list,f)
+
+    if csv:
+        df_in = pd.DataFrame(score_list)
+        step_df = df_in['steps'].apply(pd.Series).rename(columns = lambda c: 'step_'+c)
+        step_expanded = [step_df[c].apply(pd.Series).rename(columns = lambda ci: c + '_' +ci) 
+                         for c in step_df.columns]
+        df = pd.concat([df_in.drop(columns='steps')] + step_expanded,
+                       axis=1)
+        df.to_csv(eval_base+'.csv',index=False)
+
 
 
 
