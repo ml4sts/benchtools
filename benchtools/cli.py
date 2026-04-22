@@ -196,12 +196,32 @@ def betterbench():
     
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
+def init(bench_path: str):
+    """
+    Initiate a betterbench checklist from template.
+    Check if user would like to run an interactive session
+    """
+    checklist = BetterCheckList.from_template()
+
+    # Check if user is interested in running an interactive session
+    if click.confirm("Would you like to start an interactive session?", default=False):
+        checklist.interactive_session()
+
+    # Save the checklist to the file system
+    checklist.save(bench_path)
+
+
+@betterbench.command()
+@click.argument('bench-path', default='.', type=str)
 def resume(bench_path: str):
     """
     Running the betterbench interactive session
     """
+    # Load the checklist from the file system
     checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    # Start interactive session
     checklist.interactive_session()
+    # Save the checklist to the file system
     checklist.save(bench_path)
     
 
@@ -212,10 +232,8 @@ def score(bench_path: str):
     Running the betterbench scoring function
     """
     click.echo(f"Scoring benchmark now...")
+    # Load the checklist from the file system
     checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
     checklist.print_score()
-
-
-benchtool.add_command(betterbench) # To add betterbench as a benchtool command/subtool
 
 
