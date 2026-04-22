@@ -399,7 +399,7 @@ class Task:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
 
-        for (prompt_id, prompt),reference,values in zip(id_prompt_list,self.reference,self.variant_values):
+        for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
             
             error = None
             response = ''
@@ -510,7 +510,7 @@ class Task:
             except Exception as e:
                 error = e
             if score:
-                score_val = self.scoring_function(response, reference)
+                score_val = self.scoring_function(response, self.reference[prompt_id])
                 
             else: 
                 score_val = None
