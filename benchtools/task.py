@@ -198,9 +198,9 @@ class Task:
                     reference=task_dict['reference'],
                       storage_type ='yaml', 
                       scoring_function=task_dict.get('scorer', scoring_function),
-                    prompt_id_generator_fx =task_dict.get('id_generator', None),
+                    prompt_id_generator_fx =task_dict.get('id_generator', concatenator_id_generator),
                     format = task_dict.get('format', 'StringAnswer'),
-                    source_path=source_path),
+                    source_path=source_path)
 
 
     @classmethod
