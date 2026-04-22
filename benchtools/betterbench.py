@@ -38,18 +38,20 @@ class BetterCheckList():
 
     Methods
     -------
-            Create a new checklist using the BetterBench template
+            Create a new BetterCheckList object using the BetterBench tamplate
         from_template()
-            Load a betterbench checklist from a yaml file
+            Load a BetterCheckList object from a betterbench.yml file
         from_file(checklist_path: str)
+            Add a CheckListItem object to the list of items of the BetterCheckList object
+        add_item(item: CheckListItem)
             Initiate an interactive session to fill out the checklist
         interactive_session()
-            Add a CheckListItem to the checklist
-        add_item(item)
-            score checklist object
+            Score checklist object, return a dictionary of scores
         score_checklist()
-            print betterbench scores
+            Print betterbench scores
         print_score()
+            Save the BetterCheckList object to the filesystem in a betterbench.yml file
+        save(bench_path: str)
 
     '''
 
@@ -61,6 +63,10 @@ class BetterCheckList():
 
     @classmethod
     def from_template(cls):
+        '''
+        Create a new BetterCheckList object using the BetterBench tamplate 
+        '''
+
         main_checklist = load_asset_yml("betterbench.yml")
         bench_checklist=[]
         # Loop until user opts out 
@@ -80,7 +86,14 @@ class BetterCheckList():
 
     @classmethod
     def from_file(cls, checklist_path: str):
-        bench_checklist = []
+        '''
+        Load a BetterCheckList object from a betterbench.yml file
+
+        Parameters:
+        -----------
+        checklist_path: str
+            Path to a betterbench.yml file
+        '''
         # Confirm the benchmark exists
         if not checklist_path.endswith('.yml') or not os.path.exists(checklist_path):
             click.echo("Incorrect betterbench checklist path: " + checklist_path)
@@ -97,6 +110,14 @@ class BetterCheckList():
         return cls(better_checklist)
 
     def add_item(self, item: CheckListItem):
+        '''
+        Add a CheckListItem object to the list of items of the BetterCheckList object
+
+        Parameters:
+        -----------
+        item: CheckListItem
+            A CheckListItem object initialized with values
+        '''
         self.items.append(item)
 
     # def interactive_session(self, questions:list = None, file:str = None):
@@ -104,6 +125,9 @@ class BetterCheckList():
 
 
     def interactive_session(self):
+        '''
+        Initiate an interactive CLI session to fill out the checklist
+        '''
 
         # Intro
         welcome_prompt='''
@@ -177,7 +201,12 @@ class BetterCheckList():
 
     def score_checklist(self):
         '''
-        Score betterbench checklist. 
+        Score checklist object, return a dictionary of scores.
+        
+        Return:
+        -----------
+        scores: dict
+            A dictionary of scores for each categoty and total scores
         '''
         
         scores = dict(score = 0,
@@ -200,6 +229,10 @@ class BetterCheckList():
 
 
     def print_score(self):
+        '''
+        Print betterbench scores
+        '''
+
         scores = self.score_checklist()
         output = f"""
 Your benchmark's score: {scores.pop('score')}/{scores.pop('total')}
@@ -212,6 +245,14 @@ Your benchmark's score: {scores.pop('score')}/{scores.pop('total')}
         click.echo(output)
 
     def save(self, bench_path: str):
+        '''
+        Save the BetterCheckList object to the filesystem in a betterbench.yml file
+
+        Parameters:
+        -----------
+        bench_path: str
+            Path to a benchmark folder
+        '''
         # Confirm the benchmark exists
         if not os.path.exists(bench_path):
             click.echo("No benchmark reposiory at " + bench_path)
