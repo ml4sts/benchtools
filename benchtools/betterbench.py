@@ -189,10 +189,15 @@ class BetterCheckList():
                         rubric_text = "\n ".join([f"{i}- {crit}" for i,crit in item.rubric.items()])
                         score = click.prompt(f"Please enter score based on the rubric:\n {rubric_text}",
                                                type=click.IntRange(min=0,max=15,clamp=True), show_choices=True, default=5)
-                        # Pick justification closer to score
+                        # Pre-seed with justification closest to selected score
                         rubric_idx = 0 if score == 0 else ((score-1)//5+1)*5
-                        justification = click.edit(f"Justification: {item.rubric[rubric_idx]}")
-                        justification = justification.split('Justification: ', 1)[1].strip() if not justification==None else item.rubric[rubric_idx]
+                        justification_input = click.edit(f"#  Justification: {item.rubric[rubric_idx]} \n# lines starting with # will be removed")
+                        # use provided unlesss empty
+                        if justification_input:
+                            justification_lines = justification_input.split('\n')
+                            justification = '\n'.join([jl for jl in justification_lines if not(jl[0]=='#')])
+                        else:
+                            justification = item.rubric[rubric_idx]
                         item.skipped = False
                         item.response = choice if score > 0 else 'no'
                         item.justification = justification
