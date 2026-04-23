@@ -1,6 +1,6 @@
 - "category_name": "Design"
   "criterion_text": "The tested capability, characteristic, or concept is defined"
-  "criterion_id": "test_definition"
+  "criterion_id": "definition"
   "rubric":
    na: ""
    0: "Tested concept, capability, or characteristic not explicitly mentioned."
@@ -10,7 +10,7 @@
 
 - "category_name": "Design"
   "criterion_text": "How tested capability or concept translates to benchmark task is described"
-  "criterion_id": "test_description"
+  "criterion_id": "description"
   "rubric":
    na: ""
    0: "No description of how the tested capability or concept translates to the benchmark task."
@@ -20,7 +20,7 @@
 
 - "category_name": "Design"
   "criterion_text": "How knowing about the tested concept is helpful in the real world is described"
-  "criterion_id": "concept_relevance"
+  "criterion_id": "relevance"
   "rubric":
    na: ""
    0: "No description of how knowing about the tested concept is helpful in the real world."
@@ -50,7 +50,7 @@
 
 - "category_name": "Design"
   "criterion_text": "Use cases and/or user personas are described"
-  "criterion_id": "use_cases"
+  "criterion_id": "personas"
   "rubric":
    na: "The benchmark does not include any description of use cases or user personas."
    0: "The benchmark acknowledges the importance of use cases or user personas but does not explicitly formulate or describe them."
@@ -70,7 +70,7 @@
 
 - "category_name": "Design"
   "criterion_text": "Informed performance metric choice"
-  "criterion_id": "performance_metrics"
+  "criterion_id": "metric_justification"
   "rubric":
    na: ""
    0: "The benchmark does not mention an evaluation metric or does not explain the choice of metric."
@@ -90,7 +90,7 @@
 
 - "category_name": "Design"
   "criterion_text": "Human performance level is included"
-  "criterion_id": "baseline_performance"
+  "criterion_id": "human_performance"
   "rubric":
    na: "The benchmark does not state human performance and does not explain why this isn't applicable here."
    0: "The benchmark mentions human performance in passing but does not provide a measurement or explanation."
@@ -120,7 +120,7 @@
 
 - "category_name": "Design"
   "criterion_text": "Differences to related benchmarks are explained"
-  "criterion_id": "benchmark_novelty"
+  "criterion_id": "novelty"
   "rubric":
    na: ""
    0: "The benchmarks do not explain any differences or relevance to existing benchmarks."
@@ -151,7 +151,7 @@
 
 - "category_name": "Implementation"
   "criterion_text": "The evaluation data or generation mechanism is accessible"
-  "criterion_id": "eval_data"
+  "criterion_id": "task_completeness"
   "rubric":
    na: ""
    0: "No access to evaluation data, prompts, or data/environment generation mechanism is provided."
