@@ -13,7 +13,7 @@ kernelspec:
 ---
 
 
-# BenchTools as a Python Library
+# Library
 
 ## A tiny example
 
