@@ -331,9 +331,13 @@ class Bench():
         for name, task in self.tasks.items():
             self.run_task(task, runner, log_dir,score)
 
-    def score(self, model=None,task=None, run ='last'):
+    
+
+    def score(self, model=None,task=None, run ='last',collate=False):
         '''
-        Run the benchmark by running each task in the benchmark and logging the interactions.
+        Run the benchmark by running each task in the benchmark and
+        logging the interactions.
+
         Parameters:
         -----------
         model : str, list
@@ -342,7 +346,11 @@ class Bench():
             task to sore
         run: str or list
             'last', 'all', runid or list of run ids
-
+        
+        Returns
+        -------
+        score_list : list[dict]
+            list of dictionaries of scores
         '''
         
         log_path = os.path.join(self.bench_path,'logs')
@@ -401,10 +409,10 @@ class Bench():
                                            'run':run_id,
                                            'prompt_id':prompt_id})
                     
-
                         for step_id,step in log['steps'].items():
                             response = step['response']
-                            score_dict['steps'][step_id]['score'] = task.score(response,prompt_id)
+                            if not(collate):
+                                score_dict['steps'][step_id]['score'] = task.score(response,prompt_id)
                         
                         score_list.append(score_dict)
         

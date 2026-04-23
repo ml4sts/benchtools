@@ -191,12 +191,15 @@ def run(benchmark_path: str, runner_type: str,
 
 @benchtool.command()
 @click.argument('benchmark-path', required = False, type=str, default='.')
-@click.option('-r', '--result-id', type=str, default=None, 
+@click.option('-r', '--result-id', type=str, default='last', 
               help="runs to score: 'last','all' or specific ids")
 @click.option('-c','--csv',is_flag=True,
               help ='save csv of eval in additon to json')
+
+@click.option('-C','--collate',is_flag=True,
+              help='collate scores rather than recomputing them')
 # TODO: change to accept list
-def score(benchmark_path: str, result_id,csv):
+def score(benchmark_path: str, result_id,csv,collate):
     """
     Running the benchmark and generating logs
     Parameters:
@@ -205,12 +208,15 @@ def score(benchmark_path: str, result_id,csv):
     # if not provided do the last one for each model-task combination
     
     benchmark = Bench.load(benchmark_path)
-    score_list = benchmark.score(result_id)
+    
+    score_list = benchmark.score(run=result_id,collate=collate)
 
     timestamp = str(int(datetime.now().timestamp()))
-    eval_base = os.path.join(benchmark_path,'eval'+timestamp)
+    eval_base = os.path.join(benchmark_path,'eval_'+timestamp)
     with open(eval_base+'.json','w') as f:
         json.dump(score_list,f)
+
+    
 
     if csv:
         df_in = pd.DataFrame(score_list)
@@ -220,6 +226,8 @@ def score(benchmark_path: str, result_id,csv):
         df = pd.concat([df_in.drop(columns='steps')] + step_expanded,
                        axis=1)
         df.to_csv(eval_base+'.csv',index=False)
+    
+    click.echo('Saved Eval: '+eval_base)
 
 
 
