@@ -415,7 +415,8 @@ class Task:
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
             "description": self.description,
-            "id_generator":self.prompt_id_generator.__name__ 
+            "id_generator":self.prompt_id_generator.__name__ ,
+            "format":self.FormatClass.__name__
         }
         return task_dict
     
