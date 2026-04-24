@@ -20,11 +20,6 @@ def contains(response, reference):
     else:
         return int(reference in response_object['answer'])
 
-def stats(response,reference):
-    '''
-    count tokens
-    '''
-    response_object = json.loads(response)
     
 scoring_fx_list = {"exact_match": exact_match, 
               "contains":contains}
