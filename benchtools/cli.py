@@ -6,8 +6,8 @@ from datetime import datetime
 from benchtools.task import Task
 from benchtools.benchmark import Bench
 from benchtools.runner import BenchRunner
-from benchtools.betterbench import better_session, get_score
-# from task import PromptTask
+from benchtools.betterbench import BetterCheckList
+
 
 @click.group()
 def benchtool():
@@ -233,26 +233,44 @@ def betterbench():
     
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
-def resume(benchmark_path: str):
+def init(bench_path: str):
+    """
+    Initiate a betterbench checklist from template.
+    Check if user would like to run an interactive session
+    """
+    checklist = BetterCheckList.from_template()
+
+    # Check if user is interested in running an interactive session
+    if click.confirm("Would you like to start an interactive session?", default=False):
+        checklist.interactive_session()
+
+    # Save the checklist to the file system
+    checklist.save(bench_path)
+
+
+@betterbench.command()
+@click.argument('bench-path', default='.', type=str)
+def resume(bench_path: str):
     """
     Running the betterbench interactive session
     """
-    # benchmark = Bench.load(benchmark_path) # IS this needed? Maybe just check if written?
-    better_session(benchmark_path)
-
+    # Load the checklist from the file system
+    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    # Start interactive session
+    checklist.interactive_session()
+    # Save the checklist to the file system
+    checklist.save(bench_path)
     
 
 @betterbench.command()
-@click.argument('bench-path', required = True, type=str)
-def score(benchmark_path: str):
+@click.argument('bench-path', default='.', type=str)
+def score(bench_path: str):
     """
     Running the betterbench scoring function
     """
-    # benchmark = Bench.load(benchmark_path) # IS this needed? Maybe just check if written?
-    click.echo(f"Scoring now...")
-    score = get_score()
-    click.echo(f"Score: {score}")
-
-
+    click.echo(f"Scoring benchmark now...")
+    # Load the checklist from the file system
+    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    checklist.print_score()
 
 
