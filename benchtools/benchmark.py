@@ -412,7 +412,13 @@ class Bench():
                         for step_id,step in log['steps'].items():
                             response = step['response']
                             if not(collate):
-                                score_dict['steps'][step_id]['score'] = task.score(response,prompt_id)
+                                read_score = task.score(response,prompt_id)
+                                if type(read_score) ==dict:
+                                    # store dict in stepid if a dict
+                                    score_dict['steps'][step_id] = read_score
+                                else:
+                                    # store in 'score' key if not a dict
+                                    score_dict['steps'][step_id]['score'] = read_score
                         
                         score_list.append(score_dict)
         

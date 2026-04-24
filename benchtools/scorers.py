@@ -19,6 +19,12 @@ def contains(response, reference):
         return int(any(ref in response_object['answer'] for ref in reference))
     else:
         return int(reference in response_object['answer'])
+
+def stats(response,reference):
+    '''
+    count tokens
+    '''
+    response_object = json.loads(response)
     
 scoring_fx_list = {"exact_match": exact_match, 
               "contains":contains}

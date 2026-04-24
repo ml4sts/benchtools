@@ -1,0 +1,3 @@
+reference: calculated
+scorer: "calculated_answer_prod"
+format: "IntAnswer"

@@ -87,7 +87,8 @@ demo_bench = Bench.from_yaml('../../demos/listbench')
 
 <!-- ```{code-cell}
 demo_bench = Bench.load('../../demobench')
-``` -->
+``` 
+-->
 
 
 
@@ -95,6 +96,7 @@ demo_bench = Bench.load('../../demobench')
 
 ## Creating a Benchmark object
 <!-- Testing which is better -->
+
 ```{eval-rst}
 .. automodule:: benchtools.runner
     :members:
@@ -103,6 +105,23 @@ demo_bench = Bench.load('../../demobench')
 ## Benchmark class
 <!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.runner.Bench
+.. autoclass:: benchtools.benchmark.Bench
+    :members:
+```
+
+
+## Task class
+<!-- Testing which is better -->
+```{eval-rst}
+.. autoclass:: benchtools.task.Task
+    :members:
+```
+
+
+
+## BetterBench
+<!-- Testing which is better -->
+```{eval-rst}
+.. autoclass:: benchtools.task.Task
     :members:
 ```

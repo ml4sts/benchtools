@@ -1,4 +1,4 @@
-# Overview
+# User Guide
 
 
 `benchtool` is a python library with a CLI for creating, managing, and running AI benchmarks. 
@@ -15,3 +15,11 @@ The easiest way to get familar is to run the demo benchmarks that are available 
 
 
 Clone the repository then explore the `benchtools/demos` folder
+
+```{toctree}
+:caption: Contents:
+:maxdepth: 2
+
+guide/scoring.md
+guide/response.md
+```
