@@ -161,7 +161,7 @@
 
 - "category_name": "Implementation"
   "criterion_text": "The evaluation of models via API is supported"
-  "criterion_id": "eval_api"
+  "criterion_id": "api_model"
   "rubric":
    na: ""
    0: "The benchmark does not support evaluation of models via API calls."
@@ -171,7 +171,7 @@
  
 - "category_name": "Implementation"
   "criterion_text": "The evaluation of local models is supported"
-  "criterion_id": "eval_local"
+  "criterion_id": "local_model"
   "rubric":
    na: ""
    0: "The benchmark requires users to write their own code to evaluate a local model."
@@ -181,7 +181,7 @@
 
 - "category_name": "Implementation"
   "criterion_text": "A globally unique identifier is added or evaluation instances are encrypted"
-  "criterion_id": "eval_encryption"
+  "criterion_id": "instance_identifier"
   "rubric":
    na: ""
    0: "The benchmark does not include a GUID or encryption of evaluation instances."
@@ -201,7 +201,7 @@
 
 - "category_name": "Implementation"
   "criterion_text": "A script to replicate results is explicitly included"
-  "criterion_id": "relicate_results"
+  "criterion_id": "replicate_results"
   "rubric":
    na: ""
    0: "[No description provided]"
@@ -211,7 +211,7 @@
  
 - "category_name": "Implementation"
   "criterion_text": "Statistical significance or uncertainty quantification of benchmark results is reported"
-  "criterion_id": "statistical_significance"
+  "criterion_id": "uncertaint_quantification"
   "rubric":
    na: ""
    0: "No statistical significance testing or variance reporting is provided for the benchmark results."
@@ -221,7 +221,7 @@
 
 - "category_name": "Implementation"
   "criterion_text": "Need for warnings for sensitive/harmful content is assessed"
-  "criterion_id": "harm_warning"
+  "criterion_id": "content_warning"
   "rubric":
    na: ""
    0: "The benchmark does not mention that they checked for the presence or absence of sensitive/harmful content in the evaluation tasks or expected output."
@@ -252,7 +252,7 @@
  
 - "category_name": "Documentation"
   "criterion_text": "Requirements file or equivalent is available"
-  "criterion_id": "requirement_file"
+  "criterion_id": "dependencies"
   "rubric":
    na: ""
    0: "No requirements file or equivalent is provided."
@@ -262,7 +262,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Quick-start guide or demo is available"
-  "criterion_id": "start_guide"
+  "criterion_id": "demo"
   "rubric":
    na: ""
    0: "No quick-start guide or demo code is provided."
@@ -292,7 +292,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Accompanying paper is accepted at peer-reviewed venue"
-  "criterion_id": "venu_accepted"
+  "criterion_id": "peer_reviewed"
   "rubric":
    na: ""
    0: "The benchmark/its associated paper has not been accepted at a peer-reviewed venue."
@@ -302,7 +302,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Benchmark construction process is documented"
-  "criterion_id": "construction_documented"
+  "criterion_id": "doc_devleopment_process"
   "rubric":
    na: ""
    0: "No documentation of the benchmark construction process is provided."
@@ -312,7 +312,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Test tasks & rationale are documented"
-  "criterion_id": "tasks_documented"
+  "criterion_id": "doc_task_rationale"
   "rubric":
    na: ""
    0: "No documentation of test task categories or rationale is provided."
@@ -322,7 +322,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Assumptions of normative properties are documented"
-  "criterion_id": "norms_documented"
+  "criterion_id": "doc_normative_properties"
   "rubric":
    na: ""
    0: "No documentation of normative assumptions is provided, even though the benchmark measures culturally-dependent properties."
@@ -332,7 +332,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Limitations are documented"
-  "criterion_id": "limitations_documented"
+  "criterion_id": "doc_imitations"
   "rubric":
    na: ""
    0: "No documentation of the benchmark's limitations is provided."
@@ -342,7 +342,7 @@
 
 - "category_name": "Documentation"
   "criterion_text": "Data collection, test environment design, or prompt design process is documented"
-  "criterion_id": "design_documented"
+  "criterion_id": "doc_task_design"
   "rubric":
    na: ""
    0: "No documentation of the data collection or environment/prompt design process is provided."
@@ -352,7 +352,7 @@
  
 - "category_name": "Documentation"
   "criterion_text": "Evaluation metric is documented"
-  "criterion_id": "metric_documented"
+  "criterion_id": "doc_metrics"
   "rubric":
    na: ""
    0: "No documentation of the evaluation metrics is provided."
@@ -392,7 +392,7 @@
 
 - "category_name": "Maintenance"
   "criterion_text": "Contact person is listed"
-  "criterion_id": "contact_people"
+  "criterion_id": "contact_info"
   "rubric":
    na: ""
    0: "It is not disclosed who developed the benchmark."
