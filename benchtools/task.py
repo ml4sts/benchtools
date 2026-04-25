@@ -5,6 +5,7 @@ import yaml
 import json
 import boto3
 import pandas as pd
+import itertools
 from ollama import chat, ChatResponse, Client
 from .logger import init_log_folder, log_interaction
 from pathlib import PurePath
@@ -42,20 +43,35 @@ class Task:
                   prompt_id_generator_fx = concatenator_id_generator,
                   format='StringAnswer', source_path=None):
         """
-        init a task object from a prompt and reference, and a scoring function. If no scoring function is provided, defaults to exact match.
+        init a task object from a prompt and reference, and a scoring function. If no 
+        scoring function is provided, defaults to exact match.
 
         Parameters
         ----------
         dir : string or path
             directory containing the task assets
-        prompt: string
+        template: string
             prompt template
-        scoring_function : function handle or string
-            if string, must be name of built in eval function provided here
         reference: string,  number, or list of strings or numbers the same shape as variant values, 
             solution that will be passed with the model answer to the scoring function,
-        variant_values: 
-            dicttionary or list of dictiornaries with values to fill in a template, if the task is a template based task. If provided, the prompt will be used as a template and the values in variant_values will be used to fill in the template to create the final prompts for the task. The reference should then be a list of answers corresponding to each prompt variant.
+            or "calculated" to pass the values to a scorer that calculates the answer
+        scoring_function : function handle or string
+            if string, must be name of built in eval function provided here
+        variant_values: dicttionary or list of dictiornaries
+             with values to fill in a template, if the task is a template based task. 
+             If provided, the prompt will be used as a template and the values in 
+             variant_values will be used to fill in the template to create the final prompts 
+             for the task. The reference should then be a list of answers corresponding to each prompt variant.
+        storage_type : 'yaml' or 'csv'
+            how to save the task
+        description : string
+            textual description of the task, not provided to the model
+        prompt_id_generator_fx : callable or string
+            how to create ids for each
+        format : string
+            name of a class 
+        source_path : string or path
+            path to where custom code will be for scorer or id generator (benchmark path typically)
         """
         self.name = task_name
         self.task_id = task_name.strip().replace(" ", "_").lower() 
@@ -66,8 +82,19 @@ class Task:
 
         # set up to name individual prompts
         if not callable(prompt_id_generator_fx):
-            prompt_id_generator_fx  = prompt_id_fx[prompt_id_generator_fx]
-        self.prompt_id_generator = prompt_id_generator_fx
+            self.prompt_id_generator  = prompt_id_fx.get(prompt_id_generator_fx,'custom')
+
+            if self.prompt_id_generator =='custom': 
+                
+                custom_path = os.path.join(source_path,'custom_labeler.py')
+                spec = importlib.util.spec_from_file_location('custom_labeler',custom_path )
+                labeler_module = importlib.util.module_from_spec(spec)
+                
+                spec.loader.exec_module(labeler_module)
+                
+                self.prompt_id_generator_fx = getattr(labeler_module,prompt_id_generator_fx)
+        else:
+            self.prompt_id_generator = prompt_id_generator_fx
 
 
         if reference == "calculated":
@@ -77,75 +104,111 @@ class Task:
         self.label_references()
         
         # setup for response format
-        #  TODO allow others by checking first then loading from file
         mod = sys.modules[__name__]
-        self.FormatClass = getattr(mod,format)
+        if hasattr(mod,format):
+            self.FormatClass = getattr(mod,format)
+        else:
+            # load 
+            custom_path = os.path.join(source_path,'custom_response.py')
+            spec = importlib.util.spec_from_file_location('custom_response',custom_path )
+            response_module = importlib.util.module_from_spec(spec)
+            
+            spec.loader.exec_module(response_module)
+            
+            self.FormatClass = getattr(response_module,format)
+
 
         self.storage_type = storage_type
         
         if scoring_function: 
-            
-            if isinstance(scoring_function, str):
-                self.scoring_function = scoring_fx_list.get(scoring_function,'custom')
-            elif callable(scoring_function):
-                self.scoring_function = scoring_function
-
-            if self.scoring_function =='custom': 
+            if type(scoring_function)==list:
                 
-                custom_path = os.path.join(source_path,'custom_scorer.py')
-                spec = importlib.util.spec_from_file_location('custom_scorer',custom_path )
-                scoring_module = importlib.util.module_from_spec(spec)
-                
-                spec.loader.exec_module(scoring_module)
-                
-                self.scoring_function = getattr(scoring_module,scoring_function)
+                parsed_list = [self.parse_scorer(sc,source_path) 
+                               for sc in scoring_function]
+                self.scoring_function = lambda res,ref: {p.__name__:(res,ref) 
+                                                       for p in parsed_list}
+            else:
+                self.scoring_function  = self.parse_scorer(scoring_function,source_path)
         else:
             self.scoring_function = exact_match 
 
             
     @classmethod
-    def from_txt_csv(cls, source_path, task_name = None,
+    def from_txt_csv(cls, task_path, task_name = None,
                       scoring_function = None,
-                     prompt_id_generator_fx = concatenator_id_generator):
+                     prompt_id_generator_fx = concatenator_id_generator,
+                     source_path=None):
         '''
         load a template from txt and create task objects for each row of a csv
 
         folder must contain a template.txt file with the template, 
         and a values.csv file with the values to fill in the template, 
-        and the reference answers.
+        and the reference answers. it can optionally have an info.yml with additional 
+        settings
+
+        Parameters
+        -----------
+        task_path: string or path
+            where the task files are
+        task_name: string
+            name
+        scoring_function: callable or string
+            how to score the task
+        prompt_id_generator_fx: callable or string
+            over-ruled if 'id' columns in values.csv
+        source_path : string or file buffer
+            path to custom code
         '''
 
 
         if not task_name:
             # get the folder name if not provided
-            task_name = PurePath(source_path).parts[-1]
+            task_name = PurePath(task_path).parts[-1]
             # decide if using this: .replace("_", " ").title()
 
         prompt = ""
-        with open(os.path.join(source_path, "template.txt"), "r") as f:
+        with open(os.path.join(task_path, "template.txt"), "r") as f:
             prompt = f.read()
 
-        values_file = os.path.join(source_path, "values.csv")
+        values_file = os.path.join(task_path, "values.csv")
         # load and strip whitespace from column names and values
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()).applymap(lambda x: x.strip() if isinstance(x, str) else x)
         
-        variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records') # This is correct
-        reference = value_answer_df['reference'].tolist()
+        if 'reference' in value_answer_df.columns:
+            variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
+        
+            reference = value_answer_df['reference'].tolist()
+        else:
+            variant_values = value_answer_df.to_dict(orient='records')
+            reference = 'calculated'
 
         if 'id' in value_answer_df.columns:
             prompt_id_generator_fx = selector_id_generator
         
         # TODO: improve this 
-        if os.path.exists(os.path.join(source_path, "description.txt")):
-            with open(os.path.join(source_path, "description.txt"), "r") as f:
+        description_file = os.path.join(task_path, "description.txt")
+        if os.path.exists(description_file):
+            with open(description_file, "r") as f:
                 description = f.read()
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        return cls(task_name, template= prompt, variant_values = variant_values, 
-                   description = description, reference=reference, storage_type ='csv', 
-                    scoring_function=scoring_function,
-                    prompt_id_generator_fx =prompt_id_generator_fx,
+        info_file = os.path.join(task_path,'task.yml')
+        if os.path.exists(info_file):
+            with open(info_file, "r") as f:
+                info_dict = yaml.safe_load(f) 
+        else:
+            info_dict= {}
+
+        
+        return cls(task_name, template= prompt,
+                    variant_values = variant_values, 
+                    description = description,
+                    reference=reference,
+                    storage_type ='csv', 
+                   scoring_function = info_dict.get("scorer", scoring_function), 
+                   format = info_dict.get('format', 'StringAnswer'),
+                   prompt_id_generator_fx =info_dict.get('id_generator', prompt_id_generator_fx),
                     source_path=source_path)
     
     @classmethod
@@ -182,12 +245,16 @@ class Task:
         with open(yaml_file, 'r') as file:
             task_dict = yaml.safe_load(file)  
 
-        match task_dict.get('value_combinations','tuple'):
+        value_interpretation = task_dict.get('value_combinations','tuple')
+        
+        match value_interpretation:
             case 'tuple':
                 variant_values = pd.DataFrame(task_dict['values']).to_dict(orient='records')
             case 'combinations':
-                # TODO, process and fix here to make combinations
-                variant_values = task_dict['values'] 
+                
+                    # run all combinations
+                variant_values = [{k:v for k,v, in zip(task_dict['values'].keys(),vals)} 
+                                    for vals in itertools.product(task_dict['values'].values())]
 
         
         
@@ -219,24 +286,33 @@ class Task:
         
         if compact_values:
             #  this flips it to a list of dicts 
-            expanded_values = pd.DataFrame(compact_values).to_dict(orient='records') 
+            match task_dict.get('value_combinations','tuple'):
+                case 'tuple':
+                    expanded_values = pd.DataFrame(task_dict['values']).to_dict(orient='records')
+                case 'combinations':
+                    # run all combinations
+                    
+                    expanded_values = [{k:v for k,v, in zip(task_dict['values'].keys(),vals)} 
+                                    for vals in itertools.product(*task_dict['values'].values())]
+                    
+                    
         else:
             expanded_values = None
         
-        if 'id' in task_dict.keys():
+        if 'id' in compact_values.keys():
             prompt_id_generator_fx = selector_id_generator
         
 
         return cls(task_dict.get("name", "unnamed_task"),
                    template = task_dict.get("template", ""), 
                    variant_values=expanded_values,
+                   storage_type='yaml',
                    reference = task_dict.get("reference", None), 
                    scoring_function = task_dict.get("scorer", None), 
                    description = task_dict.get("description", None),
-                   storage_type='yaml',
                    format = task_dict.get('format', 'StringAnswer'),
-                   source_path = source_path,
-                    prompt_id_generator_fx =task_dict.get('id_generator', prompt_id_generator_fx))
+                   prompt_id_generator_fx =task_dict.get('id_generator', prompt_id_generator_fx),
+                   source_path = source_path)
     
     @classmethod
     def from_hf_dataset(cls,task_name, hf_path, prompt_column='prompt', answer_column='canonical_solution'):
@@ -287,6 +363,27 @@ class Task:
         else:
             self.reference = {self.name: self.reference}
 
+    @staticmethod
+    def parse_scorer(scoring_function,source_path):
+        '''
+        parse a scorer from input into a callable
+        '''
+
+        if isinstance(scoring_function, str):
+            parsed_scorer = scoring_fx_list.get(scoring_function,'custom')
+        elif callable(scoring_function):
+            parsed_scorer = scoring_function
+
+        if parsed_scorer =='custom': 
+            
+            custom_path = os.path.join(source_path,'custom_scorer.py')
+            spec = importlib.util.spec_from_file_location('custom_scorer',custom_path )
+            scoring_module = importlib.util.module_from_spec(spec)
+            
+            spec.loader.exec_module(scoring_module)
+            
+            parsed_scorer = getattr(scoring_module,scoring_function)
+        return parsed_scorer
         
     def get_bench_data(self):
         '''
@@ -318,7 +415,8 @@ class Task:
             "reference": self.reference,
             "scorer": self.scoring_function.__name__ if callable(self.scoring_function) else self.scoring_function,
             "description": self.description,
-            "id_generator":self.prompt_id_generator.__name__ 
+            "id_generator":self.prompt_id_generator.__name__ ,
+            "format":self.FormatClass.__name__
         }
         return task_dict
     
@@ -352,7 +450,7 @@ class Task:
             # Add the references to the values
             value_answer_df['reference'] = self.reference
             value_answer_df.to_csv(os.path.join(target_folder,self.task_id, 'values.csv'), index=False)
-    
+
 
     
     def run(self, runner=BenchRunner(), log_dir='logs', 

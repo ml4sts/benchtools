@@ -42,6 +42,7 @@ html_theme = 'pydata_sphinx_theme'
 
 html_theme_options = {
   "show_nav_level": 2,
+    "navigation_depth": 4,
   "header_links_before_dropdown": 6,
   "icon_links": [ 
         {
@@ -90,5 +91,5 @@ html_static_path = ['_static']
 #  "page_file_name": ["list.html", "of.html", "sidebar.html", "files.html"]
 html_sidebars = {
     "*": [],
-    "**/*": ["sidebar-nav-bs",]
+    "guide/*": ["sidebar-nav-bs.html",],
 }

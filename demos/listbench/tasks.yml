@@ -6,16 +6,17 @@
   reference: calculated
   scorer: "calculated_answer"
   format: "IntAnswer"
-- name: product_id
-  id_generator: selector_id_generator
+- name: product_combination
   template: "find the product of {a} and {b}"
   values:
      a: [2,3,5]
      b: [3,4,5]
-     id: [a,b,c]
   reference: calculated
-  scorer: "calculated_answer"
-  format: "IntAnswer"
+  value_combinations: combinations
+  scorer: 
+    - calculated_answer
+    - add_justify
+  format: "IntJustification"
 - name: symbol
   template: "what is the name for the following symbol? {symb}"
   values: 
@@ -23,13 +24,13 @@
      exmeta: ['internet', 'world', 'internet']
   reference: ["at", "dollar sign", "pound"]
   scorer: "contains"
-- name: symbol_id
-  id_generator: selector_id_generator
-  template: "what is the name for the following symbol? {symb}"
+- name: symbol_dir
+  template: "what direction does the {symb} symbol point? and what is its name "
   values: 
-     symb: ["@","$","#"]
-     exmeta: ['internet', 'world', 'internet']
-     id: [at, dollar,pound]
-  reference: ["at", "dollar sign", "pound"]
-  scorer: "contains"
+     symb: ["^","<",">"]
+     name: [carat, less,greater]
+     direction: ["up", "left", "right"]
+  scorer: check_name_dir
+  reference: calculated
+  format: NameSource
 

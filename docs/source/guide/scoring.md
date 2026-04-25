@@ -7,6 +7,8 @@ To use a custom function include a file named `custom_scorer.py` and include a f
 - response: will be a string, formatted according to the `format` key
 - reference: either the reference answer provided or the values used if `reference: calculated` in the setup
 
+The score function can return a single value, which will be stored in a `score` key or a dictionary, where its keys will be retained. 
+
 :::::{tip}
 see the `product` task in the `listbench` demo for an example of custom scoring
 :::::::

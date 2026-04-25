@@ -14,7 +14,7 @@ A library for building and running benchmarks
 
 You can install  directly from github or after cloning
 
-### diect install 
+### direct install 
 
 
 
@@ -58,7 +58,6 @@ cli.md
 pylib.md
 concept.md
 demo.md
-scoring.md
 ```
 
 
