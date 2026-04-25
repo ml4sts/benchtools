@@ -2,12 +2,14 @@ import os
 import click
 import json
 import pandas as pd
+from pathlib import Path, PurePath
 from datetime import datetime
 from benchtools.task import Task
 from benchtools.benchmark import Bench
-from benchtools.runner import BenchRunner
+from benchtools.runner import BenchRunner, BenchRunnerList
 from benchtools.betterbench import BetterCheckList
 
+# from task import PromptTask
 
 @click.group()
 def benchtool():
@@ -146,7 +148,7 @@ def add_task(task_name, benchmark_path, task_source,task_type):
               help="The api call required to access the runner engine.")
 @click.option('-l', '--log-path', type=str, default=None,
                help="The path to a log directory.")
-def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_path):
+def run_task(benchmark_path: str, task_name, runner_type, model, api, log_path):
     """
     Running the tasks and generating logs
 
@@ -155,7 +157,7 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     """
     
     # Create BenchRunner object
-    runner = BenchRunner(runner_type, model, api_url)
+    runner = BenchRunner(runner_type, model, api)
 
     benchmark = Bench.load(benchmark_path)
 
@@ -164,30 +166,42 @@ def run_task(benchmark_path: str, task_name, runner_type, model, api_url, log_pa
     benchmark.run_task(task_name, runner, log_path)
 
 @benchtool.command()
-@click.argument('benchmark-path', required = False, type=str, default='.')
+@click.argument('benchmark-path', required = False, 
+                type=click.Path(), default=Path('.'),)
 @click.option('-r', '--runner-type', type=click.Choice(['ollama', 'openai', 'bedrock']),
                default="ollama", help="The engine that will run your LLM.")
 @click.option('-m', '--model', type=str, default="gemma3", 
               help="The LLM to be benchmarked.")
-@click.option('-a', '--api-url', type=str, default=None, 
-              help="The api call required to access the runner engine.")
+@click.option('-a', '--api', type=str, default=None, 
+              help="The api base url required to access the runner engine.")
 @click.option('-l', '--log-path', type=str, default=None, 
               help="The path to a log directory.")
 @click.option('-s','--score',is_flag=True,
               help='flag to score each task while running')
+@click.option('-R','--runner-file', default=None, 
+              help='use runner.yml configuration, if provided overrides options')
+
 def run(benchmark_path: str, runner_type: str, 
-        model: str, api_url: str, log_path: str,
-        score: bool):
+        model: str, api: str, log_path: str,
+        score: bool, runner_file):
     '''
     Run the benchmark, generate logs, and optionally sore
     '''
+
     # Create BenchRunner object
-    runner = BenchRunner(runner_type, model, api_url)
+    if runner_file:
+        if not(os.path.exists(runner_file)):
+            runner_file = os.path.join(benchmark_path,runner_file)
+        runner_list = BenchRunnerList.from_file(runner_file)
+    else:
+        runner_list = BenchRunnerList([BenchRunner(runner_type, model, api)])
 
     benchmark = Bench.load(benchmark_path)
     
-    click.echo(f"Running {benchmark.bench_name} now")
-    benchmark.run(runner, log_path,score)
+    
+    for runner in runner_list.runners:
+        click.echo(f"Running {benchmark.bench_name} on {runner}")
+        benchmark.run(runner, log_path,score)
 
 @benchtool.command()
 @click.argument('benchmark-path', required = False, type=str, default='.')

@@ -112,6 +112,7 @@ class Bench():
             info = Bench.load_info(bench_path)
         else:
             info = {}
+            
             info['bench_name'] = PurePath(bench_path).parts[-1]
             info['concept'] = f'a benchmark about {info["bench_name"]}'
 
@@ -313,16 +314,10 @@ class Bench():
         -----------
         runner: BenchRunner 
             define which runner should be used for the task.
-        
-            runner.model : string
-                the model to run the task on
-            runner.api_url : string
-                the url of the api to use for the task
-            runner.runner_type: {ollama,openai}
-                to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
-                to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         log_dir: str
             Path to where the logs should be saved
+        score : bool
+            to run scoring now or not
         '''
         if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
@@ -396,6 +391,7 @@ class Bench():
                     
                     prompt_id_list = [d for d in os.listdir(run_path) 
                                       if os.path.isdir(os.path.join(run_path,d))]
+                    
                     # print(prompt_id_list)
                     for prompt_id in prompt_id_list: 
                         log_file = os.path.join(run_path,prompt_id,'log.json')

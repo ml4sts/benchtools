@@ -336,6 +336,7 @@ class Task:
         if the task is a template based task, generate the prompts by filling 
         in the template with the variant values
         '''
+        
         # TODO: consider if this could be a generator function if there are a lot of variants, to avoid memory issues. For now, we will assume that the number of variants is small enough to generate all prompts at once.
         if self.variant_values:
             id_prompt_list = []
@@ -346,11 +347,15 @@ class Task:
                 prompt_id = self.prompt_id_generator(self.task_id,value_set)
                 id_prompt_list.append((prompt_id,prompt))
 
-            return id_prompt_list
+            
         else:
-            return [(self.name, self.template)]
+            id_prompt_list= [(self.name, self.template)]
+        
+        # print(id_prompt_list)
+        return id_prompt_list
         
     def label_references(self):
+        
         if self.variant_values:
             labeled_refs = {}
             
@@ -463,14 +468,6 @@ class Task:
         ----------
         runner: BenchRunner 
             define which runner should be used for the task.
-        
-            runner.model : string
-                the model to run the task on
-            runner.api_url : string
-                the url of the api to use for the task
-            runner.runner_type: {ollama,openai}
-                to use the Ollama runner, the script expects the model to be installed, and `ollama serve` running on localhost:11434
-                to use OpenAI runner, you must have an API key set in your OPENAI_API_KEY environment variable
         log_dir: str
             Path to where the logs should be saved. If empty a log folder will be created in the current working directory
 
@@ -519,7 +516,7 @@ class Task:
 
                     case "ollama_api":
                         client = Client(
-                            host=runner.api_url if runner.api_url else "http://localhost:11434",
+                            host=runner.api ,
                         )
                         completion = client.chat(
                             runner.model,
@@ -536,7 +533,7 @@ class Task:
 
                     case "openai":
                         client = OpenAI(
-                            base_url=runner.api_url if runner.api_url else "https://api.openai.com/v1",
+                            base_url=runner.api,
                         )
                         chat_completion = client.chat.completions.create(
                             model=runner.model,

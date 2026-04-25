@@ -34,7 +34,7 @@ def concatenator_id_generator(name,values_dict):
     create an id for individual prompts from task name and values
     '''
 
-    values = values_dict.values()
+    values = [v for v in values_dict.values() if not(v=='prompt_id')]
     return name +'_' + '-'.join([str(v) for v in values])
 
 def selector_id_generator(name,values_dict):
