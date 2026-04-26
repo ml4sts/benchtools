@@ -22,4 +22,5 @@ Clone the repository then explore the `benchtools/demos` folder
 
 guide/scoring.md
 guide/response.md
+guide/specification.md
 ```

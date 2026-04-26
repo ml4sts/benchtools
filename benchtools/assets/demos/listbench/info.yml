@@ -1,0 +1,3 @@
+bench_name: listbench
+title : List Bench 
+concept: simple example of a benchmark defined by a task list in a yaml file, includes custom scoring and reponse types

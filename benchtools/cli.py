@@ -8,6 +8,7 @@ from benchtools.task import Task
 from benchtools.benchmark import Bench
 from benchtools.runner import BenchRunner, BenchRunnerList
 from benchtools.betterbench import BetterCheckList
+from .demo import copy_demo_files, list_demos
 
 # from task import PromptTask
 
@@ -244,6 +245,57 @@ def score(benchmark_path: str, result_id,csv,collate):
     click.echo('Saved Eval: '+eval_base)
 
 
+@benchtool.group()
+def demo():
+    '''
+    demo benchmarks package with benchtools
+    '''
+    pass
+
+@demo.command()
+@click.option('-n','--demo-name',default=None)
+@click.option('-t','--target-dir',default = '.',
+              help='target directory for the demo')
+@click.option('-r','--run',is_flag=True,
+              help='optionally, run the demo after sintalling')
+def install(demo_name,target_dir, run):
+    '''
+    install and optionally run a demo
+    '''
+    available_demos = list_demos()
+
+    # if not valid, warn and delete
+    if not(demo_name in available_demos):
+        click.echo(f'{demo_name} does not exist')
+        demo_name = None
+
+    # if not selected (or deleted, ask for choice)
+    enumerated_demos = '\n'.join([f'{str(i)}: {d}' 
+                                  for i,d in enumerate(available_demos)])
+    if not(demo_name):
+        click.echo('Available demos:\n'+enumerated_demos)
+        demo_id = click.prompt('Choose a demo ',
+                    type=click.Choice(range(len(available_demos))))
+        demo_name = available_demos[demo_id]
+
+    copy_demo_files(demo_name,target_dir)
+    benchmark_path =os.path.join(target_dir,demo_name)
+
+    if run:
+        benchmark = Bench.load(benchmark_path)
+    
+        click.echo(f"Running {benchmark.bench_name} on  with defaults")
+        benchmark.run()
+        
+@demo.command()
+@click.option('-c','--concept',is_flag=True,
+              help='include concept descriptions in list')
+def list(concept):
+    '''
+    list available demos
+    '''
+    demo_list = 'Available Demos:\n- ' + '\n- '.join(list_demos(concept))
+    click.echo(demo_list)
 
 
 @click.group()

@@ -16,24 +16,26 @@ You can install  directly from github or after cloning
 
 ### direct install 
 
-
+```bash
+pip install git+https://github.com/ml4sts/benchtools.git
+```
 
 ### By clone
 
 You can clone first
-```
+```bash
 git clone https://github.com/ml4sts/benchtools.git
 ```
 
 and then install 
-```
+```bash
 pip install benchtools
 ```
 (possibly `pip3`)
 
 if you clone in order to develop, you may want to install with pip's `-e` option
 
-```
+```bash
 pip install -e benchtools
 ```
 
@@ -48,7 +50,17 @@ benchtools allows you to express templated tasks in multiple ways:
 a  benchmark can consist of tasks that all fit a single format above or a mixture of meta-tasks each represented as a folder
 and then the specific tasks in one of the forms above
 
-There are two main ways to use BenchTools. The user can mix and match between the two methods.
+The fastest way to get familiar is to install a demo, one in the yaml format (listbench) and one in the folder format (folderbench) as follows:
+```bash
+benchtool demo -n BENCHMARK_NAME
+```
+
+You can also run at the same time. 
+
+```bash
+benchtool demo -n BENCHMARK_NAME -r
+```
+
 
 ```{toctree}
 :caption: Contents:
