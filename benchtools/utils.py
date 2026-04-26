@@ -1,19 +1,25 @@
 import os
 import yaml
 import importlib.resources as resources
+from pathlib import Path
+
+
+
+
+def load_demo(demo_name):
+    demo_dir = resources.files('benchtools').joinpath('demo',demo_name)
+    # with open(resources.as_file(template_dir),'r') as f:
+    template = demo_dir.read_text()
 
 def load_asset(filename):
     '''
     pass sub path to the needed file from assets as separate parameters and load the 
     content from the file
     '''
-    # template_rel = os.path.join('assets', *args)
-    # template_path = resources.path(__name__, template_rel)
-    # with open(template_path, 'r') as tmpt_f:
-    #     template = tmpt_f.read()
-    template_dir = resources.files('benchtools').joinpath('assets',filename)
-    # with open(resources.as_file(template_dir),'r') as f:
-    template = template_dir.read_text()
+    
+    file_path = resources.files('benchtools').joinpath('assets',filename)
+    
+    template = file_path.read_text()
     
     return(template)
 

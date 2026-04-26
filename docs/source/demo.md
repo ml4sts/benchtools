@@ -1,6 +1,6 @@
-# Demo Usage 
+# Example
 
-
+This is an example of installing and then using the `benchtools` for a simple benchmark
 
 
 ##  install from Source
@@ -70,16 +70,16 @@ the above is truncated, but the last few lines are the most important
 
 ## Exploring the Demo benchmarks
 
-we have two tiny demo benchmarks in a demos folder: 
+Benchrools is packaged with two demos, you can install them to create a copy and explore
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cd benchtools/demos/
-ls
+benchtool demo list
 ```
 
 ```{code-block} console
-folderbench	listbench
+folderbench	
+listbench
 ```
 
 `benchtools` supports two formats for storing tasks:
@@ -91,7 +91,8 @@ Let's examine the folder-based example first:
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cd folderbench/
+benchtool demo install -n folderbench
+cd folderbench
 ```
 
 ```{code-cell} bash
@@ -166,10 +167,12 @@ symb, reference
 ```
 
 ## Running a benchmark
-Then back int he top of the benchmark folder
+
+let's install the other benchmark to run it
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cd ../../../
+benchtool demo install -n listbench
+
 ```
 
 
