@@ -27,7 +27,8 @@ class BenchRunner():
         self.model = model
         api_default = {'ollama_api': "http://localhost:11434",
                            'openai':"https://api.openai.com/v1",
-                           'ollama':""}
+                           'ollama':"",
+                           'bedrock':""}
         if api:
             self.api = api 
         else:
