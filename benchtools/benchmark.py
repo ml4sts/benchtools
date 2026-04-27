@@ -123,7 +123,7 @@ class Bench():
             for task_dir in task_list:
                 # load the tasks
                 task_path = os.path.join(task_folder, task_dir)
-                task = Task.from_txt_csv(task_path)
+                task = Task.from_txt_csv(task_path, source_path=bench_path)
                 tasks.append(task)
         else:
             tasks = []
