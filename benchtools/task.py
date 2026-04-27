@@ -170,10 +170,18 @@ class Task:
         with open(os.path.join(task_path, "template.txt"), "r") as f:
             prompt = f.read()
 
+        info_file = os.path.join(task_path,'info.yml')
+        if os.path.exists(info_file):
+            with open(info_file, "r") as f:
+                info_dict = yaml.safe_load(f)
+        else:
+            info_dict= {}
+
         values_file = os.path.join(task_path, "values.csv")
         # load and strip whitespace from column names and values
         value_answer_df = pd.read_csv(values_file).rename(columns=lambda x: x.strip()).applymap(lambda x: x.strip() if isinstance(x, str) else x)
         
+        # TODO: Check info_dict for calculated?
         if 'reference' in value_answer_df.columns:
             variant_values = value_answer_df.drop(columns='reference').to_dict(orient='records')
         
@@ -193,14 +201,6 @@ class Task:
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        info_file = os.path.join(task_path,'task.yml')
-        if os.path.exists(info_file):
-            with open(info_file, "r") as f:
-                info_dict = yaml.safe_load(f) 
-        else:
-            info_dict= {}
-
-        
         return cls(task_name, template= prompt,
                     variant_values = variant_values, 
                     description = description,

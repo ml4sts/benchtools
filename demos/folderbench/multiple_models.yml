@@ -1,4 +1,4 @@
-runner_type: ollama
+runner_type: bedrock
 model: 
- - 'llama3.2'
- - 'gemma3'
+ - 'meta.llama3-70b-instruct-v1:0'
+ - 'google.gemma-3-4b-it '
