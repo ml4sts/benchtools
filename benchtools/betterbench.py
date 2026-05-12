@@ -194,8 +194,9 @@ class BetterCheckList():
                         justification_input = click.edit(f"#  Justification: {item.rubric[rubric_idx]} \n# lines starting with # will be removed")
                         # use provided unlesss empty
                         if justification_input:
+                            justification_input = justification_input[:-2]
                             justification_lines = justification_input.split('\n')
-                            justification = '\n'.join([jl for jl in justification_lines if not(jl[0]=='#')])
+                            justification = '\n'.join([jl for jl in justification_lines if not jl[0]=='#' ])
                         else:
                             justification = item.rubric[rubric_idx]
                         item.skipped = False
