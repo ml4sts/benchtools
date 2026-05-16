@@ -307,7 +307,7 @@ def betterbench():
     
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
-def init(bench_path: str):
+def init(benchmark_path: str):
     """
     Initiate a betterbench checklist from template.
     Check if user would like to run an interactive session
@@ -319,32 +319,32 @@ def init(bench_path: str):
         checklist.interactive_session()
 
     # Save the checklist to the file system
-    checklist.save(bench_path)
+    checklist.save(benchmark_path)
 
 
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
-def resume(bench_path: str):
+def resume(benchmark_path: str):
     """
     Running the betterbench interactive session
     """
     # Load the checklist from the file system
-    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    checklist = BetterCheckList.from_file(os.path.join(benchmark_path, 'betterbench.yml'))
     # Start interactive session
     checklist.interactive_session()
     # Save the checklist to the file system
-    checklist.save(bench_path)
+    checklist.save(benchmark_path)
     
 
 @betterbench.command()
 @click.argument('bench-path', default='.', type=str)
-def score(bench_path: str):
+def score(benchmark_path: str):
     """
     Running the betterbench scoring function
     """
     click.echo(f"Scoring benchmark now...")
     # Load the checklist from the file system
-    checklist = BetterCheckList.from_file(os.path.join(bench_path, 'betterbench.yml'))
+    checklist = BetterCheckList.from_file(os.path.join(benchmark_path, 'betterbench.yml'))
     checklist.print_score()
 
 

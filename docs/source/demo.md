@@ -301,7 +301,7 @@ cat logs/gemma3/product/1771533769/run_info.yml
 
 ```{code-block} console
 bench_name: list_bench
-bench_path: listbench/
+benchmark_path: listbench/
 description: null
 id_generator: concatenator_id_generator
 log_path: listbench/logs/gemma3/product/1771533769

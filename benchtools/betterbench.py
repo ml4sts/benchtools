@@ -51,7 +51,7 @@ class BetterCheckList():
             Print betterbench scores
         print_score()
             Save the BetterCheckList object to the filesystem in a betterbench.yml file
-        save(bench_path: str)
+        save(benchmark_path: str)
 
     '''
 
@@ -249,21 +249,21 @@ Your benchmark's score: {scores.pop('score')}/{scores.pop('total')}
 
         click.echo(output)
 
-    def save(self, bench_path: str):
+    def save(self, benchmark_path: str):
         '''
         Save the BetterCheckList object to the filesystem in a betterbench.yml file
 
         Parameters:
         -----------
-        bench_path: str
+        benchmark_path: str
             Path to a benchmark folder
         '''
         # Confirm the benchmark exists
-        if not os.path.exists(bench_path):
-            click.echo("No benchmark reposiory at " + bench_path)
+        if not os.path.exists(benchmark_path):
+            click.echo("No benchmark reposiory at " + benchmark_path)
 
         # Load existing BetterBench checklist if applicable 
-        checklist_path = os.path.join(bench_path, "betterbench.yml")
+        checklist_path = os.path.join(benchmark_path, "betterbench.yml")
         # Convert objects to a list of dicts before saving
         bench_checklist = [item.__dict__ for item in self.items]
         # Save current checklist into the benchmark repo

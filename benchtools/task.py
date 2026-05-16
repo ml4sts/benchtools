@@ -459,7 +459,7 @@ class Task:
 
     
     def run(self, runner=BenchRunner(), log_dir='logs', 
-            benchmark=None, bench_path=None,
+            benchmark=None, benchmark_path=None,
             score = False):
         """
         run the task on the stated model and log the interactions.
@@ -489,7 +489,7 @@ class Task:
         # Create logging structure for a task within a log directory
         try:
             run_log = init_log_folder(log_dir, runner.model, self.get_dict(), 
-                                        id_prompt_list, benchmark, bench_path)
+                                        id_prompt_list, benchmark, benchmark_path)
         except Exception as e:
             print(f"Couldn't create log directory in {log_dir}...\n{e}")
 
