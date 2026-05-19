@@ -5,12 +5,6 @@ from pathlib import Path
 
 
 
-
-def load_demo(demo_name):
-    demo_dir = resources.files('benchtools').joinpath('demo',demo_name)
-    # with open(resources.as_file(template_dir),'r') as f:
-    template = demo_dir.read_text()
-
 def load_asset(filename):
     '''
     pass sub path to the needed file from assets as separate parameters and load the 
