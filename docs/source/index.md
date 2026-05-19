@@ -58,7 +58,7 @@ benchtool demo install -n BENCHMARK_NAME
 You can also run at the same time. 
 
 ```bash
-benchtool demo -n BENCHMARK_NAME -r
+benchtool demo install -n BENCHMARK_NAME -r
 ```
 
 
