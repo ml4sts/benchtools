@@ -52,7 +52,7 @@ and then the specific tasks in one of the forms above
 
 The fastest way to get familiar is to install a demo, one in the yaml format (listbench) and one in the folder format (folderbench) as follows:
 ```bash
-benchtool demo -n BENCHMARK_NAME
+benchtool demo install -n BENCHMARK_NAME
 ```
 
 You can also run at the same time. 
