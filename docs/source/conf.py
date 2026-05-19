@@ -91,5 +91,6 @@ html_static_path = ['_static']
 #  "page_file_name": ["list.html", "of.html", "sidebar.html", "files.html"]
 html_sidebars = {
     "*": [],
+    "concept":["sidebar-nav-bs.html",],
     "guide/*": ["sidebar-nav-bs.html",],
 }

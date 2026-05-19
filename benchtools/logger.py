@@ -16,7 +16,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benchmark=None, bench_path=None):
+def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benchmark=None, benchmark_path=None):
     ''''
     Creates the log directories and sub-directories for a specific task.
     
@@ -47,7 +47,7 @@ def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benc
     run_info =  task_info
     if benchmark:
         run_info['bench_name'] = benchmark
-        run_info['bench_path'] = bench_path
+        run_info['benchmark_path'] = benchmark_path
     run_info['run_id'] = str(timestamp)
     run_info['log_path'] = str(run_dir)
 

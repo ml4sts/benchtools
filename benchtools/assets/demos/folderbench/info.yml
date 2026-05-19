@@ -1,0 +1,3 @@
+bench_name: folderbench
+title : Folder Bench 
+concept: simple example of a benchmark defined by tasks in folders, incldues runner file exampels
