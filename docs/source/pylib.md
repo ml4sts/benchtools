@@ -30,7 +30,13 @@ from benchtools import Task
 
 tt = Task('greeting','Hello there','hi', 'contains')
 ```
-<!-- there -->
+
+<!-- Doesn't really run anything 
+File "/work/pi_brownsarahm_uri_edu/ayman_uri/BenchTools/benchtools/benchtools/task.py", line 497, in run
+    for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+ -->
 
 ```{code-cell}
 response = tt.run()
@@ -46,15 +52,16 @@ tiny_bench.add_task(tt)
 
 There are multiple ways to creating a Task object
 ```
-add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
+add_task = Task.from_txt_csv('benchtools/assets/demos/folderbench/tasks/add')
 tiny_bench.add_task(add_task)
 ```
 
 For demo purposes we delete the folder, if it exists, before running. 
-```{code-cell}
-%%bash
+```{code-cell} bash
 rm  -rf tiniest_demo
 ```
+
+<!-- Same problem with run -->
 
 We create a new folder for a benchmark to store it in the file system
 ```{code-cell}
@@ -64,7 +71,7 @@ tiny_bench.run()
 
 
 ```{code-cell}
-pre_built_yml = Bench.from_yaml('../../demos/listbench')
+pre_built_yml = Bench.from_yaml('benchtools/assets/demos/listbench')
 pre_built_yml.written
 ```
 
@@ -74,36 +81,26 @@ we can access individual tasks:
 pre_built_yml.tasks['product'].variant_values
 ```
 
+```
+[{'a': 2, 'b': 3}, {'a': 3, 'b': 4}, {'a': 5, 'b': 5}]
+```
 
+Make sure you have `ollama serve` running to run the benchmark
 
 ```{code-cell}
 pre_built_yml.run()
 ```
 
-```{code-cell}
-demo_bench = Bench.from_yaml('../../demos/listbench')
-```
+Logs will be found in `benchtools/assets/demos/listbench/logs`
 
 
-<!-- ```{code-cell}
-demo_bench = Bench.load('../../demobench')
-``` 
--->
-
-
-
-
-
-## Creating a Benchmark object
-<!-- Testing which is better -->
-
+## Runner class
 ```{eval-rst}
 .. automodule:: benchtools.runner
     :members:
 ```
 
 ## Benchmark class
-<!-- Testing which is better -->
 ```{eval-rst}
 .. autoclass:: benchtools.benchmark.Bench
     :members:
@@ -111,7 +108,6 @@ demo_bench = Bench.load('../../demobench')
 
 
 ## Task class
-<!-- Testing which is better -->
 ```{eval-rst}
 .. autoclass:: benchtools.task.Task
     :members:
@@ -120,8 +116,7 @@ demo_bench = Bench.load('../../demobench')
 
 
 ## BetterBench
-<!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.task.Task
+.. autoclass:: benchtools.betterbench.BetterCheckList
     :members:
 ```
