@@ -217,8 +217,10 @@ def run(benchmark_path: str, runner_type: str,
 def score(benchmark_path: str, result_id,csv,collate):
     """
     Running the benchmark and generating logs
+    -----------
     Parameters:
-        benchmark-path: The path to the benchmark repository where all the task reside.
+        benchmark-path: str
+            The path to the benchmark repository where all the task reside.
     """
     # if not provided do the last one for each model-task combination
     
