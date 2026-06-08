@@ -156,7 +156,7 @@ class BenchRunner():
                     return None
         except Exception as e:
             error = e
-        return (json.dump(response), error)
+        return response, error
 
 
     
