@@ -1,8 +1,12 @@
 # module to create and run benchmarks
-import yaml
 import os
+import json
+import yaml
+import boto3
 import pandas as pd
 from pathlib import Path
+from ollama import chat, ChatResponse, Client
+
 
 # possibly resurected for batch runs? 
 class BenchRunner():
@@ -27,7 +31,8 @@ class BenchRunner():
         self.model = model
         api_default = {'ollama_api': "http://localhost:11434",
                            'openai':"https://api.openai.com/v1",
-                           'ollama':""}
+                           'ollama':"",
+                           'bedrock': ""}
         if api:
             self.api = api 
         else:
@@ -35,6 +40,125 @@ class BenchRunner():
 
     def __str__(self):
         return f'{self.model} via {self.runner_type}'
+
+    def run(self, prompt, format):
+        '''
+        Run method of a runner takes a prompt and a format and then finds the correct api call that matches the runner requested by the user. Runs the LLM call and returns the LLM response
+        '''
+        error = None
+        response = ''
+        try:
+            match self.runner_type:
+                case "ollama":
+                    completion: ChatResponse = chat(
+                        model=self.model,
+                        format = format,
+                        messages=[
+                        {
+                        'role': 'user',
+                        'content':prompt,
+                        },
+                    ])
+                    response = completion.message.content
+
+
+                case "ollama_api":
+                    client = Client(
+                        host=self.api ,
+                    )
+                    completion = client.chat(
+                        self.model,
+                        format = format,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": prompt,
+                            },
+                        ],
+                    )
+                    response = completion["message"]["content"]
+
+
+                case "openai":
+                    client = OpenAI(
+                        base_url=self.api,
+                    )
+                    chat_completion = client.chat.completions.create(
+                        model=self.model,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": prompt,
+                            }
+                        ],
+                    )
+                    response = chat_completion.choices[0].message.content
+
+                case "bedrock":
+                    bedrock_client = boto3.client('bedrock-runtime')
+                    # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
+                    # for available foundational models and their inferance parameters follow 
+                    # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+                    # Catch the model family first
+                    model_fam = None
+                    if self.model.startswith("meta"): model_fam = "llama"
+                    elif self.model.startswith("google"): model_fam = "gemma"
+                    match model_fam:
+                        case "llama":
+                            # Embed the prompt in Llama 3's instruction format.
+                            formatted_prompt = f"""
+<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+{prompt}
+<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>
+"""
+                            # Format the request payload using the model's native structure.
+                            request = {
+                                "prompt": formatted_prompt,
+                                # "max_gen_len": 512,
+                                # "temperature": 0.5,
+                            }
+                            # Convert the native request to JSON.
+                            request = json.dumps(request)
+                            completeion = bedrock_client.invoke_model(
+                                modelId = self.model,
+                                body = request,
+                                accept="application/json" # ???
+                            )
+                            # Decode the response body.
+                            response = json.loads(completeion["body"].read())
+                            response = response["generation"]
+                        case "gemma":
+                            # Format the request payload using the model's native structure.
+                            request = {
+                                'messages': [
+                                    {
+                                    'role': 'user',
+                                    'content': prompt
+                                    }
+                                ]
+                            }
+                            # Convert the native request to JSON.
+                            request = json.dumps(request)
+                            completeion = bedrock_client.invoke_model(
+                                modelId = self.model,
+                                body = request,
+                                accept="application/json" # ???
+                            )
+                            # Decode the response body.
+                            response = json.loads(completeion['body'].read())
+                            response = response['choices'][0]['message']['content']
+                        case _:
+                            raise NotImplementedError
+
+                case _:
+                    print(f"Runner type {self.runner_type} not supported")
+                    return None
+        except Exception as e:
+            error = e
+        return (json.dump(response), error)
+
+
     
 
 class BenchRunnerList():
@@ -87,11 +211,3 @@ class BenchRunnerList():
                 runner_list = [BenchRunner(**runner_info)]
         
         return cls(runner_list)
-    
-    
-
-        
-
-    
-
-        

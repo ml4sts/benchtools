@@ -3,10 +3,8 @@
 import os
 import yaml
 import json
-import boto3
 import pandas as pd
 import itertools
-from ollama import chat, ChatResponse, Client
 from .logger import init_log_folder, log_interaction
 from pathlib import PurePath
 from datasets import load_dataset
@@ -21,16 +19,6 @@ from .utils import concatenator_id_generator, selector_id_generator
 
 prompt_id_fx = {'concatenator_id_generator':concatenator_id_generator,
                 'selector_id_generator':selector_id_generator}
-
-class UnMatchedModel(Exception):
-    """
-    Exception raised for a bedrock model that isn't accounted for in the match statement
-    Follow https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html for a list of available models on bedrock and their inferance parameters
-    """
-    def __init__(self, model):
-        self.model = model
-        message = f"Cannot call the model ${attempted_withdrawal} using aws Bedrock. Please fetch the correct inferance parameters for it and add it in a PR to BenchTools."
-        super().__init__(message) # Call the base class constructor
 
 
 class Task:
@@ -496,114 +484,8 @@ class Task:
 
         for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
             
-            error = None
-            response = ''
-            try:
-                match runner.runner_type:
-                    case "ollama":
-                        completion: ChatResponse = chat(
-                            model=runner.model, 
-                            format = self.FormatClass.model_json_schema(),
-                            messages=[
-                            {
-                            'role': 'user',
-                            'content':prompt,
-                            },
-                        ])
-                        # print("response: " + response.message.content)
-                        response = completion.message.content
-                        
-
-                    case "ollama_api":
-                        client = Client(
-                            host=runner.api ,
-                        )
-                        completion = client.chat(
-                            runner.model,
-                            format = self.FormatClass.model_json_schema(),
-                            messages=[
-                                {
-                                    "role": "user",
-                                    "content": prompt,
-                                },
-                            ],
-                        )
-                        response = completion["message"]["content"]
-                        
-
-                    case "openai":
-                        client = OpenAI(
-                            base_url=runner.api,
-                        )
-                        chat_completion = client.chat.completions.create(
-                            model=runner.model,
-                            messages=[
-                                {
-                                    "role": "user",
-                                    "content": prompt,
-                                }
-                            ],
-                        )
-                        response = chat_completion.choices[0].message.content
-                        
-                    case "bedrock":
-                        bedrock_client = boto3.client('bedrock-runtime')
-                        # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
-                        # for available foundational models and their inferance parameters follow 
-                        # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
-                        # Catch the model family first
-                        model_fam = None
-                        if runner.model.startswith("meta"): model_fam = "llama"
-                        elif runner.model.startswith("google"): model_fam = "gemma"
-                        match model_fam:
-                            case "llama":
-                                # Embed the prompt in Llama 3's instruction format.
-                                formatted_prompt = f"""
-<|begin_of_text|><|start_header_id|>user<|end_header_id|>
-{prompt}
-<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>
-"""
-                                # Format the request payload using the model's native structure.
-                                request = {
-                                    "prompt": formatted_prompt,
-                                    # "max_gen_len": 512,
-                                    # "temperature": 0.5,
-                                }
-                                # Convert the native request to JSON.
-                                request = json.dumps(request)
-                                completeion = bedrock_client.invoke_model(
-                                    modelId = runner.model,
-                                    body = request
-                                )
-                                # Decode the response body.
-                                response = json.loads(completeion["body"].read())
-                                response = response["generation"]
-                            case "gemma":
-                                completeion = bedrock_client.invoke_model(
-                                    modelId = runner.model,
-                                    body = json.dumps(
-                                        {
-                                            'messages': [
-                                                {
-                                                'role': 'user',
-                                                'content': prompt
-                                                }
-                                            ]
-                                        }
-                                    )
-                                )
-                                # Decode the response body.
-                                response = json.loads(completeion['body'].read())
-                                response = response['choices'][0]['message']['content']
-                            case _:
-                                raise UnMatchedModel(runner.model)
-                        
-                    case _:
-                        print(f"Runner type {runner.runner_type} not supported")
-                        return None
-            except Exception as e:
-                error = e
+            response, error = runner.run(prompt, self.FormatClass.model_json_schema())
+            
             if score:
                 score_val = self.scoring_function(response, self.reference[prompt_id])
                 
