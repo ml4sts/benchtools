@@ -95,61 +95,31 @@ class BenchRunner():
                     response = chat_completion.choices[0].message.content
 
                 case "bedrock":
-                    bedrock_client = boto3.client('bedrock-runtime')
-                    # Bedrock has multiple foundational models that will each differ in request parameters and response fields we included cases for a couple of them
-                    # for available foundational models and their inferance parameters follow 
-                    # https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
-                    # Catch the model family first
-                    model_fam = None
-                    if self.model.startswith("meta"): model_fam = "llama"
-                    elif self.model.startswith("google"): model_fam = "gemma"
-                    match model_fam:
-                        case "llama":
-                            # Embed the prompt in Llama 3's instruction format.
-                            formatted_prompt = f"""
-<|begin_of_text|><|start_header_id|>user<|end_header_id|>
-{prompt}
-<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>
-"""
-                            # Format the request payload using the model's native structure.
-                            request = {
-                                "prompt": formatted_prompt,
-                                # "max_gen_len": 512,
-                                # "temperature": 0.5,
-                            }
-                            # Convert the native request to JSON.
-                            request = json.dumps(request)
-                            completeion = bedrock_client.invoke_model(
-                                modelId = self.model,
-                                body = request,
-                                accept="application/json" # ???
-                            )
-                            # Decode the response body.
-                            response = json.loads(completeion["body"].read())
-                            response = response["generation"]
-                        case "gemma":
-                            # Format the request payload using the model's native structure.
-                            request = {
-                                'messages': [
-                                    {
+                    client = boto3.client('bedrock-runtime', region_name='us-east-1')
+                    try:
+                        response = client.converse(
+                            modelId=self.model,
+                            messages=[
+                                {
                                     'role': 'user',
-                                    'content': prompt
-                                    }
-                                ]
-                            }
-                            # Convert the native request to JSON.
-                            request = json.dumps(request)
-                            completeion = bedrock_client.invoke_model(
-                                modelId = self.model,
-                                body = request,
-                                accept="application/json" # ???
-                            )
-                            # Decode the response body.
-                            response = json.loads(completeion['body'].read())
-                            response = response['choices'][0]['message']['content']
-                        case _:
-                            raise NotImplementedError
+                                    'content': [{'text': prompt}]
+                                }
+                            ]
+                        )
+                        # Catch the model family
+                        model_fam = None
+                        if self.model.startswith("meta") or self.model.startswith("us.meta"): model_fam = "llama"
+                        elif self.model.startswith("google"): model_fam = "gemma"
+                        elif self.model.startswith("nova") or self.model.startswith("us.nova"): model_fam = "nova"
+                        match model_fam:
+                            case "llama" |"nova":
+                                response = response['output']['message']['content'][0]['text']
+                            case "gemma" | "_":
+                                response = response['output']['message']['content']['text']
+
+                    except Exception as e:
+                        error = e
+                        print(f"bedrock converse API failed with model {self.model}.\n{e}")
 
                 case _:
                     print(f"Runner type {self.runner_type} not supported")
