@@ -108,11 +108,11 @@ class BenchRunner():
                         )
                         # Catch the model family
                         model_fam = None
-                        if self.model.startswith("meta") or self.model.startswith("us.meta"): model_fam = "llama"
+                        if self.model.startswith("meta") or self.model.startswith("us.meta"): model_fam = "meta"
                         elif self.model.startswith("google"): model_fam = "gemma"
                         elif self.model.startswith("nova") or self.model.startswith("us.nova"): model_fam = "nova"
                         match model_fam:
-                            case "llama" |"nova":
+                            case "meta" |"nova":
                                 response = response['output']['message']['content'][0]['text']
                             case "gemma" | "_":
                                 response = response['output']['message']['content']['text']
