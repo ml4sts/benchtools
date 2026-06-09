@@ -486,7 +486,7 @@ class Task:
             
             response, error = runner.run(prompt, self.FormatClass.model_json_schema())
             
-            if score:
+            if not error and score:
                 score_val = self.scoring_function(response, self.reference[prompt_id])
                 
             else: 
