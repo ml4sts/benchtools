@@ -14,7 +14,7 @@ class BenchRunner():
     A BenchRunner holds information about how a task is going to be run. 
     '''
 
-    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None):
+    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None, temperature=None, max_tokens=None, top_p=None, stop_sequence=None):
         '''
         The constructor for BenchRunner will have default values for all attributes to have a full default runner ready to be used for running any task.
         P.S. Requires Ollama to be installed and running on your machine.
@@ -25,6 +25,14 @@ class BenchRunner():
             The name of the LLM to use for running the tasks. Default is 'gemma3'. P.S. Will need to have the model downloaded locally if using ollama
         api: str
             The URL of the API to use for accessing an LLM. If None, the default API will be http://localhost:11434 as this is used by ollama by default
+        temperature: float
+            Controls randomness in generation (higher = more random)
+        max_tokens: int
+            Maximum number of tokens to generate
+        top_p: float
+            Cumulative probability threshold for nucleus sampling
+        stop_sequence: list
+            Stop sequences that will halt generation
         '''
 
         self.runner_type = runner_type
@@ -37,6 +45,13 @@ class BenchRunner():
             self.api = api 
         else:
             self.api = api_default[runner_type]
+
+        self.inference_parameters={}
+        if temperature: self.inference_parameters.update({"tempetature": temperature})
+        if top_p: self.inference_parameters.update({"top_p": top_p})
+        if max_tokens: self.inference_parameters.update({"max_tokens": max_tokens})
+        if stop_sequence: self.inference_parameters.update({"stop": temperatstop_sequenceure})
+
 
     def __str__(self):
         return f'{self.model} via {self.runner_type}'
@@ -54,11 +69,13 @@ class BenchRunner():
                         model=self.model,
                         format = format,
                         messages=[
-                        {
-                        'role': 'user',
-                        'content':prompt,
-                        },
-                    ])
+                            {
+                            'role': 'user',
+                            'content':prompt,
+                            },
+                        ],
+                        options=self.inference_parameters
+                    )
                     response = completion.message.content
 
 
@@ -75,6 +92,7 @@ class BenchRunner():
                                 "content": prompt,
                             },
                         ],
+                        options=self.inference_parameters
                     )
                     response = completion["message"]["content"]
 
@@ -95,6 +113,13 @@ class BenchRunner():
                     response = chat_completion.choices[0].message.content
 
                 case "bedrock":
+                    config={}
+                    if self.inference_parameters:
+                        if "tempetature" in self.inference_parameters: config.update({"temperature": self.inference_parameters["tempetature"]})
+                        if "top_p" in self.inference_parameters: config.update({"topP": self.inference_parameters["top_p"]})
+                        if "max_tokens" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters["max_tokens"]})
+                        if "stop" in self.inference_parameters: config.update({"stopSequences": self.inference_parameters["stop"]})
+
                     client = boto3.client('bedrock-runtime', region_name='us-east-1')
                     try:
                         response = client.converse(
@@ -104,7 +129,10 @@ class BenchRunner():
                                     'role': 'user',
                                     'content': [{'text': prompt}]
                                 }
-                            ]
+                            ],
+                            inferenceConfig=config,
+                            # additionalModelRequestFields{}, # For model-specific inference params
+                            # additionalModelResponseFieldPaths[], # For model-specific return fields
                         )
                         # Catch the model family
                         model_fam = None
