@@ -47,7 +47,7 @@ class BenchRunner():
             self.api = api_default[runner_type]
 
         self.inference_parameters={}
-        if temperature: self.inference_parameters.update({"tempetature": temperature})
+        if temperature: self.inference_parameters.update({"temperature": temperature})
         if top_p: self.inference_parameters.update({"top_p": top_p})
         if max_tokens: self.inference_parameters.update({"max_tokens": max_tokens})
         if stop_sequence: self.inference_parameters.update({"stop": temperatstop_sequenceure})
@@ -115,7 +115,7 @@ class BenchRunner():
                 case "bedrock":
                     config={}
                     if self.inference_parameters:
-                        if "tempetature" in self.inference_parameters: config.update({"temperature": self.inference_parameters["tempetature"]})
+                        if "temperature" in self.inference_parameters: config.update({"temperature": self.inference_parameters["temperature"]})
                         if "top_p" in self.inference_parameters: config.update({"topP": self.inference_parameters["top_p"]})
                         if "max_tokens" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters["max_tokens"]})
                         if "stop" in self.inference_parameters: config.update({"stopSequences": self.inference_parameters["stop"]})
