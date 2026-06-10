@@ -49,7 +49,7 @@ class BenchRunner():
         self.inference_parameters={}
         if temperature: self.inference_parameters.update({"temperature": temperature})
         if top_p: self.inference_parameters.update({"top_p": top_p})
-        if max_tokens: self.inference_parameters.update({"max_tokens": max_tokens})
+        if max_tokens: self.inference_parameters.update({"num_predict": max_tokens})
         if stop_sequence: self.inference_parameters.update({"stop": temperatstop_sequenceure})
 
 
@@ -117,7 +117,7 @@ class BenchRunner():
                     if self.inference_parameters:
                         if "temperature" in self.inference_parameters: config.update({"temperature": self.inference_parameters["temperature"]})
                         if "top_p" in self.inference_parameters: config.update({"topP": self.inference_parameters["top_p"]})
-                        if "max_tokens" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters["max_tokens"]})
+                        if "num_predict" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters["num_predict"]})
                         if "stop" in self.inference_parameters: config.update({"stopSequences": self.inference_parameters["stop"]})
 
                     client = boto3.client('bedrock-runtime', region_name='us-east-1')
