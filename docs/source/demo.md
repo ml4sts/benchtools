@@ -208,7 +208,7 @@ this will be filled in later
 We can run a benchmark by name
 
 ::::{note}
-The default runner is ollama. Make sure ollama is running by calling `ollama serve` on another terminal window
+The default runner is ollama. Make sure `ollama` is running in advence.
 :::::::
 
 ```{code-block} bash

@@ -85,7 +85,7 @@ pre_built_yml.tasks['product'].variant_values
 [{'a': 2, 'b': 3}, {'a': 3, 'b': 4}, {'a': 5, 'b': 5}]
 ```
 
-Make sure you have `ollama serve` running to run the benchmark
+Make sure `ollama` is running in advence on your system to run the benchmark
 
 ```{code-cell}
 pre_built_yml.run()
