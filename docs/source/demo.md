@@ -9,7 +9,7 @@ Installing from source means you can pull to update.
 
 First, clone the repo: 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 git clone https://github.com/ml4sts/benchtools.git
 ```
@@ -27,7 +27,7 @@ Resolving deltas: 100% (513/513), done.
 
 
 See it creates a folder
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls
 ```
@@ -39,11 +39,11 @@ benchtools
 
 Then install: 
 ::::::{important}
-this needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
+the following needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
 :::::::
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 pip install benchtools/
 ```
@@ -72,7 +72,7 @@ the above is truncated, but the last few lines are the most important
 
 Benchrools is packaged with two demos, you can install them to create a copy and explore
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool demo list
 ```
@@ -89,13 +89,13 @@ listbench
 
 Let's examine the folder-based example first: 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool demo install -n folderbench
 cd folderbench
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls
 ```
@@ -105,7 +105,7 @@ README.md	tasks
 ```
 
 The tasks folder is the main content: 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cd tasks/
 :tags: ["skip-execution"]
@@ -118,7 +118,7 @@ add	symbols
 ```
 
 We can look inside one: 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cd add/
 ls
@@ -145,13 +145,13 @@ a,b,reference
 ```
 
 :::::{important}
-The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks(each row is a subtask)
+The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks (each row is a subtask)
 :::::::
 
 we can look at the other task too:
 
 
-```{code-cell} console
+```{code-block} console
 :filename: sybmols/template.txt 
 what is the name for the following symbol? {symb}
 ```
@@ -169,17 +169,16 @@ symb, reference
 ## Running a benchmark
 
 let's install the other benchmark to run it
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool demo install -n listbench
-
 ```
 
 
 We can see the help for the command
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool run --help
 ```
@@ -207,7 +206,12 @@ this will be filled in later
 
 
 We can run a benchmark by name
-```{code-cell} bash
+
+::::{note}
+The default runner is ollama. Make sure `ollama` is running in advence.
+:::::::
+
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool run listbench/
 ```
@@ -217,7 +221,7 @@ Running list_bench now
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cd listbench/
 :tags: ["skip-execution"]
@@ -233,7 +237,7 @@ it creates a `logs` folder if one does not already exist
 
 
 ### Exploring a yaml benchmark
-```{code-cell} console
+```{code-block} console
 :filename tasks.yml 
 - name: product
   template: "find the product of {a} and {b}"
@@ -250,7 +254,7 @@ it creates a `logs` folder if one does not already exist
   scorer: "contains"
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/
 ```
@@ -262,18 +266,18 @@ gemma3
 
 there will be a folder per log
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/gemma3/
 ```
 
 ```{code-block} console
-product	symbol
+product	product_combination symbol
 
 ```
 then per task
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/gemma3/product/
 ```
@@ -284,7 +288,7 @@ ls logs/gemma3/product/
 ```
 then per run, named by the timestamp of the run start
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/gemma3/product/1771533769/
 ```
@@ -294,7 +298,7 @@ product_2-3	product_3-4	product_5-5	run_info.yml
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cat logs/gemma3/product/1771533769/run_info.yml 
 ```
@@ -324,7 +328,7 @@ values:
 ```
 it stored overall information for the run
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/gemma3/product/1771533769/product_2-3/
 ```
@@ -335,7 +339,7 @@ log.json	log.txt
 ```
 
 and a log for each prompt in both text and json format
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cat logs/gemma3/product/1771533769/product_2-3/log.txt 
 ```
@@ -352,7 +356,7 @@ So the answer is $\boxed{6}$.
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cat logs/gemma3/product/1771533769/product_2-3/log.json 
 ```
@@ -374,7 +378,7 @@ cat logs/gemma3/product/1771533769/product_2-3/log.json
 
 ## Initializing a new benchmark
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool
 ```
@@ -389,13 +393,15 @@ Options:
 
 Commands:
   add-task  Set up a new task.
+  demo      demo benchmarks package with benchtools
   init      Initializes a new benchmark.
-  run       Running the benchmark and generating logs , help="The path to...
+  run       Run the benchmark, generate logs, and optionally sore
   run-task  Running the tasks and generating logs
+  score     Running the benchmark and generating logs Parameters:...
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool init --help
 ```
@@ -419,7 +425,7 @@ Options:
 ```
 
 it asks questions interactively
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool init example --about 'in class example benchmark'
 Do you want to add any tasks now? [y/N]: y
@@ -434,7 +440,7 @@ Do you want to run the benchmark now? [Y/n]: n
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls
 ```
@@ -444,7 +450,7 @@ benchtools	example
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cd example/
 ```
@@ -453,7 +459,7 @@ cd example/
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls
 ```
@@ -463,7 +469,7 @@ about.md	info.yml	tasks
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cat info.yml 
 ```
@@ -478,7 +484,7 @@ tasks:
 
 ```
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cat tasks.yml 
 ```
@@ -501,7 +507,8 @@ cat tasks.yml
 
 ```
 
-```{code-cell} bash
+Let's mannually edit the task to make a good example.
+```{code-block} bash
 :tags: ["skip-execution"]
 nano tasks.yml 
 
@@ -509,10 +516,11 @@ nano tasks.yml
 
 ```{code-block} console
 - description: 'animal identifcaiton '
+  format: StringAnswer
   id_generator: concatenator_id_generator
   name: animal
   reference: ['zebra', 'tiger', "cheetah"]
-  scorer: exact_match
+  scorer: contains
   template: an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?
   values:
     pattern:
@@ -530,7 +538,7 @@ nano tasks.yml
 ```
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 ls
 about.md	info.yml	tasks.yml
@@ -539,10 +547,73 @@ about.md	info.yml	tasks.yml
 
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool run .
 ```
+
+Let's see what happened after running the benchmark
+
+```{code-block} bash
+:tags: ["skip-execution"]
+ls
+about.md	info.yml	logs tasks.yml
+
+```
+
+Now we have a new `logs/` folder. Let's explore its contents 
+```{code-block} bash
+:tags: ["skip-execution"]
+ls logs/
+gemma3
+
+```
+
+```{code-block} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/
+animal
+
+```
+
+```{code-block} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal
+1780063281
+
+```
+`1780063281` is the timestamp of when the benchmark was run which represents a single run of the benchmark
+
+
+```{code-block} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal/1780063281
+animal_spots-hairy-paws  animal_stripes-hairy-hooves  animal_stripes-hairy-paws  run_info.yml
+
+```
+Each run will have a folder for the different subtasks  
+
+
+Let's run the scorer to score the LLM on the task at hand.
+
+```{code-block} bash
+:tags: ["skip-execution"]
+benchtool score .
+```
+
+```{code-block} consol
+Saved Eval: ./eval_1780069448
+```
+
+```{code-block} bash
+:tags: ["skip-execution"]
+cat ./eval_1780069448.json
+```
+
+```{code-block} console
+[{"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_spots-hairy-paws", "error": "None", "values": {"pattern": "spots", "skin": "hairy", "feet": "paws", "prompt_id": "animal_spots-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a spots, paws, and hairy. what kind of animal is it?", "response": "{\n    \"answer\": \"A dog\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-hooves", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "hooves", "prompt_id": "animal_stripes-hairy-hooves"}, "steps": {"0": {"prompt": "an animal has a stripes, hooves, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}", "score": 1}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-paws", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "paws", "prompt_id": "animal_stripes-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a stripes, paws, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}]
+```
+
 
 
 ## Get updates
@@ -553,7 +624,7 @@ Watch the repo to get notifications for important updates
 
 Then update by pulling 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 cd benchtools/
 git pull
@@ -562,7 +633,7 @@ git pull
 and re-installing: 
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 pip install .
 ```

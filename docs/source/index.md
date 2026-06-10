@@ -71,12 +71,3 @@ pylib.md
 concept.md
 demo.md
 ```
-
-
-```{eval-rst}
-.. click:: benchtools.cli:benchtool
-   :prog: benchtools 
-   :nested: full
-   :commands:
-
-```
