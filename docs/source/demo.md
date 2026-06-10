@@ -552,6 +552,7 @@ about.md	info.yml	tasks.yml
 benchtool run .
 ```
 
+Let's see what happened after running the benchmark
 
 ```{code-block} bash
 :tags: ["skip-execution"]
@@ -560,6 +561,7 @@ about.md	info.yml	logs tasks.yml
 
 ```
 
+Now we have a new `logs/` folder. Let's explore its contents 
 ```{code-block} bash
 :tags: ["skip-execution"]
 ls logs/
@@ -580,6 +582,8 @@ ls logs/gemma3/animal
 1780063281
 
 ```
+`1780063281` is the timestamp of when the benchmark was run which represents a single run of the benchmark
+
 
 ```{code-block} bash
 :tags: ["skip-execution"]
@@ -587,6 +591,8 @@ ls logs/gemma3/animal/1780063281
 animal_spots-hairy-paws  animal_stripes-hairy-hooves  animal_stripes-hairy-paws  run_info.yml
 
 ```
+Each run will have a folder for the different subtasks  
+
 
 Let's run the scorer to score the LLM on the task at hand.
 
