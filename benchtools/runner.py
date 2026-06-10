@@ -14,7 +14,7 @@ class BenchRunner():
     A BenchRunner holds information about how a task is going to be run. 
     '''
 
-    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None, temperature=None, max_tokens=None, top_p=None, stop_sequence=None):
+    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None, model_params=None):
         '''
         The constructor for BenchRunner will have default values for all attributes to have a full default runner ready to be used for running any task.
         P.S. Requires Ollama to be installed and running on your machine.
@@ -25,14 +25,16 @@ class BenchRunner():
             The name of the LLM to use for running the tasks. Default is 'gemma3'. P.S. Will need to have the model downloaded locally if using ollama
         api: str
             The URL of the API to use for accessing an LLM. If None, the default API will be http://localhost:11434 as this is used by ollama by default
-        temperature: float
-            Controls randomness in generation (higher = more random)
-        max_tokens: int
-            Maximum number of tokens to generate
-        top_p: float
-            Cumulative probability threshold for nucleus sampling
-        stop_sequence: list
-            Stop sequences that will halt generation
+        model_params: dict
+            A dictionary with inference parameters to be used for the model generation:
+                temperature: float
+                    Controls randomness in generation (higher = more random)
+                max_tokens: int
+                    Maximum number of tokens to generate
+                top_p: float
+                    Cumulative probability threshold for nucleus sampling
+                stop_sequence: list
+                    Stop sequences that will halt generation
         '''
 
         self.runner_type = runner_type
@@ -47,10 +49,11 @@ class BenchRunner():
             self.api = api_default[runner_type]
 
         self.inference_parameters={}
-        if temperature: self.inference_parameters.update({"temperature": temperature})
-        if top_p: self.inference_parameters.update({"top_p": top_p})
-        if max_tokens: self.inference_parameters.update({"num_predict": max_tokens})
-        if stop_sequence: self.inference_parameters.update({"stop": stop_sequence})
+        if model_params:
+            if 'temperature' in model_params: self.inference_parameters.update({"temperature": model_params["temperature"]})
+            if 'top_p' in model_params: self.inference_parameters.update({"top_p": model_params["top_p"]})
+            if 'max_tokens' in model_params: self.inference_parameters.update({"num_predict": model_params["max_tokens"]})
+            if 'stop_sequence' in model_params: self.inference_parameters.update({"stop": model_params["stop_sequence"]})
 
 
     def __str__(self):
