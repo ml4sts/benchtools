@@ -50,7 +50,7 @@ class BenchRunner():
         if temperature: self.inference_parameters.update({"temperature": temperature})
         if top_p: self.inference_parameters.update({"top_p": top_p})
         if max_tokens: self.inference_parameters.update({"num_predict": max_tokens})
-        if stop_sequence: self.inference_parameters.update({"stop": temperatstop_sequenceure})
+        if stop_sequence: self.inference_parameters.update({"stop": stop_sequence})
 
 
     def __str__(self):
