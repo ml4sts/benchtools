@@ -46,7 +46,7 @@ class Bench():
     run()
         Run one task or all tasks of the benchmark.
     '''
-    def __init__(self, name, base_path='.', benchmark_path=None, concept=None, tasks=[], runners=[BenchRunner()]):
+    def __init__(self, name, base_path='.', benchmark_path=None, concept=None, tasks=[]):
         '''
         Initialize the benchmark object with the name and path to the benchmark folder.
 
@@ -58,8 +58,6 @@ class Bench():
             path where the benchmark will be stored 
         tasks: list of Task objects
             list of tasks to be included in the benchmark. Each task should be an instance of the Task class
-        runners: list[BenchRunner]
-            Specification of the model/s and API that will be used to run the benchmark
         '''
 
         # set up the object attributes
@@ -83,8 +81,6 @@ class Bench():
         else:
             self.tasks = {}
         
-        self.runners=runners
-
         # Written if the benchmark directory has been initialized
         self.written = os.path.exists(self.benchmark_path)
 
@@ -132,12 +128,10 @@ class Bench():
         else:
             tasks = []
 
-        runners = Bench.load_runners(benchmark_path)
-
         
         return cls(name = info['bench_name'], 
                     benchmark_path = benchmark_path,
-                    concept = info['concept'], tasks=tasks, runners=runners)
+                    concept = info['concept'], tasks=tasks)
     
     @classmethod
     def from_yaml(cls, benchmark_path):
@@ -165,11 +159,9 @@ class Bench():
         for task_dict in task_list:
             tasks.append(Task.from_dict(task_dict,source_path=benchmark_path))
 
-        runners = Bench.load_runners(benchmark_path)
-
 
         return cls(name = info['bench_name'], benchmark_path =benchmark_path,
-                   concept= info['concept'], tasks=tasks, runners=runners)
+                   concept= info['concept'], tasks=tasks)
 
     @classmethod
     def load(cls, benchmark_path):
@@ -207,25 +199,6 @@ class Bench():
             info = yaml.safe_load(f)
         
         return info
-
-    @staticmethod
-    def load_runners(benchmark_path):
-        runners = []
-        model_params = {}
-        content = os.listdir(benchmark_path)
-        if 'model_param.yml' in content:
-            with open(os.path.join(benchmark_path, 'model_param.yml'), 'r') as f:
-                model_params = yaml.safe_load(f)
-
-        if 'runner.yml' in content:
-            with open(os.path.join(benchmark_path, 'runner.yml'), 'r') as f:
-                run_info = yaml.safe_load(f)
-            api= run_info['api'] if 'api' in run_info else None
-            for model in run_info['models']:
-                runners.append(BenchRunner(run_info['runner_type'], model, api, model_params))
-        else: runners.append(BenchRunner(model_param=model_params))
-
-        return runners
         
 
     def initialize_dir(self, no_git=False):
@@ -334,7 +307,7 @@ class Bench():
             task_object.write(self.benchmark_path)
 
 
-    def run(self, log_dir=None, score=False):
+    def run(self, runner=BenchRunner(), log_dir=None, score=False):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -351,7 +324,7 @@ class Bench():
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, log_dir,score)
+            self.run_task(task, runner, log_dir,score)
 
     
 
@@ -452,7 +425,7 @@ class Bench():
 
 
 
-    def run_task(self, target_task=None, log_dir=None, score=False):
+    def run_task(self, runner=BenchRunner(), target_task=None, log_dir=None, score=False):
         '''
         run a specific task
         '''
@@ -474,10 +447,6 @@ class Bench():
         else:
             raise ValueError("target_task should be either a string (task name) or a Task object.")
 
-        # TODO: Add log_dir to attributes?
-        run_responses = []
-        for runner in self.runners:
-            run_responses.append(task_object.run(runner, log_dir, self.bench_name, self.benchmark_path,score))
-        
-        return run_responses
+        # TODO: Add log_dir to attributes?        
+        return task_object.run(runner, log_dir, self.bench_name, self.benchmark_path,score)
 
