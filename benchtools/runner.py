@@ -55,6 +55,24 @@ class BenchRunner():
             if 'max_tokens' in model_params: self.inference_parameters.update({"num_predict": model_params["max_tokens"]})
             if 'stop_sequence' in model_params: self.inference_parameters.update({"stop": model_params["stop_sequence"]})
 
+    
+    @staticmethod
+    def from_file(cls, file_path):
+        runners = []
+        model_params = {}
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"File {file_path} does not exist.")
+        
+        with open(os.path.join(file_path), 'r') as f:
+            run_info = yaml.safe_load(f)
+        type= run_info.pop('runner_type', 'ollama')
+        model= run_info.pop('model', 'gemma3:1b')
+        api= run_info.pop('api', None)
+
+        # Any remaining keys are considered model parameters
+        model_params = run_info if run_info else None
+
+        return cls(type, model, api, model_params)
 
     def __str__(self):
         return f'{self.model} via {self.runner_type}'
@@ -63,8 +81,21 @@ class BenchRunner():
         '''
         Run method of a runner takes a prompt and a format and then finds the correct api call that matches the runner requested by the user. Runs the LLM call and returns the LLM response
         '''
-        error = None
-        response = ''
+        run_info = {
+            'runner_type': self.runner_type,
+            'model': self.model,
+            'api': self.api,
+            'inference_parameters': self.inference_parameters,
+            'prompt': prompt,
+            'format': format,
+            'response': '',
+            'error': None,
+            'prompt_tokens': 0,
+            'response_tokens': 0,
+            'total_tokens': 0,
+            'stop_reason': None,
+        }
+
         try:
             match self.runner_type:
                 case "ollama":
@@ -79,7 +110,11 @@ class BenchRunner():
                         ],
                         options=self.inference_parameters
                     )
-                    response = completion.message.content
+                    run_info['response'] = completion.message.content
+                    run_info['prompt_tokens'] = completion.prompt_eval_count
+                    run_info['response_tokens'] = completion.eval_count
+                    run_info['total_tokens'] = completion.eval_count + completion.prompt_eval_count
+                    run_info['stop_reason'] = completion.done_reason
 
 
                 case "ollama_api":
@@ -97,7 +132,11 @@ class BenchRunner():
                         ],
                         options=self.inference_parameters
                     )
-                    response = completion["message"]["content"]
+                    run_info['response'] = completion["message"]["content"]
+                    run_info['prompt_tokens'] = completion["prompt_eval_count"]
+                    run_info['response_tokens'] = completion["eval_count"]
+                    run_info['total_tokens'] = completion["eval_count"] + completion["prompt_eval_count"]
+                    run_info['stop_reason'] = completion["done_reason"]
 
 
                 case "openai":
@@ -144,9 +183,13 @@ class BenchRunner():
                         elif self.model.startswith("nova") or self.model.startswith("us.nova"): model_fam = "nova"
                         match model_fam:
                             case "meta" |"nova":
-                                response = response['output']['message']['content'][0]['text']
+                                run_info['response'] = response['output']['message']['content'][0]['text']
                             case "gemma" | "_":
-                                response = response['output']['message']['content']['text']
+                                run_info['response'] = response['output']['message']['content']['text']
+                        run_info['prompt_tokens'] = response['usage']['inputTokens']
+                        run_info['response_tokens'] = response['usage']['outputTokens']
+                        run_info['total_tokens'] = response['usage']['totalTokens']
+                        run_info['stop_reason'] = response['stopReason']
 
                     except Exception as e:
                         error = e
@@ -156,17 +199,17 @@ class BenchRunner():
                     print(f"Runner type {self.runner_type} not supported")
                     return None
         except Exception as e:
-            error = e
-        return response, error
+            run_info['error'] = e
+        return run_info
 
 
     
 
 class BenchRunnerList():
     '''
-    a set of runners
+    a set of runner objects that can be used to run a benchmark on multiple models and/or runner types.
     '''
-    def __init__(self, runners: list[BenchRunner]):
+    def __init__(self, runners: list[BenchRunner]=[BenchRunner()]):
         '''
 
         Parameters

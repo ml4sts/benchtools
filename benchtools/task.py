@@ -484,16 +484,16 @@ class Task:
 
         for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
             
-            response, error = runner.run(prompt, self.FormatClass.model_json_schema())
+            run_info = runner.run(prompt, self.FormatClass.model_json_schema())
             
-            if not error and score:
-                score_val = self.scoring_function(response, self.reference[prompt_id])
+            if not 'error' in run_info and score:
+                score_val = self.scoring_function(run_info['response'], self.reference[prompt_id])
                 
             else: 
                 score_val = None
 
-            log_interaction(run_log, prompt_id, prompt, response, str(error),values,score_val)
-            responses.append(response)
+            log_interaction(run_log, prompt_id, prompt,values, run_info, score_val)
+            responses.append(run_info['response'])
 
         
         self.responses = responses 
