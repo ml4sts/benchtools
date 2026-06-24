@@ -5,7 +5,7 @@ import yaml
 import json
 import pandas as pd
 import itertools
-from .logger import init_log_folder, log_interaction
+from .logger import Logger
 from pathlib import PurePath
 from datasets import load_dataset
 from .runner import BenchRunner
@@ -446,9 +446,7 @@ class Task:
 
 
     
-    def run(self, runner=BenchRunner(), log_dir='logs', 
-            benchmark=None, benchmark_path=None,
-            score = False):
+    def run(self, runner=BenchRunner(), logger= None, log_dir='logs', score = False):
         """
         run the task on the stated model and log the interactions.
 
@@ -469,31 +467,23 @@ class Task:
         # Gerenate all the prompts of the task
         id_prompt_list = self.generate_prompts()
 
-        # Create log directory if it doesn't exist
-        if not os.path.exists(log_dir):
-            os.mkdir(log_dir)
-
-        run_log=""
-        # Create logging structure for a task within a log directory
-        try:
-            run_log = init_log_folder(log_dir, runner.model, self.get_dict(), 
-                                        id_prompt_list, benchmark, benchmark_path)
-        except Exception as e:
-            print(f"Couldn't create log directory in {log_dir}...\n{e}")
-
+        if not logger:
+            logger = Logger(log_dir)
+            
+        logger.log_task_info(self.get_dict(), id_prompt_list)
 
         for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
             
-            run_info = runner.run(prompt, self.FormatClass.model_json_schema())
+            response, error = runner.run(prompt_id, prompt, values, self.FormatClass.model_json_schema(), logger)
             
-            if not 'error' in run_info and score:
-                score_val = self.scoring_function(run_info['response'], self.reference[prompt_id])
-                
+            if not error and score:
+                score_val = self.scoring_function(response, self.reference[prompt_id])
             else: 
                 score_val = None
+        
 
-            log_interaction(run_log, prompt_id, prompt,values, run_info, score_val)
-            responses.append(run_info['response'])
+            # log_interaction(run_log, prompt_id, prompt,values, run_info, score_val)
+            responses.append(response)
 
         
         self.responses = responses 

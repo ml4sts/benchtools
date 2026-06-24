@@ -5,6 +5,7 @@ import yaml
 import boto3
 import pandas as pd
 from pathlib import Path
+from .logger import Logger
 from ollama import chat, ChatResponse, Client
 
 
@@ -26,15 +27,7 @@ class BenchRunner():
         api: str
             The URL of the API to use for accessing an LLM. If None, the default API will be http://localhost:11434 as this is used by ollama by default
         model_params: dict
-            A dictionary with inference parameters to be used for the model generation:
-                temperature: float
-                    Controls randomness in generation (higher = more random)
-                max_tokens: int
-                    Maximum number of tokens to generate
-                top_p: float
-                    Cumulative probability threshold for nucleus sampling
-                stop_sequence: list
-                    Stop sequences that will halt generation
+            A dictionary with inference parameters to be used for the model generation such as temperature, max_tokens, top_p, stop_sequence, etc.
         '''
 
         self.runner_type = runner_type
@@ -48,13 +41,7 @@ class BenchRunner():
         else:
             self.api = api_default[runner_type]
 
-        self.inference_parameters={}
-        if model_params:
-            if 'temperature' in model_params: self.inference_parameters.update({"temperature": model_params["temperature"]})
-            if 'top_p' in model_params: self.inference_parameters.update({"top_p": model_params["top_p"]})
-            if 'max_tokens' in model_params: self.inference_parameters.update({"num_predict": model_params["max_tokens"]})
-            if 'stop_sequence' in model_params: self.inference_parameters.update({"stop": model_params["stop_sequence"]})
-
+        self.inference_parameters= model_params
     
     @staticmethod
     def from_file(cls, file_path):
@@ -77,16 +64,22 @@ class BenchRunner():
     def __str__(self):
         return f'{self.model} via {self.runner_type}'
 
-    def run(self, prompt, format):
+    def run(self, prompt_id, prompt, values,  format, logger):
         '''
         Run method of a runner takes a prompt and a format and then finds the correct api call that matches the runner requested by the user. Runs the LLM call and returns the LLM response
         '''
-        run_info = {
+        runner_info = {
             'runner_type': self.runner_type,
             'model': self.model,
             'api': self.api,
-            'inference_parameters': self.inference_parameters,
+            'inference_parameters': self.inference_parameters
+        }
+        logger.log_runner_info(runner_info)
+
+        response_info = {
+            'prompt_id': prompt_id,
             'prompt': prompt,
+            'values': values,
             'format': format,
             'response': '',
             'error': None,
@@ -110,11 +103,11 @@ class BenchRunner():
                         ],
                         options=self.inference_parameters
                     )
-                    run_info['response'] = completion.message.content
-                    run_info['prompt_tokens'] = completion.prompt_eval_count
-                    run_info['response_tokens'] = completion.eval_count
-                    run_info['total_tokens'] = completion.eval_count + completion.prompt_eval_count
-                    run_info['stop_reason'] = completion.done_reason
+                    response_info['response'] = completion.message.content
+                    response_info['prompt_tokens'] = completion.prompt_eval_count
+                    response_info['response_tokens'] = completion.eval_count
+                    response_info['total_tokens'] = completion.eval_count + completion.prompt_eval_count
+                    response_info['stop_reason'] = completion.done_reason
 
 
                 case "ollama_api":
@@ -132,11 +125,11 @@ class BenchRunner():
                         ],
                         options=self.inference_parameters
                     )
-                    run_info['response'] = completion["message"]["content"]
-                    run_info['prompt_tokens'] = completion["prompt_eval_count"]
-                    run_info['response_tokens'] = completion["eval_count"]
-                    run_info['total_tokens'] = completion["eval_count"] + completion["prompt_eval_count"]
-                    run_info['stop_reason'] = completion["done_reason"]
+                    response_info['response'] = completion["message"]["content"]
+                    response_info['prompt_tokens'] = completion["prompt_eval_count"]
+                    response_info['response_tokens'] = completion["eval_count"]
+                    response_info['total_tokens'] = completion["eval_count"] + completion["prompt_eval_count"]
+                    response_info['stop_reason'] = completion["done_reason"]
 
 
                 case "openai":
@@ -156,11 +149,13 @@ class BenchRunner():
 
                 case "bedrock":
                     config={}
+                    # bedrock has some shared inference parameters but also some model specific ones.
+                    # We pop the shared ones and then send the rest as additionalModelRequestFields for the model to handle as needed.
                     if self.inference_parameters:
-                        if "temperature" in self.inference_parameters: config.update({"temperature": self.inference_parameters["temperature"]})
-                        if "top_p" in self.inference_parameters: config.update({"topP": self.inference_parameters["top_p"]})
-                        if "num_predict" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters["num_predict"]})
-                        if "stop" in self.inference_parameters: config.update({"stopSequences": self.inference_parameters["stop"]})
+                        if "temperature" in self.inference_parameters: config.update({"temperature": self.inference_parameters.pop("temperature", None)})
+                        if "topP" in self.inference_parameters: config.update({"topP": self.inference_parameters.pop("topP", None)})
+                        if "maxTokens" in self.inference_parameters: config.update({"maxTokens": self.inference_parameters.pop("maxTokens", None)})
+                        if "stopSequences" in self.inference_parameters: config.update({"stopSequences": self.inference_parameters.pop("stopSequences", None)})
 
                     client = boto3.client('bedrock-runtime', region_name='us-east-1')
                     try:
@@ -173,34 +168,37 @@ class BenchRunner():
                                 }
                             ],
                             inferenceConfig=config,
-                            # additionalModelRequestFields{}, # For model-specific inference params
+                            additionalModelRequestFields = self.inference_parameters, # For model-specific inference params
                             # additionalModelResponseFieldPaths[], # For model-specific return fields
                         )
                         # Catch the model family
-                        model_fam = None
-                        if self.model.startswith("meta") or self.model.startswith("us.meta"): model_fam = "meta"
-                        elif self.model.startswith("google"): model_fam = "gemma"
-                        elif self.model.startswith("nova") or self.model.startswith("us.nova"): model_fam = "nova"
-                        match model_fam:
-                            case "meta" |"nova":
-                                run_info['response'] = response['output']['message']['content'][0]['text']
-                            case "gemma" | "_":
-                                run_info['response'] = response['output']['message']['content']['text']
-                        run_info['prompt_tokens'] = response['usage']['inputTokens']
-                        run_info['response_tokens'] = response['usage']['outputTokens']
-                        run_info['total_tokens'] = response['usage']['totalTokens']
-                        run_info['stop_reason'] = response['stopReason']
+                        # model_fam = None
+                        # if self.model.startswith("meta") or self.model.startswith("us.meta"): model_fam = "meta"
+                        # elif self.model.startswith("google"): model_fam = "gemma"
+                        # elif self.model.startswith("nova") or self.model.startswith("us.nova"): model_fam = "nova"
+                        # match model_fam:
+                        #     case "meta" |"nova":
+                        #         response_info['response'] = response['output']['message']['content'][0]['text']
+                        #     case "gemma" | "_":
+                        #         response_info['response'] = response['output']['message']['content']['text']
+                        response_info['response'] = response['output']['message']['content'][0]['text']
+                        response_info['prompt_tokens'] = response['usage']['inputTokens']
+                        response_info['response_tokens'] = response['usage']['outputTokens']
+                        response_info['total_tokens'] = response['usage']['totalTokens']
+                        response_info['stop_reason'] = response['stopReason']
 
                     except Exception as e:
-                        error = e
+                        response_info['error'] = e
                         print(f"bedrock converse API failed with model {self.model}.\n{e}")
 
                 case _:
                     print(f"Runner type {self.runner_type} not supported")
                     return None
         except Exception as e:
-            run_info['error'] = e
-        return run_info
+            response_info['error'] = e
+
+        logger.log_interaction(response_info)
+        return response_info['response'], response_info['error']
 
 
     

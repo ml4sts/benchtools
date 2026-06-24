@@ -6,9 +6,10 @@ import requests
 import yaml
 import json
 # from pathlib import Path # ???
-from benchtools.task import Task
 from pathlib import PurePath
-from benchtools.runner import BenchRunner
+from .task import Task
+from .logger import Logger
+from .runner import BenchRunner
 from .utils import load_asset
 
 
@@ -319,12 +320,47 @@ class Bench():
         score : bool
             to run scoring now or not
         '''
+        # If user doesn't specify a log_dir, default to logs folder inside bench folder
         if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
+        elif not log_dir:
+            log_dir = os.path.join(self.benchmark_path, 'logs')
+        
+        # Initiaize a logger object that will handle the logging of the info and interactions
+        logger = Logger(log_dir)
+        logger.log_bench_info(bench_info={'bench_name': self.bench_name, 'bench_path': self.benchmark_path, 'concept': self.concept})
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, runner, log_dir,score)
+            self.run_task(task, runner, logger,score)
+
+
+
+    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None, score=False):
+        '''
+        run a specific task
+        '''
+
+        # If user doesn't specify a log_dir, default to logs folder inside bench folder
+        if not log_dir and not self.written:
+            raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
+        elif not log_dir:
+            log_dir = os.path.join(self.benchmark_path, 'logs')
+
+        if not(target_task):
+            # TODO: use a generator and make this have a state
+            target_task = list[self.tasks.keys()][0]
+
+        if isinstance(target_task, str):
+            task_object = self.tasks[target_task]
+        elif isinstance(target_task, Task):
+            task_object = target_task
+        else:
+            raise ValueError("target_task should be either a string (task name) or a Task object.")
+
+
+        return task_object.run(runner, log_dir, logger, score)
+
 
     
 
@@ -422,31 +458,3 @@ class Bench():
         
 
         return score_list
-
-
-
-    def run_task(self, runner=BenchRunner(), target_task=None, log_dir=None, score=False):
-        '''
-        run a specific task
-        '''
-        if not log_dir and not self.written:
-            raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
-
-        # If user doesn't specify a log_dir, default to logs folder inside bench folder
-        if not log_dir:
-            log_dir = os.path.join(self.benchmark_path, 'logs')
-
-        if not(target_task):
-            # TODO: use a generator and make this have a state
-            target_task = list[self.tasks.keys()][0] 
-
-        if isinstance(target_task, str):
-            task_object = self.tasks[target_task]
-        elif isinstance(target_task, Task):
-            task_object = target_task
-        else:
-            raise ValueError("target_task should be either a string (task name) or a Task object.")
-
-        # TODO: Add log_dir to attributes?        
-        return task_object.run(runner, log_dir, self.bench_name, self.benchmark_path,score)
-
