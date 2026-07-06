@@ -43,8 +43,9 @@ class Logger:
 
         bench_info[f'bench_run_id'] = str(timestamp)
         self.bench_info = bench_info
-        self.log_path = os.path.join(self.log_path, f"bench_{bench_info['bench_name']}")
-        os.makedirs(self.log_path, exist_ok=True)
+        if self.log_path != f"{bench_info['bench_path']}/logs":
+            self.log_path = os.path.join(self.log_path, f"bench_{bench_info['bench_name']}")
+            os.makedirs(self.log_path, exist_ok=True)
 
 
     def log_task_info(self, task_info, id_prompt_list: list):
@@ -59,7 +60,12 @@ class Logger:
         # Get timestamp without fractions of seconds
         timestamp = int(datetime.datetime.now().timestamp())
 
-        task_info['task_run_id'] = str(timestamp)
+        task_info['task_timestamp'] = str(timestamp)
+        if self.bench_info:
+            task_info['task_run_id'] = f"{self.bench_info['bench_run_id']}_{task_info['task_timestamp']}"
+        else:
+            task_info['task_run_id'] = task_info['task_timestamp']
+            
         self.task_info = task_info
 
         self.task_log_path = os.path.join(self.log_path, f"task_{task_info['name']}")
