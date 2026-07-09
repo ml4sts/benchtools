@@ -308,7 +308,7 @@ class Bench():
             task_object.write(self.benchmark_path)
 
 
-    def run(self, runner=BenchRunner(), log_dir=None, score=False):
+    def run(self, runner=BenchRunner(), log_dir=None):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -317,8 +317,6 @@ class Bench():
             define which runner should be used for the task.
         log_dir: str
             Path to where the logs should be saved
-        score : bool
-            to run scoring now or not
         '''
         # If user doesn't specify a log_dir, default to logs folder inside bench folder
         if not log_dir and not self.written:
@@ -332,11 +330,11 @@ class Bench():
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, runner, logger,score)
+            self.run_task(task, runner, logger)
 
 
 
-    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None, score=False):
+    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None):
         '''
         run a specific task
         '''
@@ -359,15 +357,14 @@ class Bench():
             raise ValueError("target_task should be either a string (task name) or a Task object.")
 
 
-        return task_object.run(runner, log_dir, logger, score)
+        return task_object.run(runner, log_dir, logger)
 
 
-    
 
-    def score(self, model=None,task=None, run ='last',collate=False):
+
+    def score(self, log_path=None, task=None, model=None, run='last'):
         '''
-        Run the benchmark by running each task in the benchmark and
-        logging the interactions.
+        Score the benchmark's logged task runs.
 
         Parameters:
         -----------
@@ -384,32 +381,45 @@ class Bench():
             list of dictionaries of scores
         '''
         
-        log_path = os.path.join(self.benchmark_path,'logs')
-        model_list = {m:os.path.join(log_path,m) for m in os.listdir(log_path) 
-                                    if os.path.isdir(os.path.join(log_path,m))}
-        
         run_selector = {'last': lambda runs: runs[-1],
-                        'all': lambda runs: runs
-                        }
-        
-        
-        # if not(task):
-        task_list = self.tasks.items()
-        
-        # TODO: implement subsetting
-        
-        score_list = []
-        # Run each task
-        
-        for model_name, model_path in model_list.items():
-            
-            
-            for name, task in task_list:
+                        'all': lambda runs: runs}
 
-                
+        score_list = []
+        task_list = []
+
+        if not log_path:
+            log_path = os.path.join(self.benchmark_path,'logs')
+
+        # Collect task folders found in the logs
+        task_paths = {t.rsplit('task_')[1]:os.path.join(log_path,t) for t in os.listdir(log_path)}
+
+        # Check if scoring one or more tasks
+        if type(task) == str and task in task_paths.keys():
+            task_list = [task]
+        elif type(task) == list:
+            task_list=[t for t in task if t in task_paths.keys()]
+        else:
+            task_list = task_paths.keys()
+            
+        for task_name in task_list:
+            model_list = []
+            task_path = task_paths[task_name]
+
+            # Collect model folders found in the logs
+            model_paths = {m:os.path.join(task_path,m) for m in os.listdir(task_path) 
+                                        if os.path.isdir(os.path.join(task_path,m))}
+            # Check if scoring one or more models
+            if type(model) == str and model in model_paths.keys():
+                model_list = [model]
+            elif type(model) == list:
+                model_list=[t for t in model if t in model_paths.keys()]
+            else:
+                model_list = model_paths.keys()
+        
+            for model in model_list:            
                 # load response json
-                task_path = os.path.join(model_path,name)
-                all_runs = sorted(os.listdir(task_path))
+                model_path = model_paths[model]
+                all_runs = sorted(os.listdir(model_path))
                 
                 if run in run_selector.keys():
                     selected_runs = [run_selector[run](all_runs)]
@@ -423,8 +433,11 @@ class Bench():
 
                 for run_id in selected_runs: 
                     
-                    run_path = os.path.join(task_path,run_id)
+                    run_path = os.path.join(model_path,run_id)
                     
+                    with open(os.path.join(run_path, 'run_info.yml'), 'r', encoding='utf-8') as file:
+                            run_info = yaml.safe_load(file)
+
                     prompt_id_list = [d for d in os.listdir(run_path) 
                                       if os.path.isdir(os.path.join(run_path,d))]
                     
@@ -434,27 +447,20 @@ class Bench():
                         with open(log_file, 'r', encoding='utf-8') as file:
                             log = json.load(file)
                         
-                        # print('soring',prompt_id)
-                        score_dict = log
-                        score_dict.update({'model':model_name,
-                                           'task':name,
-                                           'run':run_id,
-                                           'prompt_id':prompt_id})
+                        score_dict = run_info | log
                     
                         for step_id,step in log['steps'].items():
                             response = step['response']
-                            if not(collate):
-                                read_score = task.score(response,prompt_id)
-                                if type(read_score) ==dict:
-                                    # store dict in stepid if a dict
-                                    score_dict['steps'][step_id] = read_score
-                                else:
-                                    # store in 'score' key if not a dict
-                                    score_dict['steps'][step_id]['score'] = read_score
-                        
+                            error = step['error']
+
+                            read_score = self.tasks[task_name].score_response(response,prompt_id)
+                            if type(read_score) ==dict:
+                                # store dict in stepid if a dict
+                                score_dict['steps'][step_id] = read_score
+                            else:
+                                # store in 'score' key if not a dict
+                                score_dict['steps'][step_id]['score'] = read_score
+                    
                         score_list.append(score_dict)
         
-        
-        
-
         return score_list

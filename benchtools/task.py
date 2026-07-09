@@ -446,7 +446,7 @@ class Task:
 
 
     
-    def run(self, runner=BenchRunner(), logger= None, log_dir='logs', score = False):
+    def run(self, runner=BenchRunner(), logger= None, log_dir='logs'):
         """
         run the task on the stated model and log the interactions.
 
@@ -475,25 +475,14 @@ class Task:
         for (prompt_id, prompt),values in zip(id_prompt_list,self.variant_values):
             
             response, error = runner.run(prompt_id, prompt, values, self.FormatClass.model_json_schema(), logger)
-            
-            if not error and score:
-                score_val = self.scoring_function(response, self.reference[prompt_id])
-            else: 
-                score_val = None
-        
-
-            # log_interaction(run_log, prompt_id, prompt,values, run_info, score_val)
             responses.append(response)
+            
 
-        
         self.responses = responses 
-        
-
-
         return self.responses
 
     
-    def score(self, response,prompt_id=None):
+    def score_response(self, response,prompt_id=None):
         """
         score the response using the defined function
 
