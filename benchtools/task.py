@@ -131,8 +131,7 @@ class Task:
 
         folder must contain a template.txt file with the template, 
         and a values.csv file with the values to fill in the template, 
-        and the reference answers. it can optionally have an info.yml with additional 
-        settings
+        and the reference answers. it can optionally have an task_info.yml with additional settings
 
         Parameters
         -----------
@@ -181,7 +180,7 @@ class Task:
         else:
             description = f"a template based task with template: {prompt} and values like:\n\n {value_answer_df.head().to_markdown()}"
 
-        info_file = os.path.join(task_path,'task.yml')
+        info_file = os.path.join(task_path,'task_info.yml')
         if os.path.exists(info_file):
             with open(info_file, "r") as f:
                 info_dict = yaml.safe_load(f) 

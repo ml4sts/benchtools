@@ -108,7 +108,7 @@ class Bench():
         
         
         content = os.listdir(benchmark_path)
-        if 'info.yml' in content:
+        if 'bench_info.yml' in content:
             # load the info
             info = Bench.load_info(benchmark_path)
         else:
@@ -124,7 +124,7 @@ class Bench():
             for task_dir in task_list:
                 # load the tasks
                 task_path = os.path.join(task_folder, task_dir)
-                task = Task.from_txt_csv(task_path)
+                task = Task.from_txt_csv(task_path, source_path=benchmark_path)
                 tasks.append(task)
         else:
             tasks = []
@@ -196,7 +196,7 @@ class Bench():
 
     @staticmethod
     def load_info(benchmark_path):
-        with open(os.path.join(benchmark_path, 'info.yml'), 'r') as f:
+        with open(os.path.join(benchmark_path, 'bench_info.yml'), 'r') as f:
             info = yaml.safe_load(f)
         
         return info
@@ -261,7 +261,7 @@ class Bench():
         info = {'bench_name': self.bench_name, 
                 'concept': self.concept, 
                 'tasks': [task.get_bench_data() for task in self.tasks.values()]}
-        with open(os.path.join(self.benchmark_path, 'info.yml'), 'w') as f:
+        with open(os.path.join(self.benchmark_path, 'bench_info.yml'), 'w') as f:
             yaml.dump(info, f)
 
         # likely also write the tasks and the about, if need to be updated
@@ -399,7 +399,7 @@ class Bench():
         elif type(task) == list:
             task_list=[t for t in task if t in task_paths.keys()]
         else:
-            task_list = task_paths.keys()
+            task_list = list(task_paths.keys())
             
         for task_name in task_list:
             model_list = []
@@ -414,7 +414,7 @@ class Bench():
             elif type(model) == list:
                 model_list=[t for t in model if t in model_paths.keys()]
             else:
-                model_list = model_paths.keys()
+                model_list = list(model_paths.keys())
         
             for model in model_list:            
                 # load response json
