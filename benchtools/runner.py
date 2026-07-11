@@ -170,6 +170,18 @@ class BenchRunner():
                             inferenceConfig=config,
                             additionalModelRequestFields = self.inference_parameters, # For model-specific inference params
                             # additionalModelResponseFieldPaths[], # For model-specific return fields
+                            outputConfig={
+                                "textFormat": {
+                                    "type": "json_schema",
+                                    "structure": {
+                                        "jsonSchema": {
+                                            "schema": json.dumps(format),
+                                            "name": format['title'],
+                                            "description": format['description'] if 'description' in format else format['title']
+                                        }
+                                    }
+                                }
+                            }
                         )
                         # Catch the model family
                         # model_fam = None
