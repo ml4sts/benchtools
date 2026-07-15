@@ -2,13 +2,13 @@
 # should create folder structure
 import os
 import shutil
-import requests
 import yaml
 import json
 # from pathlib import Path # ???
-from benchtools.task import Task
 from pathlib import PurePath
-from benchtools.runner import BenchRunner
+from .task import Task
+from .logger import Logger
+from .runner import BenchRunner
 from .utils import load_asset
 
 
@@ -107,7 +107,7 @@ class Bench():
         
         
         content = os.listdir(benchmark_path)
-        if 'info.yml' in content:
+        if 'bench_info.yml' in content:
             # load the info
             info = Bench.load_info(benchmark_path)
         else:
@@ -123,7 +123,7 @@ class Bench():
             for task_dir in task_list:
                 # load the tasks
                 task_path = os.path.join(task_folder, task_dir)
-                task = Task.from_txt_csv(task_path)
+                task = Task.from_txt_csv(task_path, source_path=benchmark_path)
                 tasks.append(task)
         else:
             tasks = []
@@ -195,7 +195,7 @@ class Bench():
 
     @staticmethod
     def load_info(benchmark_path):
-        with open(os.path.join(benchmark_path, 'info.yml'), 'r') as f:
+        with open(os.path.join(benchmark_path, 'bench_info.yml'), 'r') as f:
             info = yaml.safe_load(f)
         
         return info
@@ -260,7 +260,7 @@ class Bench():
         info = {'bench_name': self.bench_name, 
                 'concept': self.concept, 
                 'tasks': [task.get_bench_data() for task in self.tasks.values()]}
-        with open(os.path.join(self.benchmark_path, 'info.yml'), 'w') as f:
+        with open(os.path.join(self.benchmark_path, 'bench_info.yml'), 'w') as f:
             yaml.dump(info, f)
 
         # likely also write the tasks and the about, if need to be updated
@@ -294,6 +294,8 @@ class Bench():
         # if ignore_text.status_code == 200:
         with open(".gitignore", 'a') as f:
             f.write(ignore_text)
+        os.system("git add -A")
+        os.system("git commit -m \"Initial commit by BenchTools\"")
         os.chdir(current_dir)
 
 
@@ -307,7 +309,7 @@ class Bench():
             task_object.write(self.benchmark_path)
 
 
-    def run(self, runner=BenchRunner(), log_dir=None, score=False):
+    def run(self, runner=BenchRunner(), log_dir=None):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -316,22 +318,104 @@ class Bench():
             define which runner should be used for the task.
         log_dir: str
             Path to where the logs should be saved
-        score : bool
-            to run scoring now or not
         '''
+
+        commit_hash = None
+        commit_message = None
+        if os.path.isdir(os.path.join(self.benchmark_path, ".git")):
+            import subprocess
+            from datetime import datetime
+
+            current_dir = os.getcwd()
+            os.chdir(self.benchmark_path)
+            try:
+                out = subprocess.run(
+                        "git diff",
+                        shell=True,
+                        capture_output=True,
+                        text=True)
+                if out.stdout.strip() != '':
+                    # Get current date and time
+                    string_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    subprocess.run(
+                        f"git add -A",
+                        shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+                    subprocess.run(
+                        f"git commit -m \"Bench run commit: {string_timestamp}\"",
+                        shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+
+                commit = subprocess.run(
+                        "git log  -1 --oneline",
+                        shell=True,
+                        capture_output=True,
+                        text=True).stdout.strip()
+                commit_hash, commit_message = commit.split(' ', 1)
+
+            except:
+                print("Error occurred when trying to get commit info")
+            os.chdir(current_dir)
+        else:
+            print("git might not be initialized in your system. Couldn't commit before run")
+
+
+        # If user doesn't specify a log_dir, default to logs folder inside bench folder
         if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
+        elif not log_dir:
+            log_dir = os.path.join(self.benchmark_path, 'logs')
+        
+        # Initiaize a logger object that will handle the logging of the info and interactions
+        logger = Logger(log_dir)
+        logger.log_bench_info(
+            bench_info={
+                'bench_name': self.bench_name,
+                'bench_path': self.benchmark_path,
+                'concept': self.concept,
+                'commit_hash': commit_hash,
+                'commit_message': commit_message})
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, runner, log_dir,score)
+            self.run_task(task, runner, logger)
 
-    
 
-    def score(self, model=None,task=None, run ='last',collate=False):
+
+    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None):
         '''
-        Run the benchmark by running each task in the benchmark and
-        logging the interactions.
+        run a specific task
+        '''
+
+        # If user doesn't specify a log_dir, default to logs folder inside bench folder
+        if not log_dir and not self.written:
+            raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
+        elif not log_dir:
+            log_dir = os.path.join(self.benchmark_path, 'logs')
+
+        if not(target_task):
+            # TODO: use a generator and make this have a state
+            target_task = list[self.tasks.keys()][0]
+
+        if isinstance(target_task, str):
+            task_object = self.tasks[target_task]
+        elif isinstance(target_task, Task):
+            task_object = target_task
+        else:
+            raise ValueError("target_task should be either a string (task name) or a Task object.")
+
+
+        return task_object.run(runner, log_dir, logger)
+
+
+
+
+    def score(self, log_path=None, task=None, model=None, run='last'):
+        '''
+        Score the benchmark's logged task runs.
 
         Parameters:
         -----------
@@ -348,32 +432,45 @@ class Bench():
             list of dictionaries of scores
         '''
         
-        log_path = os.path.join(self.benchmark_path,'logs')
-        model_list = {m:os.path.join(log_path,m) for m in os.listdir(log_path) 
-                                    if os.path.isdir(os.path.join(log_path,m))}
-        
         run_selector = {'last': lambda runs: runs[-1],
-                        'all': lambda runs: runs
-                        }
-        
-        
-        # if not(task):
-        task_list = self.tasks.items()
-        
-        # TODO: implement subsetting
-        
-        score_list = []
-        # Run each task
-        
-        for model_name, model_path in model_list.items():
-            
-            
-            for name, task in task_list:
+                        'all': lambda runs: runs}
 
-                
+        score_list = []
+        task_list = []
+
+        if not log_path:
+            log_path = os.path.join(self.benchmark_path,'logs')
+
+        # Collect task folders found in the logs
+        task_paths = {t.lstrip('task').split('_',1)[1]: os.path.join(log_path,t) for t in os.listdir(log_path) if t.startswith('task_')}
+
+        # Check if scoring one or more tasks
+        if type(task) == str and task in task_paths.keys():
+            task_list = [task]
+        elif type(task) == list:
+            task_list=[t for t in task if t in task_paths.keys()]
+        else:
+            task_list = list(task_paths.keys())
+            
+        for task_name in task_list:
+            model_list = []
+            task_path = task_paths[task_name]
+
+            # Collect model folders found in the logs
+            model_paths = {m:os.path.join(task_path,m) for m in os.listdir(task_path) 
+                                        if os.path.isdir(os.path.join(task_path,m))}
+            # Check if scoring one or more models
+            if type(model) == str and model in model_paths.keys():
+                model_list = [model]
+            elif type(model) == list:
+                model_list=[t for t in model if t in model_paths.keys()]
+            else:
+                model_list = list(model_paths.keys())
+        
+            for model in model_list:            
                 # load response json
-                task_path = os.path.join(model_path,name)
-                all_runs = sorted(os.listdir(task_path))
+                model_path = model_paths[model]
+                all_runs = sorted(os.listdir(model_path))
                 
                 if run in run_selector.keys():
                     selected_runs = [run_selector[run](all_runs)]
@@ -383,12 +480,15 @@ class Bench():
                     else:
                         selected_runs = [r for r in all_runs if r in run]
 
-                
+
 
                 for run_id in selected_runs: 
                     
-                    run_path = os.path.join(task_path,run_id)
+                    run_path = os.path.join(model_path,run_id)
                     
+                    with open(os.path.join(run_path, 'run_info.yml'), 'r', encoding='utf-8') as file:
+                            run_info = yaml.safe_load(file)
+
                     prompt_id_list = [d for d in os.listdir(run_path) 
                                       if os.path.isdir(os.path.join(run_path,d))]
                     
@@ -398,58 +498,22 @@ class Bench():
                         with open(log_file, 'r', encoding='utf-8') as file:
                             log = json.load(file)
                         
-                        # print('soring',prompt_id)
-                        score_dict = log
-                        score_dict.update({'model':model_name,
-                                           'task':name,
-                                           'run':run_id,
-                                           'prompt_id':prompt_id})
+                        score_dict = run_info | log
                     
                         for step_id,step in log['steps'].items():
                             response = step['response']
-                            if not(collate):
-                                read_score = task.score(response,prompt_id)
-                                if type(read_score) ==dict:
-                                    # store dict in stepid if a dict
-                                    score_dict['steps'][step_id] = read_score
-                                else:
-                                    # store in 'score' key if not a dict
-                                    score_dict['steps'][step_id]['score'] = read_score
-                        
+                            error = step['error']
+                            
+                            read_score = None
+                            if response:
+                                read_score = self.tasks[task_name].score_response(response,prompt_id)
+                            if type(read_score) == dict:
+                                # store dict in stepid if a dict
+                                score_dict['steps'][step_id] = read_score
+                            else:
+                                # store in 'score' key if not a dict
+                                score_dict['steps'][step_id]['score'] = read_score
+                    
                         score_list.append(score_dict)
         
-        
-        
-
         return score_list
-
-
-
-    def run_task(self, target_task=None, runner=BenchRunner(), 
-                 log_dir=None, score=False): 
-        '''
-        run a specific task
-        '''
-        if not log_dir and not self.written:
-            raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
-
-        # If user doesn't specify a log_dir, default to logs folder inside bench folder
-        if not log_dir:
-            log_dir = os.path.join(self.benchmark_path, 'logs')
-
-        if not(target_task):
-            # TODO: use a generator and make this have a state
-            target_task = list[self.tasks.keys()][0] 
-
-        if isinstance(target_task, str):
-            task_object = self.tasks[target_task]
-        elif isinstance(target_task, Task):
-            task_object = target_task
-        else:
-            raise ValueError("target_task should be either a string (task name) or a Task object.")
-
-        # TODO: Add log_dir to attributes?
-        
-        return task_object.run(runner, log_dir, self.bench_name, self.benchmark_path,score)
-
-
