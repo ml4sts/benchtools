@@ -200,14 +200,14 @@ class BenchRunner():
                         response_info['stop_reason'] = response['stopReason']
 
                     except Exception as e:
-                        response_info['error'] = e
+                        response_info['error'] = str(e)
                         print(f"bedrock converse API failed with model {self.model}.\n{e}")
 
                 case _:
                     print(f"Runner type {self.runner_type} not supported")
                     return None
         except Exception as e:
-            response_info['error'] = e
+            response_info['error'] = str(e)
 
         logger.log_interaction(response_info)
         return response_info['response'], response_info['error']

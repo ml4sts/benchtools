@@ -43,7 +43,7 @@ class Logger:
 
         bench_info[f'bench_run_id'] = str(timestamp)
         self.bench_info = bench_info
-        if self.log_path != f"{bench_info['bench_path']}/logs":
+        if self.log_path != f"{bench_info['bench_path']}/logs" and not f"bench_{bench_info['bench_name']}" in self.log_path:
             self.log_path = os.path.join(self.log_path, f"bench_{bench_info['bench_name']}")
             os.makedirs(self.log_path, exist_ok=True)
 
