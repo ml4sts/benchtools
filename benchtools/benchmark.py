@@ -2,7 +2,6 @@
 # should create folder structure
 import os
 import shutil
-import requests
 import yaml
 import json
 # from pathlib import Path # ???
@@ -295,6 +294,8 @@ class Bench():
         # if ignore_text.status_code == 200:
         with open(".gitignore", 'a') as f:
             f.write(ignore_text)
+        os.system("git add -A")
+        os.system("git commit -m \"Initial commit by BenchTools\"")
         os.chdir(current_dir)
 
 
@@ -318,6 +319,50 @@ class Bench():
         log_dir: str
             Path to where the logs should be saved
         '''
+
+        commit_hash = None
+        commit_message = None
+        if os.path.isdir(os.path.join(self.benchmark_path, ".git")):
+            import subprocess
+            from datetime import datetime
+
+            current_dir = os.getcwd()
+            os.chdir(self.benchmark_path)
+            try:
+                out = subprocess.run(
+                        "git diff",
+                        shell=True,
+                        capture_output=True,
+                        text=True)
+                if out.stdout.strip() != '':
+                    # Get current date and time
+                    string_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    subprocess.run(
+                        f"git add -A",
+                        shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+                    subprocess.run(
+                        f"git commit -m \"Bench run commit: {string_timestamp}\"",
+                        shell=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+
+                commit = subprocess.run(
+                        "git log  -1 --oneline",
+                        shell=True,
+                        capture_output=True,
+                        text=True).stdout.strip()
+                commit_hash, commit_message = commit.split(' ', 1)
+
+            except:
+                print("Error occurred when trying to get commit info")
+            os.chdir(current_dir)
+        else:
+            print("git might not be initialized in your system. Couldn't commit before run")
+
+
         # If user doesn't specify a log_dir, default to logs folder inside bench folder
         if not log_dir and not self.written:
             raise ValueError("Benchmark has not been written to disk yet, need to write in order to log.")
@@ -326,7 +371,13 @@ class Bench():
         
         # Initiaize a logger object that will handle the logging of the info and interactions
         logger = Logger(log_dir)
-        logger.log_bench_info(bench_info={'bench_name': self.bench_name, 'bench_path': self.benchmark_path, 'concept': self.concept})
+        logger.log_bench_info(
+            bench_info={
+                'bench_name': self.bench_name,
+                'bench_path': self.benchmark_path,
+                'concept': self.concept,
+                'commit_hash': commit_hash,
+                'commit_message': commit_message})
         
         # Run each task
         for name, task in self.tasks.items():
@@ -391,7 +442,7 @@ class Bench():
             log_path = os.path.join(self.benchmark_path,'logs')
 
         # Collect task folders found in the logs
-        task_paths = {t.rsplit('task_')[1]:os.path.join(log_path,t) for t in os.listdir(log_path)}
+        task_paths = {t.lstrip('task').split('_',1)[1]: os.path.join(log_path,t) for t in os.listdir(log_path) if t.startswith('task_')}
 
         # Check if scoring one or more tasks
         if type(task) == str and task in task_paths.keys():
@@ -429,7 +480,7 @@ class Bench():
                     else:
                         selected_runs = [r for r in all_runs if r in run]
 
-                
+
 
                 for run_id in selected_runs: 
                     
@@ -452,9 +503,11 @@ class Bench():
                         for step_id,step in log['steps'].items():
                             response = step['response']
                             error = step['error']
-
-                            read_score = self.tasks[task_name].score_response(response,prompt_id)
-                            if type(read_score) ==dict:
+                            
+                            read_score = None
+                            if response:
+                                read_score = self.tasks[task_name].score_response(response,prompt_id)
+                            if type(read_score) == dict:
                                 # store dict in stepid if a dict
                                 score_dict['steps'][step_id] = read_score
                             else:
