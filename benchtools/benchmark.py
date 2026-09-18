@@ -4,6 +4,8 @@ import os
 import shutil
 import yaml
 import json
+import subprocess
+from datetime import datetime
 # from pathlib import Path # ???
 from pathlib import PurePath
 from .task import Task
@@ -281,6 +283,8 @@ class Bench():
         benchmark_path: str
             The path to the benchmark folder
         '''
+        # To initialize a Git repository for the benchmark we change directory to
+        # the Benchmark path while saving the path we want to get back to
         current_dir = os.getcwd()
         os.chdir(benchmark_path)
         try:
@@ -288,7 +292,7 @@ class Bench():
             os.system("git branch -m main")
         except:
             print("git might not be initialized in your system. Please run \"git init . \" when setup")
-        # Get python gitignore template and create .gitignore
+        # Get package gitignore template and create .gitignore
         ignore_text = load_asset('.gitignore')
         # ignore_text = requests.get("https://raw.githubusercontent.com/github/gitignore/refs/heads/main/Python.gitignore")
         # if ignore_text.status_code == 200:
@@ -322,9 +326,9 @@ class Bench():
 
         commit_hash = None
         commit_message = None
+        # If the Benchmark directory is a Git repo we make a commit to store
+        # the current state of the benchmark for logging purposes
         if os.path.isdir(os.path.join(self.benchmark_path, ".git")):
-            import subprocess
-            from datetime import datetime
 
             current_dir = os.getcwd()
             os.chdir(self.benchmark_path)
