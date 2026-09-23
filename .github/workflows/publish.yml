@@ -4,7 +4,7 @@ name: deploydocs
 on:
   push:
     branches:
-    - main
+    - demo_enhancement
 
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
