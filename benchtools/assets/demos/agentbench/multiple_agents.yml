@@ -1,0 +1,4 @@
+runner_type: agent
+model: 
+ - 'my_agent'
+ - 'my_smolagent'

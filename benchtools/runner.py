@@ -7,6 +7,8 @@ import pandas as pd
 from pathlib import Path
 from .logger import Logger
 from ollama import chat, ChatResponse, Client
+from .agent import Agent, AgentResult
+from .agent_loader import load_agent_from_module
 
 
 # possibly resurected for batch runs? 
@@ -15,7 +17,7 @@ class BenchRunner():
     A BenchRunner holds information about how a task is going to be run. 
     '''
 
-    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None, model_params=None):
+    def __init__(self, runner_type='ollama', model='gemma3:1b', api=None, model_params=None, agent=None):
         '''
         The constructor for BenchRunner will have default values for all attributes to have a full default runner ready to be used for running any task.
         P.S. Requires Ollama to be installed and running on your machine.
@@ -28,6 +30,8 @@ class BenchRunner():
             The URL of the API to use for accessing an LLM. If None, the default API will be http://localhost:11434 as this is used by ollama by default
         model_params: dict
             A dictionary with inference parameters to be used for the model generation such as temperature, max_tokens, top_p, stop_sequence, etc.
+        agent: Agent
+            An agent object adapted to fit the basic Agent methods and outputs
         '''
 
         self.runner_type = runner_type
@@ -35,15 +39,18 @@ class BenchRunner():
         api_default = {'ollama_api': "http://localhost:11434",
                            'openai':"https://api.openai.com/v1",
                            'ollama':"",
-                           'bedrock': ""}
+                           'bedrock': "",
+                           'agent': ""}
         if api:
             self.api = api 
         else:
             self.api = api_default[runner_type]
 
         self.inference_parameters= model_params
+
+        self.agent = agent
     
-    @staticmethod
+    @classmethod
     def from_file(cls, file_path):
         runners = []
         model_params = {}
@@ -52,17 +59,22 @@ class BenchRunner():
         
         with open(os.path.join(file_path), 'r') as f:
             run_info = yaml.safe_load(f)
-        type= run_info.pop('runner_type', 'ollama')
+        type = run_info.pop('runner_type', 'ollama')
+        if type == 'agent':
+            agent_module_name = run_info.pop('agent', 'my_agent.py')
+            agent_module_path = os.path.join(os.path.dirname(file_path), agent_module_name)
+            agent = load_agent_from_module(agent_module_path, agent_module_name)
+        
         model= run_info.pop('model', 'gemma3:1b')
         api= run_info.pop('api', None)
 
         # Any remaining keys are considered model parameters
         model_params = run_info if run_info else None
 
-        return cls(type, model, api, model_params)
+        return cls(type, model, api, model_params, agent)
 
     def __str__(self):
-        return f'{self.model} via {self.runner_type}'
+        return f'{self.model} via {self.runner_type}' # TODO: Fix to work with agent
 
     def run(self, prompt_id, prompt, values,  format, logger):
         '''
@@ -72,9 +84,10 @@ class BenchRunner():
             'runner_type': self.runner_type,
             'model': self.model,
             'api': self.api,
-            'inference_parameters': self.inference_parameters
+            'inference_parameters': self.inference_parameters,
+            'agent_type': self.agent.agent_type
         }
-        logger.log_runner_info(runner_info)
+        logger.log_runner_info(runner_info) # TODO: Fix to include agent info
 
         response_info = {
             'prompt_id': prompt_id,
@@ -87,10 +100,16 @@ class BenchRunner():
             'response_tokens': 0,
             'total_tokens': 0,
             'stop_reason': None,
+            'steps': None,
         }
 
         try:
             match self.runner_type:
+                case "agent":
+                    # logger.log_agent_info()
+                    completion = self.agent.run(prompt) # Completion is AgentResponse object
+                    response_info['response'] = completion.final_answer
+                    response_info['steps'] = completion.steps
                 case "ollama":
                     completion: ChatResponse = chat(
                         model=self.model,

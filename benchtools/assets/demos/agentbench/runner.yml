@@ -1,0 +1,5 @@
+runner_type: agent
+agent: 'test_agent.py'
+temperature: 0.5
+max_tokens: 17
+top_p: 0.150
