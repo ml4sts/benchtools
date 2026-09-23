@@ -27,7 +27,7 @@ Resolving deltas: 100% (513/513), done.
 
 
 See it creates a folder
-```{code-block} bash
+```{code-cell} bash
 :tags: ["skip-execution"]
 ls
 ```
