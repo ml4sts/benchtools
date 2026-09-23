@@ -601,7 +601,7 @@ Let's run the scorer to score the LLM on the task at hand.
 benchtool score .
 ```
 
-```{code-block} consol
+```{code-block} console
 Saved Eval: ./eval_1780069448
 ```
 
