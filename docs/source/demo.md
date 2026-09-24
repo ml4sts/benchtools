@@ -247,7 +247,7 @@ it creates a `logs` folder if one does not already exist
 
 
 ### Exploring a yaml benchmark
-```{code-cell} console
+```{code-block} console
 :filename tasks.yml 
 - name: product
   template: "find the product of {a} and {b}"
