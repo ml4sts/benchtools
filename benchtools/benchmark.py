@@ -322,6 +322,8 @@ class Bench():
             define which runner should be used for the task.
         log_dir: str
             Path to where the logs should be saved
+        Score: bool
+            request the task run to be scored immedietly
         '''
 
         commit_hash = None
@@ -382,16 +384,38 @@ class Bench():
                 'concept': self.concept,
                 'commit_hash': commit_hash,
                 'commit_message': commit_message})
+
+        response_lists = []
         
         # Run each task
         for name, task in self.tasks.items():
-            self.run_task(task, runner, logger)
+            response_list.append(self.run_task(task, runner, logger))
+
+        if score:
+            score_list = self.score(model=runner.model, run='last')
+            return response_list, score_list
+        else:
+            return reponse_list
 
 
-
-    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None):
+    def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None, score=False):
         '''
         run a specific task
+        target_task:
+            Task instance or a task name
+        runner: BenchRunner
+            define which runner should be used for the task.
+        log_dir: str
+            Path to where the logs should be saved
+        logger: Logger
+            Logger instance used for logging the run
+        Score: bool
+            request the task run to be scored immedietly
+
+        Returns
+        -------
+        response : list
+            model response(s)
         '''
 
         # If user doesn't specify a log_dir, default to logs folder inside bench folder
@@ -411,10 +435,12 @@ class Bench():
         else:
             raise ValueError("target_task should be either a string (task name) or a Task object.")
 
-
-        return task_object.run(runner, log_dir, logger)
-
-
+        task_responses = task_object.run(runner, log_dir, logger)
+        if not score:
+            return task_responses
+        else:
+            task_run_scores = self.score(task=task_object.task_id, model=runner.model, run='last')
+            return task_responses, task_run_scores
 
 
     def score(self, log_path=None, task=None, model=None, run='last'):
