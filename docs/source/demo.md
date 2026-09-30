@@ -39,7 +39,7 @@ benchtools
 
 Then install: 
 ::::::{important}
-this needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
+the following needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
 :::::::
 
 
@@ -145,7 +145,7 @@ a,b,reference
 ```
 
 :::::{important}
-The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks(each row is a subtask)
+The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks (each row is a subtask)
 :::::::
 
 we can look at the other task too:
@@ -172,19 +172,18 @@ let's install the other benchmark to run it
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool demo install -n listbench
-
 ```
 
 
 We can see the help for the command
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool run --help
 ```
 
-```{code-block} console
+```{code-cell} console
 Usage: benchtool run [OPTIONS] BENCHMARK_PATH
 
   Running the benchmark and generating logs , help="The path to the benchmark
@@ -207,6 +206,11 @@ this will be filled in later
 
 
 We can run a benchmark by name
+
+::::{note}
+The default runner is ollama. Make sure `ollama` is running in advence.
+:::::::
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool run listbench/
@@ -268,7 +272,7 @@ ls logs/gemma3/
 ```
 
 ```{code-block} console
-product	symbol
+product	product_combination symbol
 
 ```
 then per task
@@ -389,9 +393,11 @@ Options:
 
 Commands:
   add-task  Set up a new task.
+  demo      demo benchmarks package with benchtools
   init      Initializes a new benchmark.
-  run       Running the benchmark and generating logs , help="The path to...
+  run       Run the benchmark, generate logs, and optionally sore
   run-task  Running the tasks and generating logs
+  score     Running the benchmark and generating logs Parameters:...
 
 ```
 
@@ -501,6 +507,7 @@ cat tasks.yml
 
 ```
 
+Let's mannually edit the task to make a good example.
 ```{code-cell} bash
 :tags: ["skip-execution"]
 nano tasks.yml 
@@ -509,10 +516,11 @@ nano tasks.yml
 
 ```{code-block} console
 - description: 'animal identifcaiton '
+  format: StringAnswer
   id_generator: concatenator_id_generator
   name: animal
   reference: ['zebra', 'tiger', "cheetah"]
-  scorer: exact_match
+  scorer: contains
   template: an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?
   values:
     pattern:
@@ -533,16 +541,95 @@ nano tasks.yml
 ```{code-cell} bash
 :tags: ["skip-execution"]
 ls
+```
+
+```{code-block}
 about.md	info.yml	tasks.yml
 
 ```
-
 
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool run .
 ```
+
+Let's see what happened after running the benchmark
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls
+
+```
+
+```{code-block}
+about.md	info.yml	logs tasks.yml
+```
+
+Now we have a new `logs/` folder. Let's explore its contents 
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/
+```
+
+```{code-block} 
+gemma3
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/
+```
+
+```{code-block} 
+animal
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal
+```
+
+```{code-block} 
+1780063281
+```
+
+`1780063281` is the timestamp of when the benchmark was run which represents a single run of the benchmark
+
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal/1780063281
+```
+
+
+```{code-block} 
+animal_spots-hairy-paws  animal_stripes-hairy-hooves  animal_stripes-hairy-paws  run_info.yml
+```
+
+Each run will have a folder for the different subtasks  
+
+
+Let's run the scorer to score the LLM on the task at hand.
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+benchtool score .
+```
+
+```{code-block} console
+Saved Eval: ./eval_1780069448
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+cat ./eval_1780069448.json
+```
+
+```{code-block} console
+[{"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_spots-hairy-paws", "error": "None", "values": {"pattern": "spots", "skin": "hairy", "feet": "paws", "prompt_id": "animal_spots-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a spots, paws, and hairy. what kind of animal is it?", "response": "{\n    \"answer\": \"A dog\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-hooves", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "hooves", "prompt_id": "animal_stripes-hairy-hooves"}, "steps": {"0": {"prompt": "an animal has a stripes, hooves, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}", "score": 1}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-paws", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "paws", "prompt_id": "animal_stripes-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a stripes, paws, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}]
+```
+
 
 
 ## Get updates
