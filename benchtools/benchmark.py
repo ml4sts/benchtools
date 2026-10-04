@@ -313,7 +313,7 @@ class Bench():
             task_object.write(self.benchmark_path)
 
 
-    def run(self, runner=BenchRunner(), log_dir=None):
+    def run(self, runner=BenchRunner(), log_dir=None, score=False):
         '''
         Run the benchmark by running each task in the benchmark and logging the interactions.
         Parameters:
@@ -389,13 +389,13 @@ class Bench():
         
         # Run each task
         for name, task in self.tasks.items():
-            response_list.append(self.run_task(task, runner, logger))
+            response_lists.append(self.run_task(task, runner, logger))
 
         if score:
             score_list = self.score(model=runner.model, run='last')
-            return response_list, score_list
+            return response_lists, score_list
         else:
-            return reponse_list
+            return reponse_lists
 
 
     def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None, score=False):
