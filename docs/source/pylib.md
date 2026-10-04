@@ -30,7 +30,7 @@ from benchtools import Task
 
 tt = Task('greeting','Hello there','hi', 'contains')
 ```
-<!-- there -->
+
 
 ```{code-cell}
 response = tt.run()
@@ -46,13 +46,12 @@ tiny_bench.add_task(tt)
 
 There are multiple ways to creating a Task object
 ```
-add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
+add_task = Task.from_txt_csv('folderbench/tasks/add')
 tiny_bench.add_task(add_task)
 ```
 
 For demo purposes we delete the folder, if it exists, before running. 
-```{code-cell}
-%%bash
+```{code-cell} bash
 rm  -rf tiniest_demo
 ```
 
@@ -63,47 +62,37 @@ tiny_bench.run()
 ```
 
 
-```{code-cell}
-pre_built_yml = Bench.from_yaml('../../demos/listbench')
+```{code-cell} python
+pre_built_yml = Bench.from_yaml('listbench/')
 pre_built_yml.written
 ```
 
-we can access individual tasks:
+we can access individual tasks, for example:
 
-```{code-cell}
-pre_built_yml.tasks['product'].variant_values
+```{code-cell} python
+print(pre_built_yml.tasks['product'].variant_values)
 ```
 
+```
+[{'a': 2, 'b': 3}, {'a': 3, 'b': 4}, {'a': 5, 'b': 5}]
+```
 
+Make sure `ollama` is running in advence on your system to run the benchmark
 
 ```{code-cell}
 pre_built_yml.run()
 ```
 
-```{code-cell}
-demo_bench = Bench.from_yaml('../../demos/listbench')
-```
+Logs will be found in `listbench/logs`
 
 
-<!-- ```{code-cell}
-demo_bench = Bench.load('../../demobench')
-``` 
--->
-
-
-
-
-
-## Creating a Benchmark object
-<!-- Testing which is better -->
-
+## Runner class
 ```{eval-rst}
 .. automodule:: benchtools.runner
     :members:
 ```
 
 ## Benchmark class
-<!-- Testing which is better -->
 ```{eval-rst}
 .. autoclass:: benchtools.benchmark.Bench
     :members:
@@ -111,7 +100,6 @@ demo_bench = Bench.load('../../demobench')
 
 
 ## Task class
-<!-- Testing which is better -->
 ```{eval-rst}
 .. autoclass:: benchtools.task.Task
     :members:
@@ -120,8 +108,7 @@ demo_bench = Bench.load('../../demobench')
 
 
 ## BetterBench
-<!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.task.Task
+.. autoclass:: benchtools.betterbench.BetterCheckList
     :members:
 ```
