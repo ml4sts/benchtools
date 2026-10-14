@@ -1,0 +1,4 @@
+runner_type: ollama
+model: 
+ - 'llama3.2'
+ - 'gemma3'

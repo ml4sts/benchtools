@@ -53,7 +53,7 @@ benchtools
 
 Then install: 
 ::::::{important}
-this needs to be `benchtools/` for it to be the path; `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
+the following command needs to specifically say `benchtools/` for it to be the path; otherwise `benchtools` will try to pull from pypi. Alternatively, `cd benchtools` then `pip install .`
 :::::::
 
 
@@ -115,7 +115,7 @@ ls
 ```
 
 ```{code-block} console
-README.md	tasks
+README.md  bench_info.yml  custom_scorer.py  multiple_models.yml  runner.yml  tasks 
 ```
 
 The tasks folder is the main content: 
@@ -128,7 +128,7 @@ ls
 
 it has two tasks, one folder for each
 ```{code-block} console
-add	symbols
+add  multiply  symbols
 ```
 
 We can look inside one: 
@@ -159,7 +159,7 @@ a,b,reference
 ```
 
 :::::{important}
-The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally and `id` if you have an alternative naming scheme for the subtasks(each row is a subtask)
+The columns in the csv match the variables in `{}` in the template, plus a `reference` column for the answer (this can be empty, but the heading should be there), and optionally an `id` if you have an alternative naming scheme for the subtasks (each row is a subtask)
 :::::::
 
 we can look at the other task too:
@@ -174,11 +174,16 @@ what is the name for the following symbol? {symb}
 
 ```{code-block}  console
 :filename: symbols/values.csv 
-symb, reference
-@, at
-#, pound
-\$, dollar sign
+symb, reference, exmeta
+@, at, email
+#, pound, number
+$, dollar sign, currency
 ```
+
+
+:::::{notice}
+`exmeta` here is an additional refernence for the values that will be shown in the logs and could be used later by the user in the custom scorer
+:::::::
 
 ## Running a benchmark
 
@@ -186,19 +191,18 @@ let's install the other benchmark to run it
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool demo install -n listbench
-
 ```
 
 
 We can see the help for the command
 
 
-```{code-cell} bash
+```{code-block} bash
 :tags: ["skip-execution"]
 benchtool run --help
 ```
 
-```{code-block} console
+```{code-cell} console
 Usage: benchtool run [OPTIONS] BENCHMARK_PATH
 
   Running the benchmark and generating logs , help="The path to the benchmark
@@ -221,6 +225,11 @@ this will be filled in later
 
 
 We can run a benchmark by name
+
+::::{note}
+The default runner is ollama. Make sure `ollama` is running in advence.
+:::::::
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool run listbench/
@@ -231,6 +240,12 @@ Running list_bench now
 
 ```
 
+:::::{warning}
+When a run CLI command (or library method) is called for a benchmark. The status of the benchmark will be automatically commited and the commit hash will be included in the logs if the benchmark was a repository to ensure repeatability
+:::::::
+
+
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
 cd listbench/
@@ -239,7 +254,7 @@ ls
 ```
 
 ```{code-block} console
-info.yml	logs		tasks.yml
+bench_info.yml  custom_response.py  custom_scorer.py  logs  runner.yml  tasks.yml
 
 ```
 
@@ -254,14 +269,36 @@ it creates a `logs` folder if one does not already exist
   values:
      a: [2,3,5]
      b: [3,4,5]
-  reference: [6,12,25]
-  scorer: "exact_match"
+  reference: calculated
+  scorer: "calculated_answer"
+  format: "IntAnswer"
+- name: product_combination
+  template: "find the product of {a} and {b}"
+  values:
+     a: [2,3,5]
+     b: [3,4,5]
+  reference: calculated
+  value_combinations: combinations
+  scorer: 
+    - calculated_answer
+    - add_justify
+  format: "IntJustification"
 - name: symbol
   template: "what is the name for the following symbol? {symb}"
   values: 
      symb: ["@","$","#"]
+     exmeta: ['internet', 'world', 'internet']
   reference: ["at", "dollar sign", "pound"]
   scorer: "contains"
+- name: symbol_dir
+  template: "what direction does the {symb} symbol point? and what is its name "
+  values: 
+     symb: ["^","<",">"]
+     name: [carat, less,greater]
+     direction: ["up", "left", "right"]
+  scorer: check_name_dir
+  reference: calculated
+  format: NameSource
 ```
 
 ```{code-cell} bash
@@ -270,37 +307,40 @@ ls logs/
 ```
 
 ```{code-block} console
-gemma3
+task_product  task_product_combination  task_symbol  task_symbol_dir
 
 ```
 
-there will be a folder per log
+there will be a folder per task
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-ls logs/gemma3/
+ls logs/task_product/
 ```
 
 ```{code-block} console
-product	symbol
-
+qwen.qwen3-32b-v1:0
 ```
-then per task
+then per LLM
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-ls logs/gemma3/product/
+ls logs/task_product/qwen.qwen3-32b-v1:0
 ```
 
 ```{code-block} console
-1771533769
-
+1783715070_1783715082
 ```
+
 then per run, named by the timestamp of the run start
 
+:::::{notice}
+There are two timestamps here. The first one refers to the entire benchmark run timestamp whereas the second one is the timestamp of running the specific task from the benchmark run. This way we can group multiple task run together by the benchmark's run timestamp
+:::::::
+
 ```{code-cell} bash
 :tags: ["skip-execution"]
-ls logs/gemma3/product/1771533769/
+ls logs/task_product/qwen.qwen3-32b-v1:0/1783715070_1783715082
 ```
 
 ```{code-block} console
@@ -310,37 +350,55 @@ product_2-3	product_3-4	product_5-5	run_info.yml
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cat logs/gemma3/product/1771533769/run_info.yml 
+cat logs/task_product/qwen.qwen3-32b-v1:0/1783715070_1783715082/run_info.yml 
 ```
 
 ```{code-block} console
-bench_name: list_bench
-benchmark_path: listbench/
-description: null
+api: ''
+bench_name: listbench
+bench_path: listbench
+bench_run_id: '1783715070'
+commit_hash: null
+commit_message: null
+concept: simple example of a benchmark defined by a task list in a yaml file, includes
+  custom scoring and reponse types
+description: "a template based task with template: find the product of {a} and {b} and values like:\n\
+  \n |    |   a |   b |   reference |\n|---:|----:|----:|------------:|\n|  0 |  \
+  \ 2 |   3 |           6 |\n|  1 |   3 |   4 |           12 |\n|  2 |   5 |   5 |\
+  \          25 |"
+format: IntAnswer
 id_generator: concatenator_id_generator
-log_path: listbench/logs/gemma3/product/1771533769
+inference_parameters: null
+log_path: listbench/logs/task_product
+model: qwen.qwen3-32b-v1:0
 name: product
 reference:
-- 6
-- 12
-- 25
-run_id: '1771533769'
+  product_2-3: 6
+  product_3-4: 12
+  product_5-5: 25
+  runner_type: bedrock
 scorer: exact_match
+task_run_id: '1783715070_1783715082'
+task_timestamp: '1783715082'
 template: find the product of {a} and {b}
+values:
 values:
 - a: 2
   b: 3
+  prompt_id: product_2-3
 - a: 3
   b: 4
+  prompt_id: product_3-4
 - a: 5
   b: 5
+  prompt_id: product_5-5
 
 ```
 it stored overall information for the run
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-ls logs/gemma3/product/1771533769/product_2-3/
+ls logs/task_product/qwen.qwen3-32b-v1:0/1783715070_1783715082/product_2-3/
 ```
 
 ```{code-block} console
@@ -348,10 +406,10 @@ log.json	log.txt
 
 ```
 
-and a log for each prompt in both text and json format
+and a log for each prompt in both text and json format. The json file includes more details about the subtask and its metadata whereas the text file holds only a prompt and a response to simulate a conversation thread
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cat logs/gemma3/product/1771533769/product_2-3/log.txt 
+cat logs/task_product/qwen.qwen3-32b-v1:0/1783715070_1783715082/product_2-3/log.txt 
 ```
 
 ```{code-block} console
@@ -359,28 +417,49 @@ cat logs/gemma3/product/1771533769/product_2-3/log.txt
 find the product of 2 and 3
 
 ------ response ------
-The product of 2 and 3 is 2 * 3 = 6.
-
-So the answer is $\boxed{6}$.
-
+{
+  "answer": 6
+}
 
 ```
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
-cat logs/gemma3/product/1771533769/product_2-3/log.json 
+cat logs/task_product/qwen.qwen3-32b-v1:0/1783715070_1783715082/product_2-3/log.json 
 ```
 
 ```{code-block} console
 {
     "task_name": "product",
     "template": "find the product of {a} and {b}",
-    "prompt_name": "product_2-3",
-    "error": "None",
     "steps": {
         "0": {
+            "prompt_id": "product_2-3",
             "prompt": "find the product of 2 and 3",
-            "response": "The product of 2 and 3 is 2 * 3 = 6.\n\nSo the answer is $\\boxed{6}$."
+            "values": {
+                "a": 2,
+                "b": 3,
+                "prompt_id": "product_2-3"
+            },
+            "format": {
+                "properties": {
+                    "answer": {
+                        "title": "Answer",
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "answer"
+                ],
+                "title": "IntAnswer",
+                "type": "object"
+            },
+            "response": "{\n  \"answer\": 6\n}",
+            "error": null,
+            "prompt_tokens": 21,
+            "response_tokens": 10,
+            "total_tokens": 31,
+            "stop_reason": "end_turn"
         }
     }
 }
@@ -403,9 +482,11 @@ Options:
 
 Commands:
   add-task  Set up a new task.
+  demo      demo benchmarks package with benchtools
   init      Initializes a new benchmark.
-  run       Running the benchmark and generating logs , help="The path to...
+  run       Run the benchmark, generate logs, and optionally sore
   run-task  Running the tasks and generating logs
+  score     Running the benchmark and generating logs Parameters:...
 
 ```
 
@@ -515,6 +596,7 @@ cat tasks.yml
 
 ```
 
+Let's mannually edit the task to make a good example.
 ```{code-cell} bash
 :tags: ["skip-execution"]
 nano tasks.yml 
@@ -523,10 +605,11 @@ nano tasks.yml
 
 ```{code-block} console
 - description: 'animal identifcaiton '
+  format: StringAnswer
   id_generator: concatenator_id_generator
   name: animal
   reference: ['zebra', 'tiger', "cheetah"]
-  scorer: exact_match
+  scorer: contains
   template: an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?
   values:
     pattern:
@@ -547,16 +630,95 @@ nano tasks.yml
 ```{code-cell} bash
 :tags: ["skip-execution"]
 ls
+```
+
+```{code-block}
 about.md	info.yml	tasks.yml
 
 ```
-
 
 
 ```{code-cell} bash
 :tags: ["skip-execution"]
 benchtool run .
 ```
+
+Let's see what happened after running the benchmark
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls
+
+```
+
+```{code-block}
+about.md	info.yml	logs tasks.yml
+```
+
+Now we have a new `logs/` folder. Let's explore its contents 
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/
+```
+
+```{code-block} 
+gemma3
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/
+```
+
+```{code-block} 
+animal
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal
+```
+
+```{code-block} 
+1780063281
+```
+
+`1780063281` is the timestamp of when the benchmark was run which represents a single run of the benchmark
+
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+ls logs/gemma3/animal/1780063281
+```
+
+
+```{code-block} 
+animal_spots-hairy-paws  animal_stripes-hairy-hooves  animal_stripes-hairy-paws  run_info.yml
+```
+
+Each run will have a folder for the different subtasks  
+
+
+Let's run the scorer to score the LLM on the task at hand.
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+benchtool score .
+```
+
+```{code-block} console
+Saved Eval: ./eval_1780069448
+```
+
+```{code-cell} bash
+:tags: ["skip-execution"]
+cat ./eval_1780069448.json
+```
+
+```{code-block} console
+[{"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_spots-hairy-paws", "error": "None", "values": {"pattern": "spots", "skin": "hairy", "feet": "paws", "prompt_id": "animal_spots-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a spots, paws, and hairy. what kind of animal is it?", "response": "{\n    \"answer\": \"A dog\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-hooves", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "hooves", "prompt_id": "animal_stripes-hairy-hooves"}, "steps": {"0": {"prompt": "an animal has a stripes, hooves, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}", "score": 1}}, "model": "gemma3", "task": "animal", "run": "1780063281"}, {"task_name": "animal", "template": "an animal has a {pattern}, {feet}, and {skin}. what kind of animal is it?", "prompt_id": "animal_stripes-hairy-paws", "error": "None", "values": {"pattern": "stripes", "skin": "hairy", "feet": "paws", "prompt_id": "animal_stripes-hairy-paws"}, "steps": {"0": {"prompt": "an animal has a stripes, paws, and hairy. what kind of animal is it?", "response": "{\n  \"answer\": \"A zebra!\"\n}\n", "score": 0}}, "model": "gemma3", "task": "animal", "run": "1780063281"}]
+```
+
 
 
 ## Get updates

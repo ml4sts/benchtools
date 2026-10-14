@@ -1,2 +1,5 @@
 runner_type: ollama
 model: 'llama3.2'
+temperature: 0.5
+max_tokens: 17
+top_p: 0.150

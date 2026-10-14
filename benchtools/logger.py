@@ -16,127 +16,136 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def init_log_folder(log_path, model, task_info: dict, id_prompt_list: list, benchmark=None, benchmark_path=None):
-    ''''
-    Creates the log directories and sub-directories for a specific task.
-    
-    Parameters:
-    -------------
-    log_path: str
-        The path to the log dir where the log file will be created.
-    model: 
-        The name of the model running the task
-    task_info: dict
-        A dictionary with all the task's info for which the logger is being initialized.
+class Logger:
+    ''' 
+    A class that holds all information and methods related to logging the interactions between the runner and the model. The logger will create the logging structure for each run of a task, and will log the prompt, response, and any other relevant information such as tokens used, stop reason, errors, etc...
     '''
-    # Get timestamp without fractions of seconds
-    timestamp = int(datetime.datetime.now().timestamp())
 
-    model_dir = os.path.join(log_path, model)
-    if not os.path.exists(model_dir):
-        os.mkdir(model_dir)
+    def __init__(self, log_path):
+        '''
+        Initializes the logger by creating the log directory if it doesn't exist.
 
-    task_dir = os.path.join(model_dir, task_info['name'])
-    if not os.path.exists(task_dir):
-        os.mkdir(task_dir)
+        Parameters:
+        -------------
+        log_path: str
+            The path to the log dir where the log file will be created.
+        '''
+        self.log_path = log_path
+        # self.init_log_directory() # Create the log folder structure for the task
+        os.makedirs(self.log_path, exist_ok=True)
 
-    run_dir = os.path.join(task_dir, str(timestamp))
-    os.mkdir(run_dir)
-
-    # Create run_info.yml with all the metadata
-    run_info =  task_info
-    if benchmark:
-        run_info['bench_name'] = benchmark
-        run_info['benchmark_path'] = benchmark_path
-    run_info['run_id'] = str(timestamp)
-    run_info['log_path'] = str(run_dir)
-
-    # Add prompt_id of each value set to values
-    for idx, (prompt_id, _) in enumerate(id_prompt_list):
-        run_info['values'][idx].update({'prompt_id': prompt_id})
-    
-    with open(os.path.join(run_dir,'run_info.yml'), 'w') as f:
-        yaml.dump(run_info, f)
+        self.bench_info = {}
 
 
+    def log_bench_info(self, bench_info):
+        # Get timestamp without fractions of seconds
+        timestamp = int(datetime.datetime.now().timestamp())
 
-    {
-        # TODO: What can we benifit from the logger?
-        # log_file = os.path.join(log_path, f'{task_name}_log.txt')
-        # print(f"\nLOGPATH: {log_file}\n") # Debugging
+        bench_info[f'bench_run_id'] = str(timestamp)
+        self.bench_info = bench_info
+        if self.log_path != f"{bench_info['bench_path']}/logs" and not f"bench_{bench_info['bench_name']}" in self.log_path:
+            self.log_path = os.path.join(self.log_path, f"bench_{bench_info['bench_name']}")
+            os.makedirs(self.log_path, exist_ok=True)
 
-        # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        # handler = logging.FileHandler(log_file)
-        # handler.setFormatter(formatter)
 
-        # logger = logging.getLogger(task_name)
-        # logger.setLevel(logging.INFO) # TODO add as an argument to the init functuion to use more options 
-        # logger.addHandler(handler)
+    def log_task_info(self, task_info, id_prompt_list: list):
+        '''
+        Logs the task info to the log folder specified by the user
 
-        # print(logger) # Debugging
-        # return logger
-    }
+        Parameters:
+        -------------
+        task_info: dict
+            A dictionary with all the task's info for which the logger is being initialized.
+        '''
+        # Get timestamp without fractions of seconds
+        timestamp = int(datetime.datetime.now().timestamp())
 
-    return run_dir
+        task_info['task_timestamp'] = str(timestamp)
+        if self.bench_info:
+            task_info['task_run_id'] = f"{self.bench_info['bench_run_id']}_{task_info['task_timestamp']}"
+        else:
+            task_info['task_run_id'] = task_info['task_timestamp']
+            
+        self.task_info = task_info
 
-def log_interaction(run_log_dir, prompt_id, prompt, response, error,values,score=None):
-    """
-    Logs the event to the log folder specified by the user
+        self.task_log_path = os.path.join(self.log_path, f"task_{task_info['name']}")
+        os.makedirs(self.task_log_path, exist_ok=True)
+        
+        # with open(os.path.join(run_log_dir, "task_info.yml"), 'w') as f:
+            # yaml.dump(task_info, f)
 
-    Parameters:
-    -------------
-    run_log_dir: str
-        Path to a run-specific directory in a log directory specified in a call to the run method
-    prompt_id: str
-        Index of the sub-task being logged
-    prompt: str
-        The input provided to the model.
-    response: str
-        The output generated by the model.
-    error: str
-        Any error from the runner
-    """
+        # Add prompt_id of each value set to values
+        for idx, (prompt_id, _) in enumerate(id_prompt_list):
+            task_info['values'][idx].update({'prompt_id': prompt_id})
 
-    # Making this into a directory in case more files (possibly steps) were to be held in here
-    prompt_dir = os.path.join(run_log_dir, prompt_id)
-    os.mkdir(prompt_dir)
 
-    with open(os.path.join(prompt_dir, "log.txt"), 'w') as f:
-        f.write("------ prompt ------\n")
-        f.write(f"{prompt}\n\n")
-        f.write("------ response ------\n")
-        f.write(f"{response}\n\n")
-    
-    # Gather run_info info
-    with open(os.path.join(run_log_dir, "run_info.yml"), 'r') as f:
-            run_info = yaml.safe_load(f) 
+    def log_runner_info(self, runner_info):
+        ''''
+        Creates the log directories and sub-directories for a specific task.
 
-    
-    step_trace = {
-        'task_name': run_info['name'],
-        'template': run_info['template'],
-        'prompt_id': prompt_id,
-        'error': error,
-        'values':values,
-        'steps':{ 
-            0: { # In case a subtask had more than one step we can always make the 0 dynamic
-                'prompt': prompt,
-                'response': response,
+        Parameters:
+        -------------
+        runner_info: dict
+            Dictionary that contains information about the runner of a task
+        '''
+
+        self.model_dir = os.path.join(self.task_log_path, runner_info['model'])
+        os.makedirs(self.model_dir, exist_ok=True)
+
+        self.run_dir = os.path.join(self.model_dir, self.task_info['task_run_id'])
+        os.makedirs(self.run_dir, exist_ok=True)
+ 
+        self.runner_info = runner_info
+
+        # Create run_info.yml with all the metadata
+        self.run_info =  self.bench_info | self.task_info | self.runner_info
+        self.run_info['log_path'] = str(self.task_log_path)
+
+        with open(os.path.join(self.run_dir,'run_info.yml'), 'w') as f:
+            yaml.dump(self.run_info, f)
+
+
+    def log_interaction(self, response_info):
+        """
+        Logs the event to the log folder specified by the user
+
+        Parameters:
+        -------------
+        response_info: dict
+            A dictionary of logged information from the interaction with the LLM
+        """
+
+        # Making this into a directory in case more files (possibly steps) were to be held in here
+        self.prompt_dir = os.path.join(self.run_dir, response_info['prompt_id'])
+        os.mkdir(self.prompt_dir)
+
+        with open(os.path.join(self.prompt_dir, "log.txt"), 'w') as f:
+            f.write("------ prompt ------\n")
+            f.write(f"{response_info['prompt']}\n\n")
+            f.write("------ response ------\n")
+            f.write(f"{response_info['response']}\n\n")
+
+
+        step_trace = {
+            'task_name': self.run_info['name'],
+            'template': self.run_info['template'],
+            'steps':{ 
+                0: response_info,
             },
-        },
-    }
-    if not(score is None):
-        step_trace['steps'][0]['score'] = score
+        }
+        
 
-    with open(os.path.join(prompt_dir, "log.json"), 'w') as f:
-        # yaml.dump(step_trace, f)
-        json.dump(step_trace, f, indent=4, cls=EnhancedJSONEncoder)
+        with open(os.path.join(self.prompt_dir, "log.json"), 'w') as f:
+            json.dump(step_trace, f, indent=4, cls=EnhancedJSONEncoder)
 
-    # TODO: What can we benifit from the logger?
-    # logger.info(f'Input: {prompt}')
-    # logger.info(f'Output: {response}')
-
-
-
-    
-
+        # TODO: What can we benifit from the logger?
+        # logger.info(f'Input: {prompt}')
+        # logger.info(f'Output: {response}')
+        
+        
+        
+    # def log_score(score):
+    #     with open(os.path.join(run_log_dir, "run_info.yml"), 'r') as f:
+    #             run_info = yaml.safe_load(f) 
+        
+    #     step_trace['steps'][0]['score'] = score
