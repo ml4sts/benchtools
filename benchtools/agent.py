@@ -103,25 +103,3 @@ def steps_from_memory(agent) -> list[Step]:
         else:
             steps.append(Step(type=type(m).__name__.lower(), content=str(m)))
     return steps
-
-class LangGraphAdapter(Agent):
-
-    def __init__(self, graph):
-        self.agent_type = "lang_graph"
-        self.graph = graph
-
-    def run(self, task, **kwargs):
-        return self.graph.invoke(
-            {"messages": [{"role": "user", "content": task}]}
-        )
-
-
-
-class OpenAIAgentAdapter(Agent):
-
-    def __init__(self, agent):
-        self.agent_type = "OpenAI_agnet"
-        self.agent = agent
-
-    def run(self, task, **kwargs):
-        return Runner.run_sync(self.agent, task)
