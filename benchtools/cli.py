@@ -219,23 +219,23 @@ def run(benchmark_path: str, runner_type: str,
               help="The path to a log directory.")
 @click.option('-r', '--result-id', type=str, default='last', 
               help="runs to score: 'last','all' or specific ids")
+@click.option('-t', '--task', type=str, default=None, 
+              help="specific task to score")
+@click.option('-m', '--model', type=str, default=None, 
+              help="specific model to score")
 @click.option('-c','--csv',is_flag=True,
               help ='save csv of eval in additon to json')
 # @click.option('-C','--collate',is_flag=True,help='collate scores rather than recomputing them')
 # TODO: change to accept list
-def score(benchmark_path: str, log_path, result_id,csv):
+def score(benchmark_path: str, log_path, result_id, task, model, csv):
     """
-    Running the benchmark and generating logs
-    -----------
-    Parameters:
-        benchmark-path: str
-            The path to the benchmark repository where all the task reside.
+    Score a benchmark's specific or last run
     """
     # if not provided do the last one for each model-task combination
     
     benchmark = Bench.load(benchmark_path)
-    
-    score_list = benchmark.score(log_path=log_path, run=result_id)
+
+    score_list = benchmark.score(log_path=log_path, task=task, model=model, run=result_id)
 
     timestamp = str(int(datetime.now().timestamp()))
     eval_base = os.path.join(benchmark_path,'eval_'+timestamp)
