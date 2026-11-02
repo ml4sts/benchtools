@@ -395,7 +395,7 @@ class Bench():
             score_list = self.score(model=runner.model, run='last')
             return response_lists, score_list
         else:
-            return reponse_lists
+            return response_lists
 
 
     def run_task(self, target_task=None, runner=BenchRunner(), log_dir=None, logger=None, score=False):
