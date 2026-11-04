@@ -30,14 +30,14 @@ from benchtools import Task
 
 tt = Task('greeting','Hello there','hi', 'contains')
 ```
-<!-- there -->
+
 
 ```{code-cell}
 response = tt.run()
 ```
 
 ```{code-cell}
-tt.score(response)
+tt.score_response(response)
 ```
 
 ```{code-cell}
@@ -45,14 +45,19 @@ tiny_bench.add_task(tt)
 ```
 
 There are multiple ways to creating a Task object
+
+We can load an existing task folder
 ```
-add_task = Task.from_txt_csv('../../demos/folderbench/tasks/add')
+add_task = Task.from_txt_csv('folderbench/tasks/add')
 tiny_bench.add_task(add_task)
 ```
 
+::::{notice}
+the above can be done after having installed the demo benchmark "folderbench" on the same path we are running Python from using the CLI
+:::::::
+
 For demo purposes we delete the folder, if it exists, before running. 
-```{code-cell}
-%%bash
+```{code-cell} bash
 rm  -rf tiniest_demo
 ```
 
@@ -62,66 +67,61 @@ tiny_bench.initialize_dir()
 tiny_bench.run()
 ```
 
-
-```{code-cell}
-pre_built_yml = Bench.from_yaml('../../demos/listbench')
+We can also load an existing yaml task
+```{code-cell} python
+pre_built_yml = Bench.from_yaml('listbench/')
 pre_built_yml.written
 ```
 
-we can access individual tasks:
+::::{notice}
+similarly, the above can be done after having installed the demo benchmark "listbench" on the same path we are running Python from using the CLI
+:::::::
 
-```{code-cell}
-pre_built_yml.tasks['product'].variant_values
+we can access individual tasks, for example:
+
+```{code-cell} python
+print(pre_built_yml.tasks['product'].variant_values)
 ```
 
+```
+[{'a': 2, 'b': 3}, {'a': 3, 'b': 4}, {'a': 5, 'b': 5}]
+```
 
+Make sure `ollama` is running in advence on your system to run the benchmark
 
 ```{code-cell}
 pre_built_yml.run()
 ```
 
-```{code-cell}
-demo_bench = Bench.from_yaml('../../demos/listbench')
-```
+Logs will be found in `logs/`
 
 
-<!-- ```{code-cell}
-demo_bench = Bench.load('../../demobench')
-``` 
--->
-
-
-
-
-
-## Creating a Benchmark object
-<!-- Testing which is better -->
-
+## Task class
 ```{eval-rst}
-.. automodule:: benchtools.runner
+.. autoclass:: benchtools.task.Task
     :members:
 ```
 
 ## Benchmark class
-<!-- Testing which is better -->
 ```{eval-rst}
 .. autoclass:: benchtools.benchmark.Bench
     :members:
 ```
 
-
-## Task class
-<!-- Testing which is better -->
+## Runner class
 ```{eval-rst}
-.. autoclass:: benchtools.task.Task
+.. automodule:: benchtools.runner
     :members:
 ```
 
-
+## Logger class
+```{eval-rst}
+.. autoclass:: benchtools.logger.Logger
+    :members:
+```
 
 ## BetterBench
-<!-- Testing which is better -->
 ```{eval-rst}
-.. autoclass:: benchtools.task.Task
+.. autoclass:: benchtools.betterbench.BetterCheckList
     :members:
 ```

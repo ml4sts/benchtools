@@ -33,6 +33,14 @@ and then values for the template feilds are in a csv file:
 
 ### Single run settings
 
+:::{literalinclude} ../../../benchtools/assets/demos/listbench/runner.yml
+:linenos:
+:language: yaml
+:caption: runner.yml
+:::
+
+### Inference parameters settings
+
 :::{literalinclude} ../../../benchtools/assets/demos/folderbench/runner.yml
 :linenos:
 :language: yaml
